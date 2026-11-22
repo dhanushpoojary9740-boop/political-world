@@ -399,11 +399,11 @@ func _refresh_office_log() -> void:
     var start_index := maxi(0, entries.size() - 16)
     for i in range(start_index, entries.size()):
         var entry: Dictionary = entries[i]
-        var detail_text := "%s\\n%s" % [str(entry["department"]), str(entry["location"])]
+        var detail_text := "%s\n%s" % [str(entry["department"]), str(entry["location"])]
         _add_info_card(office_log_list, str(entry["title"]), detail_text, "%s  •  %s" % [str(entry["kind"]), str(entry["status"]).to_upper()])
 
 func _on_complete_office_mission(mission_id: int) -> void:
-    report_label.text = "\\n".join(PackedStringArray(world.complete_office_mission(mission_id)))
+    report_label.text = "\n".join(PackedStringArray(world.complete_office_mission(mission_id)))
     _refresh()
     _save_progress()
 

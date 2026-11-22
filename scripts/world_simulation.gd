@@ -628,7 +628,7 @@ func office_summary() -> String:
     for mission in office_missions:
         if str(mission.get("status", "")) == "Available":
             available_missions += 1
-    return "Office: %s\\nArea: %s, %s\\nOpen proposals: %d\\nIssues awaiting department response: %d\\nMonthly responsibilities available: %d\\nYour authority: represent residents, submit representations, and request action. Elected councils, civil servants, and competent departments retain their legal powers and operational duties." % [
+    return "Office: %s\nArea: %s, %s\nOpen proposals: %d\nIssues awaiting department response: %d\nMonthly responsibilities available: %d\nYour authority: represent residents, submit representations, and request action. Elected councils, civil servants, and competent departments retain their legal powers and operational duties." % [
         elected_office_name, home_city, home_state, pending_proposals, active_issues, available_missions
     ]
 
