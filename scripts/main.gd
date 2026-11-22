@@ -28,6 +28,7 @@ func _ready() -> void:
     world.initialize()
     var has_saved_game: bool = world.load_game()
     _build_ui()
+    _configure_touch_scroll_passthrough(self)
     if has_saved_game and world.career_started:
         setup_box.visible = false
         dashboard_box.visible = true
@@ -102,6 +103,21 @@ func _build_ui() -> void:
     _build_dashboard()
 
     _build_bottom_navigation(root)
+
+func _configure_touch_scroll_passthrough(node: Node) -> void:
+    # Let drag gestures travel through cards, labels, and tab pages to the
+    # nearest ScrollContainer. ScrollContainers remain the gesture handlers.
+    if node is Control:
+        var control := node as Control
+        if control is ScrollContainer:
+            control.mouse_filter = Control.MOUSE_FILTER_STOP
+        elif control is ColorRect:
+            control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        else:
+            control.mouse_filter = Control.MOUSE_FILTER_PASS
+
+    for child in node.get_children():
+        _configure_touch_scroll_passthrough(child)
 
 func _build_bottom_navigation(parent: VBoxContainer) -> void:
     main_tab_bar = ScrollContainer.new()
@@ -520,7 +536,7 @@ func _refresh() -> void:
         if main_tab_buttons.size() > 4:
             main_tab_buttons[4].visible = world.has_elected_office
         if world.has_elected_office:
-            office_label.text = world.office_summary()
+            office_label.text = world.office_summary().replace("\\n", "\n")
             _refresh_office_missions()
             _refresh_office_log()
 
