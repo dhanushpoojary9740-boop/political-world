@@ -297,6 +297,9 @@ func _add_info_card(parent: VBoxContainer, title_text: String, detail_text: Stri
     status.add_theme_font_size_override("font_size", 11)
     status.add_theme_color_override("font_color", Color("#9db5c8"))
     body.add_child(status)
+    # These cards are created after the initial UI pass. Keep their controls
+    # from swallowing touch-drag gestures intended for PageContent.
+    _configure_touch_scroll_passthrough(card)
 
 func _add_office_action_card(parent: VBoxContainer, title_text: String, detail_text: String, button_text: String, callback: Callable) -> void:
     var card := PanelContainer.new()
@@ -314,6 +317,7 @@ func _add_office_action_card(parent: VBoxContainer, title_text: String, detail_t
     var detail := _add_body(body, detail_text)
     detail.add_theme_font_size_override("font_size", 14)
     _add_button(body, button_text, callback)
+    _configure_touch_scroll_passthrough(card)
 
 func _card_style() -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
@@ -379,6 +383,9 @@ func _refresh_office_missions() -> void:
             completed_label.add_theme_font_size_override("font_size", 11)
             completed_label.add_theme_color_override("font_color", Color("#8ab7a1"))
             body.add_child(completed_label)
+        # Mission cards are rebuilt dynamically every refresh, so configure
+        # their newly-created descendants each time.
+        _configure_touch_scroll_passthrough(card)
 
 func _refresh_office_log() -> void:
     if not is_instance_valid(office_log_list):
