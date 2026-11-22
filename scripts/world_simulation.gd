@@ -234,6 +234,9 @@ func _ensure_election_schema() -> void:
             election["assembly_seats"] = int(election.get("assembly_seats", STATE_ASSEMBLY_SEATS.get(state_name, 60)))
             election["phase"] = str(election.get("phase", "Scheduled"))
             election["campaign_spend_by_party"] = election.get("campaign_spend_by_party", {})
+        election["high_command_slate_approved"] = bool(election.get("high_command_slate_approved", false))
+        election["high_command_priority"] = str(election.get("high_command_priority", "Balanced outreach"))
+        election["high_command_monthly_budget"] = int(election.get("high_command_monthly_budget", 50000))
             saved_elections[i] = election
         world_state["state_elections"] = saved_elections
 
@@ -389,7 +392,7 @@ func _advance_modeled_election(
             report_lines.append("Campaign period opened for %s. AI party organizations are campaigning automatically." % jurisdiction)
         election["phase"] = "Campaigning"
         election["months_to_poll"] = months_remaining
-        _run_modeled_ai_campaigns(election)
+        _run_modeled_ai_campaigns(election, state_name)
         return election
 
     var result := _resolve_modeled_election(election, jurisdiction, seat_count, state_name, regional)
@@ -455,7 +458,7 @@ func _advance_modeled_election(
     return election
 
 
-func _run_modeled_ai_campaigns(election: Dictionary) -> void:
+func _run_modeled_ai_campaigns(election: Dictionary, state_name: String = "") -> void:
     var spending_by_party: Dictionary = election.get("campaign_spend_by_party", {})
     for party_id_variant in parties.keys():
         var party_id := str(party_id_variant)
@@ -467,6 +470,13 @@ func _run_modeled_ai_campaigns(election: Dictionary) -> void:
             MODELED_CAMPAIGN_MAX_MONTHLY_COST,
             MODELED_CAMPAIGN_BASE_COST + members * MODELED_CAMPAIGN_MEMBER_COST
         )
+        if state_name == "Karnataka" and party_id == player_party_id:
+            monthly_budget = mini(
+                maxi(0, int(election.get("high_command_monthly_budget", 50000))),
+                MODELED_CAMPAIGN_MAX_MONTHLY_COST
+            )
+            if not bool(election.get("high_command_slate_approved", false)):
+                monthly_budget = 0
         var available_funds := maxi(0, int(party.get("funds", 0)))
         var spend := mini(available_funds, monthly_budget)
         if spend <= 0:
@@ -497,7 +507,12 @@ func _resolve_modeled_election(
             base_support = float(support_by_state.get(state_name, base_support))
         var members := maxi(1, int(party.get("members", 1)))
         var campaign_score := minf(7.0, float(spending_by_party.get(party_id, 0)) / 100000.0)
-        var score := maxf(0.5, base_support + log(maxf(1.0, float(members)) / 1000.0) * 2.0 + campaign_score + randf_range(-1.5, 1.5))
+        var priority_bonus := 0.0
+        if state_name == "Karnataka" and party_id == player_party_id:
+            var priority := str(election.get("high_command_priority", "Balanced outreach"))
+            if priority != "Balanced outreach":
+                priority_bonus = 0.35
+        var score := maxf(0.5, base_support + log(maxf(1.0, float(members)) / 1000.0) * 2.0 + campaign_score + priority_bonus + randf_range(-1.5, 1.5))
         scores[party_id] = score
         total_score += score
 
@@ -1408,6 +1423,34 @@ func party_summary() -> String:
         party["name"], player_role, _format_number(int(party["members"])),
         _format_number(int(party["funds"])), float(party["popularity"])
     ]
+
+func set_karnataka_slate_approved(approved: bool) -> String:
+    var elections: Array = world_state.get("state_elections", [])
+    for i in range(elections.size()):
+        var election: Dictionary = elections[i]
+        if str(election.get("state", "")) == "Karnataka":
+            if str(election.get("phase", "Scheduled")) == "Completed":
+                return "The current Karnataka election cycle is complete. Approval applies to the next cycle."
+            election["high_command_slate_approved"] = approved
+            elections[i] = election
+            world_state["state_elections"] = elections
+            return "AI-prepared Karnataka slate approved. Your party's planned campaign can now spend within the set budget."
+    return "Karnataka election record was not found."
+
+func set_karnataka_campaign_plan(priority: String, monthly_budget: int) -> String:
+    var allowed_priorities := ["Balanced outreach", "Public services", "Jobs & economy", "Rural development", "Youth engagement"]
+    if not allowed_priorities.has(priority):
+        priority = "Balanced outreach"
+    var elections: Array = world_state.get("state_elections", [])
+    for i in range(elections.size()):
+        var election: Dictionary = elections[i]
+        if str(election.get("state", "")) == "Karnataka":
+            election["high_command_priority"] = priority
+            election["high_command_monthly_budget"] = clampi(monthly_budget, 0, MODELED_CAMPAIGN_MAX_MONTHLY_COST)
+            elections[i] = election
+            world_state["state_elections"] = elections
+            return "Karnataka campaign plan saved. Actual spending is capped by available party funds and ₹200,000 per month."
+    return "Karnataka election record was not found."
 
 func election_summary() -> String:
     var lines: Array[String] = []

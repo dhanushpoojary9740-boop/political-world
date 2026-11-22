@@ -34,6 +34,9 @@ var duty_member_picker: OptionButton
 var duty_role_picker: OptionButton
 var party_member_status: Label
 var election_detail_labels: Dictionary = {}
+var karnataka_command_status: Label
+var karnataka_budget: SpinBox
+var karnataka_priority: OptionButton
 
 func _ready() -> void:
     world = WorldSimulationScript.new()
@@ -376,7 +379,24 @@ func _build_dashboard() -> void:
     var karnataka_elections := _new_tab(election_tabs, "Karnataka")
     _add_section_title(karnataka_elections, "KARNATAKA ASSEMBLY")
     election_detail_labels["karnataka"] = _add_body(karnataka_elections, "")
-    _add_body(karnataka_elections, "You act as party high command in Karnataka. Until a separate candidate-selection workflow is available, the AI organization handles campaign operations and candidate participation; no public office is granted automatically to you.")
+    _add_body(karnataka_elections, "Karnataka High Command: review the AI-prepared slate, set a campaign focus and monthly budget, and assign a party member to election duty. This prototype manages a state-level slate, not individual constituency candidates.")
+    karnataka_command_status = _add_body(karnataka_elections, "")
+    _add_button(karnataka_elections, "APPROVE AI-PREPARED KARNATAKA SLATE", _on_approve_karnataka_slate)
+    var priority_label := _add_body(karnataka_elections, "Campaign priority")
+    karnataka_priority = OptionButton.new()
+    for priority in ["Balanced outreach", "Public services", "Jobs & economy", "Rural development", "Youth engagement"]:
+        karnataka_priority.add_item(priority)
+    karnataka_elections.add_child(karnataka_priority)
+    var budget_label := _add_body(karnataka_elections, "Monthly campaign budget (₹)")
+    karnataka_budget = SpinBox.new()
+    karnataka_budget.min_value = 0
+    karnataka_budget.max_value = 200000
+    karnataka_budget.step = 5000
+    karnataka_budget.value = 50000
+    karnataka_budget.custom_minimum_size = Vector2(0, 44)
+    karnataka_elections.add_child(karnataka_budget)
+    _add_button(karnataka_elections, "SAVE CAMPAIGN PLAN", _on_save_karnataka_plan)
+    _add_body(karnataka_elections, "AI still runs routine campaign operations. Your plan is applied only to Karnataka’s modeled assembly campaign; it does not grant public office or override election results.")
 
     var other_state_elections := _new_tab(election_tabs, "Other states")
     _add_section_title(other_state_elections, "OTHER STATE ASSEMBLIES")
@@ -906,6 +926,27 @@ func _refresh_election_tabs() -> void:
             karnataka_text += line
         else:
             other_text += line
+    var karnataka_election: Dictionary = {}
+    for election_variant in state_elections:
+        var item: Dictionary = election_variant
+        if str(item.get("state", "")) == "Karnataka":
+            karnataka_election = item
+            break
+    if is_instance_valid(karnataka_command_status):
+        karnataka_command_status.text = "Slate: %s\nPriority: %s\nMonthly plan: ₹%s\nPhase: %s" % [
+            "Approved" if bool(karnataka_election.get("high_command_slate_approved", false)) else "Awaiting your review",
+            str(karnataka_election.get("high_command_priority", "Balanced outreach")),
+            world._format_number(int(karnataka_election.get("high_command_monthly_budget", 50000))),
+            str(karnataka_election.get("phase", "Scheduled"))
+        ]
+        if is_instance_valid(karnataka_budget):
+            karnataka_budget.value = int(karnataka_election.get("high_command_monthly_budget", 50000))
+        if is_instance_valid(karnataka_priority):
+            var selected_priority := str(karnataka_election.get("high_command_priority", "Balanced outreach"))
+            for pi in range(karnataka_priority.item_count):
+                if karnataka_priority.get_item_text(pi) == selected_priority:
+                    karnataka_priority.select(pi)
+                    break
     election_detail_labels["karnataka"].text = karnataka_text
     election_detail_labels["other_states"].text = other_text
 
@@ -915,6 +956,19 @@ func _refresh_election_tabs() -> void:
         str(national.get("phase", "Scheduled")), int(national.get("seats", 543)),
         str(national.get("last_result", "Not yet held"))
     ]
+
+func _on_approve_karnataka_slate() -> void:
+    var result: String = world.set_karnataka_slate_approved(true)
+    karnataka_command_status.text = result
+    _refresh()
+    _save_progress()
+
+func _on_save_karnataka_plan() -> void:
+    var priority := karnataka_priority.get_item_text(karnataka_priority.selected)
+    var result: String = world.set_karnataka_campaign_plan(priority, int(karnataka_budget.value))
+    karnataka_command_status.text = result
+    _refresh()
+    _save_progress()
 
 func _refresh_overview_metrics() -> void:
     if overview_metric_values.size() < 4:
