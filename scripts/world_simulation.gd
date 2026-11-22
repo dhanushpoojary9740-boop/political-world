@@ -1,45 +1,39 @@
 extends RefCounted
 class_name WorldSimulation
 
-const ELECTION_INTERVAL_MONTHS := 7
-
 var year: int = 2026
 var month: int = 1
-var player_state: String = "Karnataka"
-var player_party_id: String = "party_player"
-var player_member_id: String = "player"
+var character_name: String = "New Politician"
+var character_age: int = 25
+var home_state: String = "Karnataka"
+var home_city: String = "Brahmavara"
+var career_started: bool = false
+var career_path: String = ""
+var player_party_id: String = ""
+var player_role: String = "Ordinary citizen"
+var personal_funds: int = 50000
+var experience: int = 0
+var reputation: float = 0.0
+var party_counter: int = 0
 var parties: Dictionary = {}
-var politicians: Dictionary = {}
-var election_log: Array[String] = []
 var notifications: Array[String] = []
 
 func initialize() -> void:
     parties = {
-        "party_player": {
-            "name": "People's Progress Party",
+        "party_established": {
+            "name": "People's Unity Party",
+            "members": 12500,
             "funds": 25000000,
-            "popularity": {"Karnataka": 18.0, "Maharashtra": 4.0, "Kerala": 3.0, "Tamil Nadu": 3.0},
-            "members": ["player", "member_1", "member_2", "member_3"],
-            "seat_count": {"Karnataka": 0, "Maharashtra": 0, "Kerala": 0, "Tamil Nadu": 0}
+            "popularity": 24.0,
+            "is_player_created": false
         },
-        "party_rival": {
-            "name": "National Unity Front",
-            "funds": 60000000,
-            "popularity": {"Karnataka": 32.0, "Maharashtra": 35.0, "Kerala": 28.0, "Tamil Nadu": 25.0},
-            "members": ["rival_1", "rival_2", "rival_3", "rival_4"],
-            "seat_count": {"Karnataka": 0, "Maharashtra": 0, "Kerala": 0, "Tamil Nadu": 0}
+        "party_reform": {
+            "name": "Progressive Reform Front",
+            "members": 7800,
+            "funds": 12000000,
+            "popularity": 16.0,
+            "is_player_created": false
         }
-    }
-
-    politicians = {
-        "player": {"name": "Player", "party_id": player_party_id, "state": "Karnataka", "is_player": true, "eligible": true},
-        "member_1": {"name": "Ananya Rao", "party_id": player_party_id, "state": "Karnataka", "is_player": false, "eligible": true},
-        "member_2": {"name": "Kiran Shetty", "party_id": player_party_id, "state": "Karnataka", "is_player": false, "eligible": true},
-        "member_3": {"name": "Meera Nair", "party_id": player_party_id, "state": "Maharashtra", "is_player": false, "eligible": true},
-        "rival_1": {"name": "Arjun Desai", "party_id": "party_rival", "state": "Karnataka", "is_player": false, "eligible": true},
-        "rival_2": {"name": "Nisha Menon", "party_id": "party_rival", "state": "Maharashtra", "is_player": false, "eligible": true},
-        "rival_3": {"name": "Dev Patel", "party_id": "party_rival", "state": "Kerala", "is_player": false, "eligible": true},
-        "rival_4": {"name": "Sanjay Kumar", "party_id": "party_rival", "state": "Tamil Nadu", "is_player": false, "eligible": true}
     }
 
 func date_label() -> String:
@@ -49,6 +43,87 @@ func _month_name(value: int) -> String:
     var names := ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     return names[clampi(value - 1, 0, 11)]
 
+func start_career(name: String, age: int, city: String, path: String, party_name: String = "") -> bool:
+    var clean_name := name.strip_edges()
+    var clean_city := city.strip_edges()
+    if clean_name.is_empty() or clean_city.is_empty():
+        notifications = ["Enter your character's name and hometown to begin."]
+        return false
+
+    character_name = clean_name
+    character_age = clampi(age, 18, 90)
+    home_city = clean_city
+    career_path = path
+    career_started = true
+    experience = 0
+    reputation = 0.0
+    personal_funds = 50000
+
+    if path == "join":
+        player_party_id = "party_established"
+        player_role = "Party volunteer"
+        notifications = ["You joined People's Unity Party as a volunteer in %s, Karnataka." % home_city]
+    elif path == "found":
+        var clean_party_name := party_name.strip_edges()
+        if clean_party_name.is_empty():
+            career_started = false
+            notifications = ["Enter a name for your new political party."]
+            return false
+        party_counter += 1
+        player_party_id = "player_party_%d" % party_counter
+        parties[player_party_id] = {
+            "name": clean_party_name,
+            "members": 5,
+            "funds": 25000,
+            "popularity": 1.0,
+            "is_player_created": true
+        }
+        player_role = "Party founder"
+        notifications = ["You founded %s with five initial supporters. Your party has no elected seats." % clean_party_name]
+    else:
+        career_started = false
+        notifications = ["Choose a valid political path."]
+        return false
+    return true
+
+func perform_activity(activity: String) -> Array[String]:
+    notifications.clear()
+    if not career_started:
+        notifications.append("Begin your political career first.")
+        return notifications.duplicate()
+
+    match activity:
+        "volunteer":
+            experience += 2
+            reputation += 0.4
+            personal_funds = maxi(0, personal_funds - 500)
+            _increase_party_popularity(0.15)
+            notifications.append("You helped organize a local campaign activity. Experience +2; local reputation improved.")
+        "community":
+            experience += 2
+            reputation += 0.7
+            personal_funds = maxi(0, personal_funds - 800)
+            _increase_party_popularity(0.25)
+            notifications.append("You organized a community service event in %s. Experience +2; reputation improved." % home_city)
+        "meeting":
+            experience += 1
+            reputation += 0.2
+            notifications.append("You attended a party meeting and built political relationships. Experience +1.")
+        "recruit":
+            var party: Dictionary = parties[player_party_id]
+            if int(party["members"]) < 100000:
+                party["members"] = int(party["members"]) + 1
+                party["funds"] = int(party["funds"]) + 500
+                parties[player_party_id] = party
+                experience += 1
+                _increase_party_popularity(0.05)
+                notifications.append("You recruited one new party member. Party membership and funds increased slightly.")
+            else:
+                notifications.append("Your party's local recruitment limit has been reached in this prototype.")
+        _:
+            notifications.append("That activity is not available.")
+    return notifications.duplicate()
+
 func advance_month() -> Array[String]:
     notifications.clear()
     month += 1
@@ -56,66 +131,45 @@ func advance_month() -> Array[String]:
         month = 1
         year += 1
 
-    _simulate_monthly_party_growth()
-    if month == 7:
-        _run_election_cycle()
-    if notifications.is_empty():
-        notifications.append("The month advanced. AI party units completed routine administration.")
+    if career_started:
+        personal_funds += 1500
+        if month % 3 == 0:
+            var party: Dictionary = parties[player_party_id]
+            party["members"] = int(party["members"]) + 2
+            party["funds"] = int(party["funds"]) + 2000
+            party["popularity"] = minf(100.0, float(party["popularity"]) + 0.1)
+            parties[player_party_id] = party
+            notifications.append("Your party's AI local unit recruited two members and completed routine administration.")
+        if experience >= 20 and reputation >= 5.0:
+            notifications.append("You have begun building the experience and reputation needed for local party leadership.")
+        else:
+            notifications.append("You continued building your political career. Your next opportunities depend on experience, reputation, and party standing.")
+    else:
+        notifications.append("The calendar advanced. Your political career has not started.")
     return notifications.duplicate()
 
-func _simulate_monthly_party_growth() -> void:
-    for party_id in parties.keys():
-        var party: Dictionary = parties[party_id]
-        var popularity: Dictionary = party["popularity"]
-        for state in popularity.keys():
-            var current: float = float(popularity[state])
-            var drift := 0.12 if party_id == player_party_id and state == player_state else 0.04
-            popularity[state] = clampf(current + drift, 0.0, 100.0)
-        party["popularity"] = popularity
-        party["funds"] = int(party["funds"]) + 250000
-
-func _run_election_cycle() -> void:
-    notifications.append("Election month: AI units organized campaigns across all simulated states.")
-    for state in ["Karnataka", "Maharashtra", "Kerala", "Tamil Nadu"]:
-        var candidate_id := _find_candidate_for_state(player_party_id, state)
-        if state == player_state and candidate_id == player_member_id:
-            notifications.append("You were automatically registered as your party's candidate in Karnataka.")
-        elif candidate_id != "":
-            notifications.append("%s selected %s for %s." % [parties[player_party_id]["name"], politicians[candidate_id]["name"], state])
-        else:
-            notifications.append("AI could not find an eligible candidate for %s." % state)
-
-        _resolve_state_election(state)
-
-func _find_candidate_for_state(party_id: String, state: String) -> String:
-    var party: Dictionary = parties.get(party_id, {})
-    for member_id in party.get("members", []):
-        var politician: Dictionary = politicians.get(member_id, {})
-        if politician.get("state", "") == state and politician.get("eligible", false):
-            return member_id
-    return ""
-
-func _resolve_state_election(state: String) -> void:
-    var player_party: Dictionary = parties[player_party_id]
-    var rival_party: Dictionary = parties["party_rival"]
-    var player_score := float(player_party["popularity"].get(state, 0.0))
-    var rival_score := float(rival_party["popularity"].get(state, 0.0))
-    var won := player_score >= rival_score
-    var winner_id := player_party_id if won else "party_rival"
-    var winner_name: String = parties[winner_id]["name"]
-    player_party["seat_count"][state] = 1 if won else 0
-    rival_party["seat_count"][state] = 0 if won else 1
-    election_log.append("%s election (%s): %s won the simulated seat." % [date_label(), state, winner_name])
-    notifications.append("%s result: %s won the simulated seat." % [state, winner_name])
+func _increase_party_popularity(amount: float) -> void:
+    if player_party_id == "" or not parties.has(player_party_id):
+        return
+    var party: Dictionary = parties[player_party_id]
+    party["popularity"] = minf(100.0, float(party["popularity"]) + amount)
+    parties[player_party_id] = party
 
 func party_summary() -> String:
+    if not career_started or player_party_id == "" or not parties.has(player_party_id):
+        return "No party membership\nYou are an ordinary citizen."
     var party: Dictionary = parties[player_party_id]
-    return "%s\nParty funds: ₹%s\nMembers: %d\nKarnataka popularity: %.1f%%" % [
-        party["name"],
-        _format_money(int(party["funds"])),
-        party["members"].size(),
-        float(party["popularity"]["Karnataka"])
+    return "%s\nRole: %s\nMembers: %s\nParty funds: ₹%s\nParty popularity: %.1f%%" % [
+        party["name"], player_role, _format_number(int(party["members"])),
+        _format_number(int(party["funds"])), float(party["popularity"])
     ]
 
-func _format_money(amount: int) -> String:
-    return "%s" % amount
+func career_summary() -> String:
+    if not career_started:
+        return "You have not entered politics yet.\nChoose whether to join an established party or found your own."
+    return "%s, age %d\n%s, Karnataka\nExperience: %d  •  Reputation: %.1f\nPersonal funds: ₹%s" % [
+        character_name, character_age, home_city, experience, reputation, _format_number(personal_funds)
+    ]
+
+func _format_number(value: int) -> String:
+    return str(value)
