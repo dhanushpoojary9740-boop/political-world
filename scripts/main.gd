@@ -38,59 +38,77 @@ func _build_ui() -> void:
     background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     add_child(background)
 
-    var scroll := ScrollContainer.new()
-    scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    scroll.offset_left = 12
-    scroll.offset_right = -12
-    scroll.offset_top = 12
-    scroll.offset_bottom = -12
-    add_child(scroll)
-
+    # Fixed screen structure: header, scrollable page content, then bottom navigation.
     var root := VBoxContainer.new()
-    root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    root.add_theme_constant_override("separation", 12)
-    scroll.add_child(root)
+    root.name = "AppLayout"
+    root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    root.offset_left = 14
+    root.offset_top = 12
+    root.offset_right = -14
+    root.offset_bottom = -12
+    root.add_theme_constant_override("separation", 8)
+    add_child(root)
+
+    var header := VBoxContainer.new()
+    header.name = "Header"
+    header.add_theme_constant_override("separation", 3)
+    root.add_child(header)
 
     var title := Label.new()
     title.text = "POLITICAL WORLD"
-    title.add_theme_font_size_override("font_size", 28)
+    title.add_theme_font_size_override("font_size", 24)
     title.add_theme_color_override("font_color", Color("#d9b56d"))
-    root.add_child(title)
+    header.add_child(title)
 
     date_label = Label.new()
-    date_label.add_theme_font_size_override("font_size", 18)
+    date_label.add_theme_font_size_override("font_size", 16)
     date_label.add_theme_color_override("font_color", Color("#ffffff"))
-    root.add_child(date_label)
+    header.add_child(date_label)
 
     var subtitle := Label.new()
     subtitle.text = "YOUR POLITICAL JOURNEY • INDIA"
+    subtitle.add_theme_font_size_override("font_size", 12)
     subtitle.add_theme_color_override("font_color", Color("#a9b6c2"))
-    root.add_child(subtitle)
+    header.add_child(subtitle)
+
+    var content_scroll := ScrollContainer.new()
+    content_scroll.name = "PageContent"
+    content_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    content_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    content_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    content_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+    content_scroll.add_theme_stylebox_override("panel", _button_style("#0b1420"))
+    root.add_child(content_scroll)
 
     setup_box = VBoxContainer.new()
+    setup_box.name = "CareerSetup"
+    setup_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     setup_box.add_theme_constant_override("separation", 10)
-    root.add_child(setup_box)
+    content_scroll.add_child(setup_box)
     _build_setup()
 
     dashboard_box = TabContainer.new()
+    dashboard_box.name = "DashboardPages"
     dashboard_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     dashboard_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    dashboard_box.custom_minimum_size = Vector2(0, 390)
+    dashboard_box.custom_minimum_size = Vector2(0, 0)
     dashboard_box.tabs_visible = false
     dashboard_box.add_theme_constant_override("side_margin", 6)
     dashboard_box.visible = false
-    root.add_child(dashboard_box)
+    content_scroll.add_child(dashboard_box)
     _build_dashboard()
+
     _build_bottom_navigation(root)
 
 func _build_bottom_navigation(parent: VBoxContainer) -> void:
     main_tab_bar = ScrollContainer.new()
     main_tab_bar.name = "BottomNavigation"
-    main_tab_bar.custom_minimum_size = Vector2(0, 60)
+    main_tab_bar.custom_minimum_size = Vector2(0, 64)
     main_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     main_tab_bar.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
     main_tab_bar.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
     main_tab_bar.add_theme_stylebox_override("panel", _button_style("#101f2d"))
+    main_tab_bar.size_flags_vertical = Control.SIZE_SHRINK_END
     main_tab_bar.visible = false
     parent.add_child(main_tab_bar)
 
@@ -103,8 +121,8 @@ func _build_bottom_navigation(parent: VBoxContainer) -> void:
     for index in range(tab_names.size()):
         var tab_button := Button.new()
         tab_button.text = tab_names[index]
-        tab_button.custom_minimum_size = Vector2(96, 46)
-        tab_button.add_theme_font_size_override("font_size", 14)
+        tab_button.custom_minimum_size = Vector2(104, 48)
+        tab_button.add_theme_font_size_override("font_size", 13)
         tab_button.add_theme_color_override("font_color", Color("#f2e8d5"))
         tab_button.add_theme_stylebox_override("normal", _button_style("#1b2a38"))
         tab_button.add_theme_stylebox_override("hover", _button_style("#2c4354"))
@@ -261,7 +279,7 @@ func _add_body(parent: VBoxContainer, text_value: String) -> Label:
 func _add_button(parent: VBoxContainer, text_value: String, callback: Callable) -> void:
     var button := Button.new()
     button.text = text_value
-    button.custom_minimum_size = Vector2(0, 48)
+    button.custom_minimum_size = Vector2(0, 46)
     button.add_theme_color_override("font_color", Color("#101820"))
     button.add_theme_stylebox_override("normal", _button_style("#e7bd62"))
     button.add_theme_stylebox_override("hover", _button_style("#f3d58f"))
