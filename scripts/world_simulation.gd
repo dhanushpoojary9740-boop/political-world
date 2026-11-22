@@ -2,6 +2,7 @@ extends RefCounted
 class_name WorldSimulation
 
 const LOCAL_ELECTION_MONTH := 12
+const LOCAL_ELECTION_CYCLE_YEARS := 5 # Simplified prototype cycle; real local-body terms vary by jurisdiction.
 const LOCAL_CAMPAIGN_MODEL_BUDGET := 500000 # In-game budget assumption, not a statutory limit.
 const CAMPAIGN_ACTION_COST := 5000
 const VOLUNTEER_ACTIVITY_COST := 1000
@@ -74,6 +75,9 @@ var local_candidate_selected: bool = false
 var local_election_completed: bool = false
 var local_election_year: int = 2026
 var local_election_result: String = ""
+var last_local_election_year: int = 0
+var last_local_election_result: String = ""
+var last_election_vote_share: float = 0.0
 var election_vote_share: float = 0.0
 var election_turnout: int = 0
 var rival_candidate_name: String = "Rohan Shetty"
@@ -159,6 +163,9 @@ func start_career(name: String, age: int, city: String, path: String, party_name
     local_election_completed = false
     local_election_year = year
     local_election_result = ""
+    last_local_election_year = 0
+    last_local_election_result = ""
+    last_election_vote_share = 0.0
     election_vote_share = 0.0
     election_turnout = 0
     has_elected_office = false
@@ -672,7 +679,7 @@ func advance_month() -> Array[String]:
         _process_office_work()
         if has_elected_office:
             generate_monthly_office_missions()
-        if month == LOCAL_ELECTION_MONTH and not local_election_completed:
+        if month == LOCAL_ELECTION_MONTH and year >= local_election_year:
             _resolve_local_election()
         if notifications.is_empty():
             notifications.append("You continued building your political career. Your next opportunities depend on experience, reputation, relationships, and party standing.")
@@ -681,7 +688,10 @@ func advance_month() -> Array[String]:
     return notifications.duplicate()
 
 func _resolve_local_election() -> void:
-    # Resolve the scheduled local election once. Party roles do not grant government authority.
+    # Local elections recur on a modeled five-year cycle. Actual schedules differ by local-body type and jurisdiction.
+    if local_election_completed:
+        return
+    last_local_election_year = local_election_year
     election_turnout = randi_range(5500, 7500)
     rival_candidate_name = FICTIONAL_AI_NAMES[posmod(local_election_year + month, FICTIONAL_AI_NAMES.size())]
 
@@ -731,10 +741,32 @@ func _resolve_local_election() -> void:
             "LOCAL ELECTION RESULT. The election took place and your party's AI organization handled its campaign. You were not an approved candidate and gained no elected office."
         )
 
+    last_local_election_result = local_election_result
+    last_election_vote_share = election_vote_share
     local_election_completed = true
     local_candidate_selected = false
     ticket_approved = false
     ticket_requested = false
+
+    # The elected mandate lasts until the next scheduled local election.
+    # A defeated incumbent or an incumbent who does not stand loses this office.
+    if local_election_result != "WON" and has_elected_office:
+        has_elected_office = false
+        elected_office_name = ""
+        if career_path == "join":
+            if experience >= LOCAL_LEADER_XP:
+                career_rank = "Local Party Leader"
+            elif experience >= ACTIVE_WORKER_XP:
+                career_rank = "Active Party Worker"
+            else:
+                career_rank = "Party volunteer"
+        else:
+            career_rank = "Party founder"
+        player_role = career_rank
+        notifications.append("Your local elected term has ended. You no longer hold government authority; you return to your party role.")
+
+    local_election_year += LOCAL_ELECTION_CYCLE_YEARS
+    local_election_completed = false
 
 func _increase_party_popularity(amount: float) -> void:
     if player_party_id == "" or not parties.has(player_party_id):
@@ -761,21 +793,25 @@ func party_summary() -> String:
     ]
 
 func election_summary() -> String:
-    if local_election_completed:
-        if local_election_result == "WON":
-            return "Local election: completed (%d)\nArea: %s\nResult: WON — %.1f%% of votes\nAI opponent: %s\nElected office: %s" % [
-                local_election_year, local_election_area(), election_vote_share, rival_candidate_name, elected_office_name
-            ]
-        if local_election_result == "LOST":
-            return "Local election: completed (%d)\nArea: %s\nResult: LOST — %.1f%% of votes\nAI opponent: %s\nNo elected office or government authority." % [
-                local_election_year, local_election_area(), election_vote_share, rival_candidate_name
-            ]
-        return "Local election: completed (%d)\nArea: %s\nYou were not an approved candidate." % [local_election_year, local_election_area()]
+    var lines: Array[String] = []
+    lines.append("Next local election: December %d" % local_election_year)
+    lines.append("Area: %s" % local_election_area())
     if local_candidate_selected:
-        return "Local election: December %d\nArea: %s\nYour party ticket is approved. Campaigning is open." % [local_election_year, local_election_area()]
-    if ticket_requested:
-        return "Local election: December %d\nArea: %s\nYour ticket application is under review." % [local_election_year, local_election_area()]
-    return "Local election: December %d\nApply for a party ticket when you meet the eligibility requirements."
+        lines.append("Your party ticket is approved. Campaigning is open for the scheduled election.")
+    elif ticket_requested:
+        lines.append("Your ticket application is under review.")
+    else:
+        lines.append("Apply for a party ticket when you meet the eligibility requirements.")
+    if last_local_election_year > 0:
+        if last_local_election_result == "WON":
+            lines.append("Previous result (%d): WON — %.1f%% of votes." % [last_local_election_year, last_election_vote_share])
+        elif last_local_election_result == "LOST":
+            lines.append("Previous result (%d): LOST — %.1f%% of votes." % [last_local_election_year, last_election_vote_share])
+        else:
+            lines.append("Previous result (%d): You were not an approved candidate." % last_local_election_year)
+    if has_elected_office:
+        lines.append("Current mandate: %s, through the next scheduled local election." % elected_office_name)
+    return "\n".join(lines)
 
 func _format_number(value: int) -> String:
     var negative := value < 0
@@ -796,7 +832,7 @@ const SAVE_PATH := "user://political_world_save.json"
 
 func save_game() -> bool:
     var save_data: Dictionary = {
-        "save_version": 6,
+        "save_version": 7,
         "year": year,
         "month": month,
         "character_name": character_name,
@@ -822,6 +858,9 @@ func save_game() -> bool:
         "local_election_completed": local_election_completed,
         "local_election_year": local_election_year,
         "local_election_result": local_election_result,
+        "last_local_election_year": last_local_election_year,
+        "last_local_election_result": last_local_election_result,
+        "last_election_vote_share": last_election_vote_share,
         "election_vote_share": election_vote_share,
         "election_turnout": election_turnout,
         "rival_candidate_name": rival_candidate_name,
@@ -884,6 +923,9 @@ func load_game() -> bool:
     local_election_completed = bool(parsed.get("local_election_completed", false))
     local_election_year = int(parsed.get("local_election_year", year))
     local_election_result = str(parsed.get("local_election_result", ""))
+    last_local_election_year = int(parsed.get("last_local_election_year", 0))
+    last_local_election_result = str(parsed.get("last_local_election_result", ""))
+    last_election_vote_share = float(parsed.get("last_election_vote_share", 0.0))
     election_vote_share = float(parsed.get("election_vote_share", 0.0))
     election_turnout = int(parsed.get("election_turnout", 0))
     rival_candidate_name = str(parsed.get("rival_candidate_name", "Rohan Shetty"))
@@ -911,6 +953,10 @@ func load_game() -> bool:
         # Migrate older saves from the prototype's nominal stipend to the new modeled household budget.
         monthly_income = 35000
         monthly_living_expenses = 22000
+    if loaded_save_version < 7 and local_election_year < year:
+        # Older prototypes only had a one-time 2026 election. Move that stale date
+        # to the next December so an existing career can enter the recurring cycle.
+        local_election_year = year + (1 if month >= LOCAL_ELECTION_MONTH else 0)
     for party_id in parties.keys():
         var party_record: Dictionary = parties[party_id]
         if not party_record.has("debt"):
