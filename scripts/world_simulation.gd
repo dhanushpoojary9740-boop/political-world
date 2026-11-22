@@ -20,6 +20,25 @@ const FICTIONAL_AI_NAMES: Array[String] = [
     "Sanjay Menon", "Divya Acharya", "Arjun Patil", "Pooja Kamath"
 ]
 
+
+const OFFICE_MISSION_CATALOG := [
+    {"department": "Public Works Department (PWD)", "title": "Inspect a damaged road stretch", "detail": "Document the location and condition of a damaged road, then submit a representation requesting technical inspection and repair prioritization.", "action": "proposal", "impact": "infrastructure"},
+    {"department": "Rural Development and Panchayat Raj Department", "title": "Follow up on a village drainage complaint", "detail": "Record the affected street and request the Gram Panchayat and engineering staff to inspect the drainage problem.", "action": "issue", "impact": "service"},
+    {"department": "Rural Water Supply and Sanitation Department", "title": "Review a drinking-water supply complaint", "detail": "Collect the affected locality and service details, then forward the complaint for a departmental response.", "action": "issue", "impact": "service"},
+    {"department": "Health and Family Welfare Department", "title": "Raise a primary health-centre service concern", "detail": "Document the reported service gap and request a response from the appropriate health authority.", "action": "issue", "impact": "service"},
+    {"department": "School Education and Literacy Department", "title": "Review a government-school facility request", "detail": "Meet local stakeholders, record the facility concern, and submit it for review by education authorities.", "action": "proposal", "impact": "service"},
+    {"department": "Urban Development Department", "title": "Follow up on streetlight maintenance", "detail": "Identify the affected public stretch and seek an update from the municipal body responsible for maintenance.", "action": "issue", "impact": "infrastructure"},
+    {"department": "Revenue Department", "title": "Help residents navigate a pending revenue-service request", "detail": "Collect case references with residents' consent and refer them to the appropriate revenue office. Do not promise a particular decision.", "action": "followup", "impact": "trust"},
+    {"department": "Women and Child Development Department", "title": "Review access to local welfare services", "detail": "Meet service users and request an official review of access, outreach, or facility concerns.", "action": "proposal", "impact": "service"},
+    {"department": "Food, Civil Supplies and Consumer Affairs Department", "title": "Document a public distribution service complaint", "detail": "Record the location and reported issue, then submit it for review by the responsible office.", "action": "issue", "impact": "trust"},
+    {"department": "Transport Department", "title": "Review a local public-transport access concern", "detail": "Gather residents' feedback and submit a representation requesting assessment of access, safety, or service frequency.", "action": "proposal", "impact": "infrastructure"},
+    {"department": "Karnataka State Pollution Control Board", "title": "Request inspection of a reported pollution concern", "detail": "Record the reported location and nature of the concern, then refer it for inspection by the competent authority.", "action": "issue", "impact": "service"},
+    {"department": "Municipal Administration", "title": "Conduct a public grievance meeting", "detail": "Hear residents' concerns, record the main issues, and send a categorized representation to the relevant local offices.", "action": "meeting", "impact": "trust"},
+    {"department": "District Administration", "title": "Review pending inter-department follow-ups", "detail": "Check the status of earlier representations and request written updates from the offices concerned.", "action": "followup", "impact": "trust"},
+    {"department": "Public Works Department (PWD)", "title": "Review a public-building maintenance request", "detail": "Document the reported maintenance need and request a technical assessment and appropriate administrative action.", "action": "proposal", "impact": "infrastructure"}
+]
+
+
 var year: int = 2026
 var month: int = 1
 var character_name: String = "New Politician"
@@ -53,6 +72,9 @@ var elected_office_name: String = ""
 var office_proposals: Array = []
 var constituency_issues: Array = []
 var office_action_counter: int = 0
+var office_missions: Array = []
+var office_mission_history: Array = []
+var office_mission_counter: int = 0
 var party_counter: int = 0
 var parties: Dictionary = {}
 var notifications: Array[String] = []
@@ -134,6 +156,9 @@ func start_career(name: String, age: int, city: String, path: String, party_name
     office_proposals.clear()
     constituency_issues.clear()
     office_action_counter = 0
+    office_missions.clear()
+    office_mission_history.clear()
+    office_mission_counter = 0
 
     if path == "join":
         player_party_id = "party_established"
@@ -262,6 +287,99 @@ func _run_local_campaign() -> void:
         _format_number(campaign_expenditure), _format_number(LOCAL_CAMPAIGN_MODEL_BUDGET)
     ])
 
+
+func generate_monthly_office_missions() -> void:
+    if not has_elected_office:
+        office_missions.clear()
+        return
+    office_missions.clear()
+    var situations: Array[String] = [
+        "repeat complaint", "seasonal service pressure", "safety concern", "accessibility concern",
+        "maintenance backlog", "inspection follow-up", "public feedback", "service coverage gap"
+    ]
+    var urgency_levels: Array[String] = ["routine", "time-sensitive", "priority", "monitoring"]
+    var stakeholder_groups: Array[String] = [
+        "nearby residents", "commuters and road users", "local service users",
+        "school families", "senior residents", "small businesses"
+    ]
+    var seen_signatures: Dictionary = {}
+    var attempts := 0
+    while office_missions.size() < 4 and attempts < 100:
+        attempts += 1
+        var source: Dictionary = OFFICE_MISSION_CATALOG[randi_range(0, OFFICE_MISSION_CATALOG.size() - 1)]
+        var situation := situations[randi_range(0, situations.size() - 1)]
+        var urgency := urgency_levels[randi_range(0, urgency_levels.size() - 1)]
+        var stakeholder := stakeholder_groups[randi_range(0, stakeholder_groups.size() - 1)]
+        var signature := "%s|%s|%s|%s" % [str(source["title"]), situation, urgency, stakeholder]
+        if seen_signatures.has(signature):
+            continue
+        seen_signatures[signature] = true
+        office_mission_counter += 1
+        office_missions.append({
+            "id": office_mission_counter,
+            "title": "%s — %s" % [str(source["title"]), situation.capitalize()],
+            "department": str(source["department"]),
+            "detail": "%s Priority: %s. Raised by: %s. Review the facts, record the representation, and request an official response; do not promise an outcome outside your authority." % [str(source["detail"]), urgency, stakeholder],
+            "action": str(source["action"]),
+            "impact": str(source["impact"]),
+            "location": "%s area, %s" % [home_city, home_state],
+            "status": "Available",
+            "generated_index": year * 12 + month,
+            "deadline": "%s %d" % [_month_name(month), year]
+        })
+
+func complete_office_mission(mission_id: int) -> Array[String]:
+    notifications.clear()
+    if not has_elected_office:
+        notifications.append("You need a current elected office to act on constituency responsibilities.")
+        return notifications.duplicate()
+    for i in range(office_missions.size()):
+        var mission: Dictionary = office_missions[i]
+        if int(mission.get("id", -1)) != mission_id:
+            continue
+        if str(mission.get("status", "")) != "Available":
+            notifications.append("This monthly responsibility has already been completed or submitted.")
+            return notifications.duplicate()
+        var action_type := str(mission.get("action", "issue"))
+        var title_text := str(mission.get("title", "Constituency matter"))
+        var department := str(mission.get("department", "District Administration"))
+        var location := str(mission.get("location", local_election_area()))
+        var current_index := year * 12 + month
+        if action_type == "proposal":
+            office_action_counter += 1
+            office_proposals.append({
+                "id": office_action_counter, "title": title_text, "department": department,
+                "location": location, "status": "Pending council review",
+                "submitted_index": current_index, "approved_index": -1
+            })
+            mission["status"] = "Submitted for review"
+            notifications.append("Representation submitted to %s regarding %s. Council and the competent department will review it; you cannot direct implementation." % [department, title_text])
+        elif action_type == "issue":
+            office_action_counter += 1
+            constituency_issues.append({
+                "id": office_action_counter, "topic": title_text, "department": department,
+                "location": location, "status": "Submitted to department", "submitted_index": current_index
+            })
+            mission["status"] = "Referred to department"
+            notifications.append("The matter was formally referred to %s for examination and response: %s." % [department, title_text])
+        elif action_type == "meeting":
+            reputation = minf(100.0, reputation + 0.35)
+            public_trust = minf(100.0, public_trust + 0.5)
+            mission["status"] = "Meeting held; follow-up recorded"
+            notifications.append("You held a public grievance meeting in %s. Residents' concerns were recorded and routed to the relevant offices." % location)
+        else:
+            public_trust = minf(100.0, public_trust + 0.25)
+            mission["status"] = "Follow-up completed"
+            notifications.append("You requested written updates from %s and recorded the follow-up for %s." % [department, title_text])
+        mission["completed_index"] = current_index
+        office_missions[i] = mission
+        office_mission_history.append(mission.duplicate(true))
+        if office_mission_history.size() > 100:
+            office_mission_history.pop_front()
+        return notifications.duplicate()
+    notifications.append("That monthly responsibility is no longer available.")
+    return notifications.duplicate()
+
 func submit_office_proposal() -> void:
     if not has_elected_office:
         notifications.append("Only a current elected representative can submit an official constituency proposal.")
@@ -271,7 +389,7 @@ func submit_office_proposal() -> void:
         if str(item.get("status", "")) in ["Pending council review", "Approved — awaiting AI implementation"]:
             open_count += 1
     if open_count >= 2:
-        notifications.append("You already have two proposals awaiting review or implementation. Wait for the council and AI departments to process them.")
+        notifications.append("You already have two proposals awaiting review or implementation. Wait for the council and competent departments to process them.")
         return
 
     office_action_counter += 1
@@ -298,10 +416,10 @@ func raise_constituency_issue() -> void:
         return
     var open_count := 0
     for item in constituency_issues:
-        if str(item.get("status", "")) == "Submitted to AI department":
+        if str(item.get("status", "")) in ["Submitted to AI department", "Submitted to department"]:
             open_count += 1
     if open_count >= 3:
-        notifications.append("Three constituency issues are already awaiting the AI department. Let the department process them before raising another.")
+        notifications.append("Three constituency issues are already awaiting a departmental response. Let the offices process them before raising another.")
         return
 
     office_action_counter += 1
@@ -316,10 +434,12 @@ func raise_constituency_issue() -> void:
     constituency_issues.append({
         "id": office_action_counter,
         "topic": topic,
-        "status": "Submitted to AI department",
+        "status": "Submitted to department",
+        "department": str(OFFICE_MISSION_CATALOG[randi_range(0, OFFICE_MISSION_CATALOG.size() - 1)]["department"]),
+        "location": local_election_area(),
         "submitted_index": year * 12 + month
     })
-    notifications.append("You formally raised a constituency issue: %s. The responsible AI department handles routine investigation and service delivery." % topic)
+    notifications.append("You formally raised a constituency issue: %s. The competent public office handles routine investigation and service delivery." % topic)
 
 func resubmit_returned_proposal() -> void:
     if not has_elected_office:
@@ -365,7 +485,7 @@ func _process_office_work() -> void:
                 proposal["status"] = "Returned for revision"
                 notifications.append("Council returned '%s' for revision. Improve its public support or revise and resubmit it." % str(proposal.get("title", "proposal")))
         elif status == "Approved — awaiting AI implementation" and current_index > int(proposal.get("approved_index", current_index)):
-            proposal["status"] = "Implemented by AI department"
+            proposal["status"] = "Implemented by %s" % str(proposal.get("department", "the competent department"))
             var project_title := str(proposal.get("title", "proposal"))
             _apply_project_impact(project_title)
             notifications.append("AI officials completed '%s'. Local infrastructure is now %.1f/100, service quality %.1f/100, and public trust %.1f/100." % [project_title, local_infrastructure, local_service_quality, public_trust])
@@ -373,12 +493,12 @@ func _process_office_work() -> void:
 
     for i in range(constituency_issues.size()):
         var issue: Dictionary = constituency_issues[i]
-        if str(issue.get("status", "")) == "Submitted to AI department" and current_index > int(issue.get("submitted_index", current_index)):
-            issue["status"] = "Resolved by AI department"
+        if str(issue.get("status", "")) in ["Submitted to AI department", "Submitted to department"] and current_index > int(issue.get("submitted_index", current_index)):
+            issue["status"] = "Response received from %s" % str(issue.get("department", "the responsible department"))
             local_service_quality = minf(100.0, local_service_quality + 0.6)
             public_trust = minf(100.0, public_trust + 0.4)
             _increase_party_popularity(0.03)
-            notifications.append("The AI department resolved '%s'. Service quality rose to %.1f/100 and public trust to %.1f/100." % [str(issue.get("topic", "issue")), local_service_quality, public_trust])
+            notifications.append("%s responded to '%s'. Service quality rose to %.1f/100 and public trust to %.1f/100." % [str(issue.get("department", "The responsible department")), str(issue.get("topic", "issue")), local_service_quality, public_trust])
         constituency_issues[i] = issue
 
 func _process_party_monthly() -> void:
@@ -473,14 +593,18 @@ func office_summary() -> String:
         return "No elected office. Party roles do not grant government authority."
     var pending_proposals := 0
     var active_issues := 0
+    var available_missions := 0
     for proposal in office_proposals:
         if str(proposal.get("status", "")) in ["Pending council review", "Approved — awaiting AI implementation"]:
             pending_proposals += 1
     for issue in constituency_issues:
-        if str(issue.get("status", "")) == "Submitted to AI department":
+        if str(issue.get("status", "")) in ["Submitted to AI department", "Submitted to department"]:
             active_issues += 1
-    return "Office: %s\nConstituency: %s, %s\nOpen proposals: %d / 2\nIssues awaiting AI department: %d / 3\nYour authority: represent constituents, submit proposals, and raise issues. Council review and routine administration remain with AI officials." % [
-        elected_office_name, home_city, home_state, pending_proposals, active_issues
+    for mission in office_missions:
+        if str(mission.get("status", "")) == "Available":
+            available_missions += 1
+    return "Office: %s\\nArea: %s, %s\\nOpen proposals: %d\\nIssues awaiting department response: %d\\nMonthly responsibilities available: %d\\nYour authority: represent residents, submit representations, and request action. Elected councils, civil servants, and competent departments retain their legal powers and operational duties." % [
+        elected_office_name, home_city, home_state, pending_proposals, active_issues, available_missions
     ]
 
 func office_activity_summary() -> String:
@@ -521,6 +645,8 @@ func advance_month() -> Array[String]:
             notifications.append("Birthday: you are now %d. Personal income and political activity continue on the monthly calendar." % character_age)
         _process_party_monthly()
         _process_office_work()
+        if has_elected_office:
+            generate_monthly_office_missions()
         if month == LOCAL_ELECTION_MONTH and not local_election_completed:
             _resolve_local_election()
         if notifications.is_empty():
@@ -554,6 +680,7 @@ func _resolve_local_election() -> void:
 
         if candidate_votes > rival_votes:
             has_elected_office = true
+            generate_monthly_office_missions()
             elected_office_name = "Local elected representative — %s" % home_city
             player_role = elected_office_name
             career_rank = elected_office_name
@@ -644,7 +771,7 @@ const SAVE_PATH := "user://political_world_save.json"
 
 func save_game() -> bool:
     var save_data: Dictionary = {
-        "save_version": 5,
+        "save_version": 6,
         "year": year,
         "month": month,
         "character_name": character_name,
@@ -678,6 +805,9 @@ func save_game() -> bool:
         "office_proposals": office_proposals,
         "constituency_issues": constituency_issues,
         "office_action_counter": office_action_counter,
+        "office_missions": office_missions,
+        "office_mission_history": office_mission_history,
+        "office_mission_counter": office_mission_counter,
         "party_counter": party_counter,
         "parties": parties,
         "local_infrastructure": local_infrastructure,
@@ -739,6 +869,11 @@ func load_game() -> bool:
     var saved_issues: Variant = parsed.get("constituency_issues", [])
     constituency_issues = saved_issues if typeof(saved_issues) == TYPE_ARRAY else []
     office_action_counter = int(parsed.get("office_action_counter", 0))
+    var saved_missions: Variant = parsed.get("office_missions", [])
+    office_missions = saved_missions if typeof(saved_missions) == TYPE_ARRAY else []
+    var saved_mission_history: Variant = parsed.get("office_mission_history", [])
+    office_mission_history = saved_mission_history if typeof(saved_mission_history) == TYPE_ARRAY else []
+    office_mission_counter = int(parsed.get("office_mission_counter", 0))
     party_counter = int(parsed.get("party_counter", 0))
     var saved_parties: Variant = parsed.get("parties", {})
     if typeof(saved_parties) == TYPE_DICTIONARY and not saved_parties.is_empty():
@@ -756,5 +891,7 @@ func load_game() -> bool:
         if not party_record.has("debt"):
             party_record["debt"] = 0
         parties[party_id] = party_record
+    if has_elected_office and office_missions.is_empty():
+        generate_monthly_office_missions()
     notifications = ["Saved career loaded."]
     return true

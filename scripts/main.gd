@@ -12,6 +12,7 @@ var conditions_label: Label
 var office_tab: VBoxContainer
 var office_label: Label
 var office_log_list: VBoxContainer
+var office_mission_list: VBoxContainer
 var report_label: Label
 var name_input: LineEdit
 var age_input: SpinBox
@@ -244,10 +245,13 @@ func _build_dashboard() -> void:
     var office_responsibilities := _new_tab(office_tabs, "Responsibilities")
     _add_section_title(office_responsibilities, "YOUR ELECTED OFFICE")
     office_label = _add_body(office_responsibilities, "")
-    _add_info_card(office_responsibilities, "Your mandate", "Represent residents, raise local concerns, and submit development proposals. Council review and department execution remain with responsible officials.", "AUTHORITY")
-    _add_office_action_card(office_responsibilities, "Constituency development", "Submit a project proposal for council review. If approved, the responsible department schedules and implements the work.", "SUBMIT PROPOSAL", func(): _run_activity("office_proposal"))
-    _add_office_action_card(office_responsibilities, "Public-service issue", "Report a service problem for the relevant AI department to investigate and resolve.", "RAISE ISSUE", func(): _run_activity("office_issue"))
-    _add_office_action_card(office_responsibilities, "Returned proposal", "Revise a proposal returned by the council and send it back for review.", "REVISE & RESUBMIT", func(): _run_activity("office_resubmit"))
+    _add_info_card(office_responsibilities, "Your mandate", "Represent residents, raise local concerns, and submit representations. Elected councils and competent departments retain their statutory powers and operational duties.", "REPRESENTATION • OVERSIGHT")
+    _add_section_title(office_responsibilities, "THIS MONTH'S RESPONSIBILITIES")
+    _add_body(office_responsibilities, "A small, refreshed set of local responsibilities appears each month. Choose which matters to pursue; submissions and follow-ups continue through the official process.")
+    office_mission_list = VBoxContainer.new()
+    office_mission_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    office_mission_list.add_theme_constant_override("separation", 10)
+    office_responsibilities.add_child(office_mission_list)
 
     var office_log := _new_tab(office_tabs, "Work log")
     _add_section_title(office_log, "OFFICE WORK LOG")
@@ -304,22 +308,104 @@ func _card_style() -> StyleBoxFlat:
     style.set_content_margin_all(14)
     return style
 
+func _refresh_office_missions() -> void:
+    if not is_instance_valid(office_mission_list):
+        return
+    _clear_children(office_mission_list)
+    if world.office_missions.is_empty():
+        _add_info_card(office_mission_list, "Monthly responsibilities are being prepared", "Your next set of local matters will appear after the next monthly transition.", "NO ACTIVE ASSIGNMENTS")
+        return
+    for mission_value in world.office_missions:
+        var mission: Dictionary = mission_value
+        var mission_id := int(mission.get("id", -1))
+        var title_text := str(mission.get("title", "Constituency matter"))
+        var department := str(mission.get("department", "District Administration"))
+        var location := str(mission.get("location", world.local_election_area()))
+        var detail := str(mission.get("detail", "Review this local matter and take the appropriate representative action."))
+        var status := str(mission.get("status", "Available"))
+        var card := PanelContainer.new()
+        card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        card.add_theme_stylebox_override("panel", _card_style())
+        office_mission_list.add_child(card)
+        var body := VBoxContainer.new()
+        body.add_theme_constant_override("separation", 6)
+        card.add_child(body)
+        var title := Label.new()
+        title.text = title_text
+        title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        title.add_theme_font_size_override("font_size", 16)
+        title.add_theme_color_override("font_color", Color("#f0d18a"))
+        body.add_child(title)
+        var department_label := Label.new()
+        department_label.text = department.to_upper()
+        department_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        department_label.add_theme_font_size_override("font_size", 11)
+        department_label.add_theme_color_override("font_color", Color("#9db5c8"))
+        body.add_child(department_label)
+        var place_label := Label.new()
+        place_label.text = "AREA  •  %s     |     DUE  •  %s" % [location, str(mission.get("deadline", world.date_label()))]
+        place_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        place_label.add_theme_font_size_override("font_size", 12)
+        place_label.add_theme_color_override("font_color", Color("#d4dce3"))
+        body.add_child(place_label)
+        var detail_label := _add_body(body, detail)
+        detail_label.add_theme_font_size_override("font_size", 14)
+        var status_label := Label.new()
+        status_label.text = "STATUS  •  %s" % status.to_upper()
+        status_label.add_theme_font_size_override("font_size", 11)
+        status_label.add_theme_color_override("font_color", Color("#e7bd62"))
+        body.add_child(status_label)
+        if status == "Available":
+            _add_button(body, "TAKE ACTION", _on_complete_office_mission.bind(mission_id))
+        else:
+            var completed_label := Label.new()
+            completed_label.text = "ACTION RECORDED"
+            completed_label.add_theme_font_size_override("font_size", 11)
+            completed_label.add_theme_color_override("font_color", Color("#8ab7a1"))
+            body.add_child(completed_label)
+
 func _refresh_office_log() -> void:
     if not is_instance_valid(office_log_list):
         return
     _clear_children(office_log_list)
     var entries: Array[Dictionary] = []
     for proposal in world.office_proposals:
-        entries.append({"kind": "PROPOSAL", "title": str(proposal.get("title", "Development proposal")), "status": str(proposal.get("status", "Pending"))})
+        entries.append({
+            "kind": "OFFICIAL REPRESENTATION",
+            "title": str(proposal.get("title", "Development proposal")),
+            "department": str(proposal.get("department", "Council review")),
+            "location": str(proposal.get("location", world.local_election_area())),
+            "status": str(proposal.get("status", "Pending"))
+        })
     for issue in world.constituency_issues:
-        entries.append({"kind": "PUBLIC SERVICE", "title": str(issue.get("topic", "Constituency issue")), "status": str(issue.get("status", "Submitted"))})
+        entries.append({
+            "kind": "PUBLIC SERVICE FOLLOW-UP",
+            "title": str(issue.get("topic", "Constituency issue")),
+            "department": str(issue.get("department", "District Administration")),
+            "location": str(issue.get("location", world.local_election_area())),
+            "status": str(issue.get("status", "Submitted"))
+        })
+    for mission in world.office_mission_history:
+        entries.append({
+            "kind": "MONTHLY RESPONSIBILITY",
+            "title": str(mission.get("title", "Office responsibility")),
+            "department": str(mission.get("department", "District Administration")),
+            "location": str(mission.get("location", world.local_election_area())),
+            "status": str(mission.get("status", "Completed"))
+        })
     if entries.is_empty():
-        _add_info_card(office_log_list, "No matters filed yet", "Your submissions and their progress will appear here.", "READY")
+        _add_info_card(office_log_list, "No matters filed yet", "Submitted representations, service referrals, and official responses will be recorded here.", "READY")
         return
-    var start_index := maxi(0, entries.size() - 12)
+    var start_index := maxi(0, entries.size() - 16)
     for i in range(start_index, entries.size()):
         var entry: Dictionary = entries[i]
-        _add_info_card(office_log_list, str(entry["title"]), str(entry["kind"]), str(entry["status"]).to_upper())
+        var detail_text := "%s\\n%s" % [str(entry["department"]), str(entry["location"])]
+        _add_info_card(office_log_list, str(entry["title"]), detail_text, "%s  •  %s" % [str(entry["kind"]), str(entry["status"]).to_upper()])
+
+func _on_complete_office_mission(mission_id: int) -> void:
+    report_label.text = "\\n".join(PackedStringArray(world.complete_office_mission(mission_id)))
+    _refresh()
+    _save_progress()
 
 func _new_tab(parent: TabContainer, tab_title: String) -> VBoxContainer:
     var page := VBoxContainer.new()
@@ -435,6 +521,7 @@ func _refresh() -> void:
             main_tab_buttons[4].visible = world.has_elected_office
         if world.has_elected_office:
             office_label.text = world.office_summary()
+            _refresh_office_missions()
             _refresh_office_log()
 
 func _notification(what: int) -> void:
