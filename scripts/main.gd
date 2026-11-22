@@ -106,26 +106,52 @@ func _build_ui() -> void:
     header.add_theme_constant_override("separation", 5)
     root.add_child(header)
 
+    var brand_row := HBoxContainer.new()
+    brand_row.name = "BrandHeader"
+    brand_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    brand_row.add_theme_constant_override("separation", 12)
+    header.add_child(brand_row)
+
+    var brand_mark := PanelContainer.new()
+    brand_mark.custom_minimum_size = Vector2(44, 44)
+    brand_mark.add_theme_stylebox_override("panel", _brand_mark_style())
+    brand_row.add_child(brand_mark)
+    var mark_label := Label.new()
+    mark_label.text = "P"
+    mark_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    mark_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    mark_label.add_theme_font_size_override("font_size", 25)
+    mark_label.add_theme_color_override("font_color", Color("#e8c879"))
+    brand_mark.add_child(mark_label)
+
+    var brand_copy := VBoxContainer.new()
+    brand_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    brand_copy.add_theme_constant_override("separation", 1)
+    brand_row.add_child(brand_copy)
     var title := Label.new()
     title.text = "POLITICAL WORLD"
-    title.add_theme_font_size_override("font_size", 27)
-    title.add_theme_color_override("font_color", Color("#f0d18a"))
-    header.add_child(title)
-
-    date_label = Label.new()
-    date_label.add_theme_font_size_override("font_size", 16)
-    date_label.add_theme_color_override("font_color", Color("#ffffff"))
-    header.add_child(date_label)
+    title.add_theme_font_size_override("font_size", 22)
+    title.add_theme_color_override("font_color", Color("#f2e6c9"))
+    brand_copy.add_child(title)
 
     var subtitle := Label.new()
-    subtitle.text = "YOUR POLITICAL JOURNEY  •  INDIA"
-    subtitle.add_theme_font_size_override("font_size", 12)
-    subtitle.add_theme_color_override("font_color", Color("#b5c6cb"))
-    header.add_child(subtitle)
+    subtitle.text = "YOUR POLITICAL JOURNEY  /  INDIA"
+    subtitle.add_theme_font_size_override("font_size", 10)
+    subtitle.add_theme_color_override("font_color", Color("#91a4b7"))
+    brand_copy.add_child(subtitle)
+
+    var date_capsule := PanelContainer.new()
+    date_capsule.add_theme_stylebox_override("panel", _date_capsule_style())
+    brand_row.add_child(date_capsule)
+    date_label = Label.new()
+    date_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    date_label.add_theme_font_size_override("font_size", 12)
+    date_label.add_theme_color_override("font_color", Color("#e6d6ad"))
+    date_capsule.add_child(date_label)
 
     var header_rule := ColorRect.new()
-    header_rule.color = Color("#c8a45b")
-    header_rule.custom_minimum_size = Vector2(0, 2)
+    header_rule.color = Color("#b89a5a")
+    header_rule.custom_minimum_size = Vector2(0, 1)
     header_rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     header.add_child(header_rule)
 
@@ -176,7 +202,7 @@ func _configure_touch_scroll_passthrough(node: Node) -> void:
 func _build_bottom_navigation(parent: VBoxContainer) -> void:
     main_tab_bar = ScrollContainer.new()
     main_tab_bar.name = "BottomNavigation"
-    main_tab_bar.custom_minimum_size = Vector2(0, 82)
+    main_tab_bar.custom_minimum_size = Vector2(0, 76)
     main_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     main_tab_bar.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
     main_tab_bar.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -186,7 +212,7 @@ func _build_bottom_navigation(parent: VBoxContainer) -> void:
     parent.add_child(main_tab_bar)
 
     var nav_row := HBoxContainer.new()
-    nav_row.add_theme_constant_override("separation", 8)
+    nav_row.add_theme_constant_override("separation", 6)
     nav_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     main_tab_bar.add_child(nav_row)
 
@@ -194,8 +220,8 @@ func _build_bottom_navigation(parent: VBoxContainer) -> void:
     for index in range(tab_names.size()):
         var tab_button := Button.new()
         tab_button.text = tab_names[index]
-        tab_button.custom_minimum_size = Vector2(118, 60)
-        tab_button.add_theme_font_size_override("font_size", 14)
+        tab_button.custom_minimum_size = Vector2(104, 56)
+        tab_button.add_theme_font_size_override("font_size", 13)
         tab_button.add_theme_stylebox_override("normal", _button_style("#19333d"))
         tab_button.add_theme_stylebox_override("hover", _button_style("#294b53"))
         tab_button.add_theme_stylebox_override("pressed", _button_style("#d0ad62"))
@@ -385,15 +411,37 @@ func _add_office_action_card(parent: VBoxContainer, title_text: String, detail_t
 
 func _card_style() -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
-    style.bg_color = Color("#122832")
-    style.border_color = Color("#405960")
+    style.bg_color = Color("#111e2d")
+    style.border_color = Color("#2c3c52")
     style.set_border_width_all(1)
-    style.border_width_left = 3
-    style.set_corner_radius_all(16)
-    style.set_content_margin_all(18)
-    style.shadow_color = Color(0, 0, 0, 0.30)
-    style.shadow_size = 6
-    style.shadow_offset = Vector2(0, 3)
+    style.border_width_left = 2
+    style.border_color = Color("#b89a5a")
+    style.set_corner_radius_all(15)
+    style.set_content_margin_all(17)
+    style.shadow_color = Color(0, 0, 0, 0.22)
+    style.shadow_size = 5
+    style.shadow_offset = Vector2(0, 2)
+    return style
+
+func _brand_mark_style() -> StyleBoxFlat:
+    var style := StyleBoxFlat.new()
+    style.bg_color = Color("#101d2b")
+    style.border_color = Color("#b89a5a")
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(12)
+    style.set_content_margin_all(2)
+    return style
+
+func _date_capsule_style() -> StyleBoxFlat:
+    var style := StyleBoxFlat.new()
+    style.bg_color = Color("#111e2d")
+    style.border_color = Color("#34465b")
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(10)
+    style.content_margin_left = 11
+    style.content_margin_right = 11
+    style.content_margin_top = 9
+    style.content_margin_bottom = 9
     return style
 
 func _refresh_office_missions() -> void:
@@ -522,16 +570,21 @@ func _add_section_title(parent: VBoxContainer, text_value: String) -> void:
     var title_row := HBoxContainer.new()
     title_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     title_row.add_theme_constant_override("separation", 10)
+    title_row.custom_minimum_size = Vector2(0, 28)
+
     var accent := ColorRect.new()
-    accent.color = Color("#c8a45b")
-    accent.custom_minimum_size = Vector2(4, 25)
+    accent.color = Color("#d0ad62")
+    accent.custom_minimum_size = Vector2(3, 18)
+    accent.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     title_row.add_child(accent)
+
     var label := Label.new()
-    label.text = text_value
+    label.text = text_value.to_upper()
     label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    label.add_theme_font_size_override("font_size", 18)
-    label.add_theme_color_override("font_color", Color("#f0d18a"))
+    label.add_theme_font_size_override("font_size", 13)
+    label.add_theme_color_override("font_color", Color("#c6d0dc"))
     title_row.add_child(label)
+
     parent.add_child(title_row)
 
 func _add_body(parent: VBoxContainer, text_value: String) -> Label:
@@ -539,17 +592,20 @@ func _add_body(parent: VBoxContainer, text_value: String) -> Label:
     label.text = text_value
     label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    label.add_theme_color_override("font_color", Color("#d4dce3"))
+    label.add_theme_font_size_override("font_size", 15)
+    label.add_theme_color_override("font_color", Color("#c7d1dd"))
     parent.add_child(label)
     return label
 
 func _add_button(parent: VBoxContainer, text_value: String, callback: Callable) -> void:
     var button := Button.new()
     button.text = text_value
-    button.custom_minimum_size = Vector2(0, 52)
+    button.custom_minimum_size = Vector2(0, 50)
     button.add_theme_color_override("font_color", Color("#14232a"))
     button.add_theme_stylebox_override("normal", _button_style("#d5b36b"))
-    button.add_theme_stylebox_override("hover", _button_style("#ecd08e"))
+    button.add_theme_stylebox_override("hover", _button_style("#e8c879"))
+    button.add_theme_stylebox_override("pressed", _button_style("#b18b45"))
+    button.add_theme_color_override("font_hover_color", Color("#101820"))
     button.pressed.connect(callback)
     parent.add_child(button)
 
