@@ -32,6 +32,11 @@ var ticket_approved: bool = false
 var local_candidate_selected: bool = false
 var local_election_completed: bool = false
 var local_election_year: int = 2026
+var local_election_result: String = ""
+var election_vote_share: float = 0.0
+var election_turnout: int = 0
+var has_elected_office: bool = false
+var elected_office_name: String = ""
 var party_counter: int = 0
 var parties: Dictionary = {}
 var notifications: Array[String] = []
@@ -92,6 +97,11 @@ func start_career(name: String, age: int, city: String, path: String, party_name
     local_candidate_selected = false
     local_election_completed = false
     local_election_year = year
+    local_election_result = ""
+    election_vote_share = 0.0
+    election_turnout = 0
+    has_elected_office = false
+    elected_office_name = ""
 
     if path == "join":
         player_party_id = "party_established"
@@ -227,19 +237,52 @@ func advance_month() -> Array[String]:
     return notifications.duplicate()
 
 func _resolve_local_election() -> void:
+    # Resolve the scheduled local election once. Party roles do not grant government authority.
+    election_turnout = randi_range(5500, 7500)
+
     if local_candidate_selected and ticket_approved:
         var party: Dictionary = parties[player_party_id]
         var party_popularity: float = float(party["popularity"])
-        var player_score := party_popularity + reputation * 0.8 + campaign_effort * 1.5 + randf_range(-8.0, 8.0)
-        var rival_score := 24.0 + randf_range(-8.0, 8.0)
-        if player_score >= rival_score:
-            player_role = "Local elected representative"
-            career_rank = "Local elected representative"
-            notifications.append("Election result: you won your local election and became an elected representative.")
+        var membership_strength: float = log(maxf(1.0, float(party["members"]))) / log(10.0)
+        var candidate_score: float = (
+            party_popularity * 1.2
+            + reputation * 1.8
+            + campaign_effort * 2.0
+            + local_leader_relationship * 0.35
+            + membership_strength * 2.4
+        )
+        var rival_score: float = 24.0 + randf_range(-5.0, 5.0)
+        election_vote_share = clampf(50.0 + (candidate_score - rival_score) * 1.6, 5.0, 95.0)
+        var candidate_votes: int = roundi(float(election_turnout) * election_vote_share / 100.0)
+        var rival_votes: int = election_turnout - candidate_votes
+
+        if candidate_votes > rival_votes:
+            has_elected_office = true
+            elected_office_name = "Local elected representative"
+            player_role = elected_office_name
+            career_rank = elected_office_name
+            local_election_result = "WON"
+            notifications.append(
+                "ELECTION RESULT — WON. You received %s of %s votes (%.1f%%) with %d%% turnout. You are now a Local elected representative. Your authority is limited to this elected office." % [
+                    _format_number(candidate_votes), _format_number(election_turnout),
+                    election_vote_share, roundi(float(election_turnout) / 100.0)
+                ]
+            )
         else:
-            notifications.append("Election result: you lost the local election. Your party retains its membership and organization, but you did not win an elected office.")
+            local_election_result = "LOST"
+            notifications.append(
+                "ELECTION RESULT — LOST. You received %s of %s votes (%.1f%%); the rival candidate won with %s votes. You remain in your party role and receive no elected-office authority." % [
+                    _format_number(candidate_votes), _format_number(election_turnout),
+                    election_vote_share, _format_number(rival_votes)
+                ]
+            )
     else:
-        notifications.append("Local election completed. Your party's AI organization handled its campaign, but you were not a candidate.")
+        local_election_result = "NOT A CANDIDATE"
+        election_vote_share = 0.0
+        notifications.append(
+            "LOCAL ELECTION RESULT. The election took place and your party's AI organization handled its campaign. You were not an approved candidate and gained no elected office."
+        )
+
     local_election_completed = true
     local_candidate_selected = false
     ticket_approved = false
@@ -271,12 +314,20 @@ func party_summary() -> String:
 
 func election_summary() -> String:
     if local_election_completed:
-        return "Local election: completed\nYou are not currently registered as a candidate."
+        if local_election_result == "WON":
+            return "Local election: completed (%d)\\nResult: WON — %.1f%% of votes\\nElected office: %s" % [
+                local_election_year, election_vote_share, elected_office_name
+            ]
+        if local_election_result == "LOST":
+            return "Local election: completed (%d)\\nResult: LOST — %.1f%% of votes\\nNo elected office or government authority." % [
+                local_election_year, election_vote_share
+            ]
+        return "Local election: completed (%d)\\nYou were not an approved candidate." % local_election_year
     if local_candidate_selected:
-        return "Local election: December %d\nYour party ticket is approved. Campaigning is open." % year
+        return "Local election: December %d\\nYour party ticket is approved. Campaigning is open." % local_election_year
     if ticket_requested:
-        return "Local election: December %d\nYour ticket application is under review." % year
-    return "Local election: December %d\nApply for a party ticket when you meet the eligibility requirements." % year
+        return "Local election: December %d\\nYour ticket application is under review." % local_election_year
+    return "Local election: December %d\\nApply for a party ticket when you meet the eligibility requirements."
 
 func _format_number(value: int) -> String:
     return str(value)
@@ -286,7 +337,7 @@ const SAVE_PATH := "user://political_world_save.json"
 
 func save_game() -> bool:
     var save_data: Dictionary = {
-        "save_version": 1,
+        "save_version": 2,
         "year": year,
         "month": month,
         "character_name": character_name,
@@ -308,6 +359,11 @@ func save_game() -> bool:
         "local_candidate_selected": local_candidate_selected,
         "local_election_completed": local_election_completed,
         "local_election_year": local_election_year,
+        "local_election_result": local_election_result,
+        "election_vote_share": election_vote_share,
+        "election_turnout": election_turnout,
+        "has_elected_office": has_elected_office,
+        "elected_office_name": elected_office_name,
         "party_counter": party_counter,
         "parties": parties
     }
@@ -350,6 +406,11 @@ func load_game() -> bool:
     local_candidate_selected = bool(parsed.get("local_candidate_selected", false))
     local_election_completed = bool(parsed.get("local_election_completed", false))
     local_election_year = int(parsed.get("local_election_year", year))
+    local_election_result = str(parsed.get("local_election_result", ""))
+    election_vote_share = float(parsed.get("election_vote_share", 0.0))
+    election_turnout = int(parsed.get("election_turnout", 0))
+    has_elected_office = bool(parsed.get("has_elected_office", false))
+    elected_office_name = str(parsed.get("elected_office_name", ""))
     party_counter = int(parsed.get("party_counter", 0))
     var saved_parties: Variant = parsed.get("parties", {})
     if typeof(saved_parties) == TYPE_DICTIONARY and not saved_parties.is_empty():
