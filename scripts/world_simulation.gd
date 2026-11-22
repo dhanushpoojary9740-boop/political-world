@@ -280,3 +280,79 @@ func election_summary() -> String:
 
 func _format_number(value: int) -> String:
     return str(value)
+
+
+const SAVE_PATH := "user://political_world_save.json"
+
+func save_game() -> bool:
+    var save_data: Dictionary = {
+        "save_version": 1,
+        "year": year,
+        "month": month,
+        "character_name": character_name,
+        "character_age": character_age,
+        "home_state": home_state,
+        "home_city": home_city,
+        "career_started": career_started,
+        "career_path": career_path,
+        "player_party_id": player_party_id,
+        "player_role": player_role,
+        "career_rank": career_rank,
+        "personal_funds": personal_funds,
+        "experience": experience,
+        "reputation": reputation,
+        "local_leader_relationship": local_leader_relationship,
+        "campaign_effort": campaign_effort,
+        "ticket_requested": ticket_requested,
+        "ticket_approved": ticket_approved,
+        "local_candidate_selected": local_candidate_selected,
+        "local_election_completed": local_election_completed,
+        "local_election_year": local_election_year,
+        "party_counter": party_counter,
+        "parties": parties
+    }
+    var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+    if file == null:
+        return false
+    file.store_string(JSON.stringify(save_data))
+    file.close()
+    return true
+
+func load_game() -> bool:
+    if not FileAccess.file_exists(SAVE_PATH):
+        return false
+    var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+    if file == null:
+        return false
+    var parsed: Variant = JSON.parse_string(file.get_as_text())
+    file.close()
+    if typeof(parsed) != TYPE_DICTIONARY or not bool(parsed.get("career_started", false)):
+        return false
+
+    year = int(parsed.get("year", 2026))
+    month = clampi(int(parsed.get("month", 1)), 1, 12)
+    character_name = str(parsed.get("character_name", "New Politician"))
+    character_age = int(parsed.get("character_age", 25))
+    home_state = str(parsed.get("home_state", "Karnataka"))
+    home_city = str(parsed.get("home_city", "Brahmavara"))
+    career_started = bool(parsed.get("career_started", false))
+    career_path = str(parsed.get("career_path", ""))
+    player_party_id = str(parsed.get("player_party_id", ""))
+    player_role = str(parsed.get("player_role", "Ordinary citizen"))
+    career_rank = str(parsed.get("career_rank", "Ordinary citizen"))
+    personal_funds = int(parsed.get("personal_funds", 50000))
+    experience = int(parsed.get("experience", 0))
+    reputation = float(parsed.get("reputation", 0.0))
+    local_leader_relationship = float(parsed.get("local_leader_relationship", 0.0))
+    campaign_effort = float(parsed.get("campaign_effort", 0.0))
+    ticket_requested = bool(parsed.get("ticket_requested", false))
+    ticket_approved = bool(parsed.get("ticket_approved", false))
+    local_candidate_selected = bool(parsed.get("local_candidate_selected", false))
+    local_election_completed = bool(parsed.get("local_election_completed", false))
+    local_election_year = int(parsed.get("local_election_year", year))
+    party_counter = int(parsed.get("party_counter", 0))
+    var saved_parties: Variant = parsed.get("parties", {})
+    if typeof(saved_parties) == TYPE_DICTIONARY and not saved_parties.is_empty():
+        parties = saved_parties
+    notifications = ["Saved career loaded."]
+    return true

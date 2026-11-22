@@ -18,7 +18,12 @@ var dashboard_box: VBoxContainer
 func _ready() -> void:
     world = WorldSimulationScript.new()
     world.initialize()
+    var has_saved_game: bool = world.load_game()
     _build_ui()
+    if has_saved_game and world.career_started:
+        setup_box.visible = false
+        dashboard_box.visible = true
+        report_label.text = "Saved career restored automatically."
     _refresh()
 
 func _build_ui() -> void:
@@ -101,6 +106,7 @@ func _build_dashboard() -> void:
     _add_button(dashboard_box, "Apply for local election ticket", func(): _run_activity("request_ticket"))
     _add_button(dashboard_box, "Campaign as approved candidate", func(): _run_activity("campaign"))
     _add_button(dashboard_box, "ADVANCE ONE MONTH", _on_advance_month)
+    _add_button(dashboard_box, "SAVE GAME NOW", _on_save_game)
     _add_section_title(dashboard_box, "WORLD REPORT")
     report_label = _add_body(dashboard_box, "Your political journey is ready to begin.")
 
@@ -187,3 +193,9 @@ func _refresh() -> void:
         career_label.text = world.career_summary()
         party_label.text = world.party_summary()
         election_label.text = world.election_summary()
+
+func _notification(what: int) -> void:
+    if not is_instance_valid(world) or not world.career_started:
+        return
+    if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_CLOSE_REQUEST:
+        world.save_game()
