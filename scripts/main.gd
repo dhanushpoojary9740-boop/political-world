@@ -36,6 +36,12 @@ var party_member_area: VBoxContainer
 var duty_member_picker: OptionButton
 var duty_role_picker: OptionButton
 var party_member_status: Label
+var constitution_model_picker: OptionButton
+var constitution_term_picker: OptionButton
+var constitution_status: Label
+var internal_candidate_picker: OptionButton
+var internal_election_status: Label
+var party_office_picker: OptionButton
 var election_detail_labels: Dictionary = {}
 var karnataka_command_status: Label
 var karnataka_budget: SpinBox
@@ -359,6 +365,41 @@ func _build_dashboard() -> void:
 		duty_role_picker.add_item(duty)
 	party_duties.add_child(duty_role_picker)
 	_add_button(party_duties, "ASSIGN SELECTED DUTY", _on_assign_party_duty)
+
+	var party_constitution := _new_tab(party_tabs, "Constitution")
+	_add_section_title(party_constitution, "PARTY CONSTITUTION")
+	_add_body(party_constitution, "Set internal leadership rules and appoint office bearers. These choices never grant elected government authority.")
+	_add_body(party_constitution, "LEADERSHIP MODEL")
+	constitution_model_picker = OptionButton.new()
+	constitution_model_picker.custom_minimum_size = Vector2(0, 44)
+	for model in ["Founder-led", "Member election", "Delegate election"]:
+		constitution_model_picker.add_item(model)
+	party_constitution.add_child(constitution_model_picker)
+	_add_body(party_constitution, "PRESIDENTIAL TERM")
+	constitution_term_picker = OptionButton.new()
+	constitution_term_picker.custom_minimum_size = Vector2(0, 44)
+	for term in ["2 years", "3 years", "4 years", "5 years", "6 years"]:
+		constitution_term_picker.add_item(term)
+	constitution_term_picker.select(3)
+	party_constitution.add_child(constitution_term_picker)
+	_add_button(party_constitution, "ADOPT / UPDATE CONSTITUTION", _on_adopt_constitution)
+	constitution_status = _add_body(party_constitution, "No constitution adopted yet.")
+	_add_section_title(party_constitution, "INTERNAL PRESIDENTIAL ELECTION")
+	_add_body(party_constitution, "Use Member election or Delegate election for a contested vote. Nominate at least two candidates; current nominations and the most recent completed election are shown separately.")
+	internal_candidate_picker = OptionButton.new()
+	internal_candidate_picker.custom_minimum_size = Vector2(0, 44)
+	party_constitution.add_child(internal_candidate_picker)
+	_add_button(party_constitution, "NOMINATE SELECTED CANDIDATE", _on_nominate_internal_candidate)
+	_add_button(party_constitution, "HOLD PRESIDENTIAL ELECTION", _on_hold_internal_election)
+	internal_election_status = _add_body(party_constitution, "No internal election held yet.")
+	_add_section_title(party_constitution, "APPOINT PARTY OFFICE BEARERS")
+	party_office_picker = OptionButton.new()
+	party_office_picker.custom_minimum_size = Vector2(0, 44)
+	for office in ["General Secretary", "Treasurer", "Vice President", "Organization Secretary"]:
+		party_office_picker.add_item(office)
+	party_constitution.add_child(party_office_picker)
+	_add_button(party_constitution, "APPOINT SELECTED MEMBER", _on_appoint_party_office)
+	_add_body(party_constitution, "Select a member in Party > Duties before appointing. Office-bearers are internal party officials; the player remains subject to their actual elected mandate.")
 
 	var party_finances := _new_tab(party_tabs, "Finances")
 	_add_section_title(party_finances, "PERSONAL, PARTY & CAMPAIGN ACCOUNTS")
@@ -1081,12 +1122,72 @@ func _on_assign_party_duty() -> void:
 	_refresh()
 	_save_progress()
 
+func _on_adopt_constitution() -> void:
+	var model := constitution_model_picker.get_item_text(constitution_model_picker.selected)
+	var term := constitution_term_picker.selected + 2
+	constitution_status.text = world.adopt_party_constitution(model, term)
+	_refresh()
+	_save_progress()
+
+func _on_appoint_party_office() -> void:
+	if duty_member_picker.item_count == 0:
+		constitution_status.text = "Add or recruit a member, then select them under Party > Duties."
+		return
+	var member_id := str(duty_member_picker.get_item_metadata(duty_member_picker.selected))
+	var office := party_office_picker.get_item_text(party_office_picker.selected)
+	constitution_status.text = world.appoint_party_office_bearer(member_id, office)
+	_refresh()
+	_save_progress()
+
+func _on_nominate_internal_candidate() -> void:
+	if not is_instance_valid(internal_candidate_picker) or internal_candidate_picker.item_count == 0:
+		internal_election_status.text = "Add party members or choose yourself as a candidate."
+		return
+	var candidate_id := str(internal_candidate_picker.get_item_metadata(internal_candidate_picker.selected))
+	internal_election_status.text = world.nominate_party_president_candidate(candidate_id)
+	_refresh_party_members()
+	_save_progress()
+
+func _on_hold_internal_election() -> void:
+	internal_election_status.text = world.hold_party_presidential_election()
+	_refresh()
+	_save_progress()
+
 func _refresh_party_members() -> void:
 	if not is_instance_valid(party_member_area) or not is_instance_valid(duty_member_picker):
 		return
 	for child in party_member_area.get_children():
 		child.queue_free()
 	duty_member_picker.clear()
+	if is_instance_valid(internal_candidate_picker):
+		internal_candidate_picker.clear()
+		internal_candidate_picker.add_item("You (founder)")
+		internal_candidate_picker.set_item_metadata(0, "founder")
+	var constitution := world.party_constitution()
+	# Keep the controls synchronized with the saved constitution; never show a default
+	# dropdown value that differs from the active party rules.
+	if not constitution.is_empty():
+		var saved_model := str(constitution.get("leadership_model", "Founder-led"))
+		for model_index in range(constitution_model_picker.item_count):
+			if constitution_model_picker.get_item_text(model_index) == saved_model:
+				constitution_model_picker.select(model_index)
+				break
+		var saved_term := int(constitution.get("president_term_years", 5))
+		var term_index := clampi(saved_term - 2, 0, constitution_term_picker.item_count - 1)
+		constitution_term_picker.select(term_index)
+	if is_instance_valid(constitution_status) and not constitution.is_empty():
+		var bearers: Dictionary = constitution.get("office_bearers", {})
+		var lines: Array[String] = []
+		if bool(constitution.get("constitution_adopted", false)):
+			lines.append("Adopted: %s leadership • %d-year term" % [str(constitution.get("leadership_model", "Founder-led")), int(constitution.get("president_term_years", 5))])
+		else:
+			lines.append("No constitution adopted yet.")
+		for office in bearers.keys():
+			var bearer: Dictionary = bearers[office]
+			lines.append("%s: %s" % [str(office), str(bearer.get("name", "Unassigned"))])
+		constitution_status.text = "\n".join(lines)
+		if is_instance_valid(internal_election_status):
+			internal_election_status.text = world.party_internal_election_summary()
 	var roster: Array = world.get_player_party_members()
 	for member_variant in roster:
 		var member: Dictionary = member_variant
@@ -1105,6 +1206,9 @@ func _refresh_party_members() -> void:
 		party_member_area.add_child(row)
 		duty_member_picker.add_item(str(member.get("name", "Member")))
 		duty_member_picker.set_item_metadata(duty_member_picker.item_count - 1, str(member.get("id", "")))
+		if is_instance_valid(internal_candidate_picker):
+			internal_candidate_picker.add_item(str(member.get("name", "Member")))
+			internal_candidate_picker.set_item_metadata(internal_candidate_picker.item_count - 1, str(member.get("id", "")))
 	if roster.is_empty():
 		var empty_label := Label.new()
 		empty_label.text = "No named roster records yet. Add a member above."

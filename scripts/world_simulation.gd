@@ -694,6 +694,221 @@ func _month_name(value: int) -> String:
 	var names := ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 	return names[clampi(value - 1, 0, 11)]
 
+func party_constitution() -> Dictionary:
+	if player_party_id == "" or not parties.has(player_party_id):
+		return {}
+	var party: Dictionary = parties[player_party_id]
+	return {
+		"leadership_model": str(party.get("leadership_model", "Founder-led")),
+		"president_term_years": int(party.get("president_term_years", 5)),
+		"constitution_adopted": bool(party.get("constitution_adopted", false)),
+		"office_bearers": party.get("office_bearers", {})
+	}
+
+func adopt_party_constitution(leadership_model: String, term_years: int) -> String:
+	if player_party_id == "" or not parties.has(player_party_id):
+		return "You must belong to a party first."
+	if leadership_model not in ["Founder-led", "Member election", "Delegate election"]:
+		return "Choose a valid leadership model."
+	var party: Dictionary = parties[player_party_id]
+	party["leadership_model"] = leadership_model
+	party["president_term_years"] = clampi(term_years, 2, 6)
+	party["constitution_adopted"] = true
+	if not party.has("office_bearers"):
+		party["office_bearers"] = {}
+	parties[player_party_id] = party
+	return "Party constitution adopted: %s leadership, %d-year president term. These rules govern internal party leadership only." % [leadership_model, clampi(term_years, 2, 6)]
+
+
+func nominate_party_president_candidate(candidate_id: String) -> String:
+	if player_party_id == "" or not parties.has(player_party_id):
+		return "You must belong to a party first."
+	var party: Dictionary = parties[player_party_id]
+	if not bool(party.get("constitution_adopted", false)):
+		return "Adopt a party constitution before opening leadership nominations."
+	if str(party.get("leadership_model", "Founder-led")) == "Founder-led":
+		return "Founder-led rules do not hold contested presidential elections. Update the constitution to Member election or Delegate election."
+	var candidate_name := ""
+	if candidate_id == "founder":
+		candidate_name = character_name
+	else:
+		for member_variant in party.get("member_records", []):
+			var member: Dictionary = member_variant
+			if str(member.get("id", "")) == candidate_id:
+				candidate_name = str(member.get("name", ""))
+				break
+	if candidate_name.is_empty():
+		return "Choose yourself or a current party member as the candidate."
+	var election: Dictionary = party.get("internal_election", {"nominations": [], "history": []})
+	var nominations: Array = election.get("nominations", [])
+	for item in nominations:
+		if str(item.get("candidate_id", "")) == candidate_id:
+			return "That candidate is already nominated."
+	nominations.append({"candidate_id": candidate_id, "candidate_name": candidate_name})
+	election["nominations"] = nominations
+	party["internal_election"] = election
+	parties[player_party_id] = party
+	return "%s is nominated for party president. Nominate at least one other candidate before holding the election." % candidate_name
+
+func hold_party_presidential_election() -> String:
+	if player_party_id == "" or not parties.has(player_party_id):
+		return "You must belong to a party first."
+	var party: Dictionary = parties[player_party_id]
+	if not bool(party.get("constitution_adopted", false)):
+		return "Adopt a party constitution before holding a leadership election."
+	if str(party.get("leadership_model", "Founder-led")) == "Founder-led":
+		return "Your constitution uses Founder-led rules. Change it to Member election or Delegate election to hold a contested election."
+	var election: Dictionary = party.get("internal_election", {"nominations": [], "history": []})
+	var nominations: Array = election.get("nominations", [])
+	if nominations.size() < 2:
+		return "At least two nominated candidates are required for a contested leadership election."
+
+	var records: Array = party.get("member_records", [])
+	var candidates: Array[Dictionary] = []
+	for nomination_variant in nominations:
+		var nomination: Dictionary = nomination_variant
+		var candidate_id := str(nomination.get("candidate_id", ""))
+		var valid := candidate_id == "founder"
+		if not valid:
+			for member_variant in records:
+				var member: Dictionary = member_variant
+				if str(member.get("id", "")) == candidate_id:
+					valid = true
+					break
+		if valid:
+			candidates.append(nomination)
+	if candidates.size() < 2:
+		return "At least two valid nominated candidates are required. Review nominations and try again."
+
+	# Every eligible named party member receives one ballot. The founder is included
+	# as a voter, and each roster member votes once. Preferences are deterministic
+	# so the same saved party state produces the same count.
+	var voters: Array[Dictionary] = [{"id": "founder", "name": character_name, "duty": "Founder"}]
+	for member_variant in records:
+		var member: Dictionary = member_variant
+		var voter_id := str(member.get("id", ""))
+		if voter_id != "" and voter_id != "founder":
+			voters.append({"id": voter_id, "name": str(member.get("name", "Member")), "duty": str(member.get("duty", "Volunteer"))})
+
+	var vote_totals: Dictionary = {}
+	var ballots: Array[Dictionary] = []
+	for candidate in candidates:
+		vote_totals[str(candidate.get("candidate_id", ""))] = 0
+
+	for voter in voters:
+		var voter_id := str(voter.get("id", ""))
+		var voter_duty := str(voter.get("duty", "Volunteer"))
+		var best_candidate: Dictionary = candidates[0]
+		var best_score := -999999
+		for candidate_index in range(candidates.size()):
+			var candidate: Dictionary = candidates[candidate_index]
+			var candidate_id := str(candidate.get("candidate_id", ""))
+			var score := 10
+			if candidate_id == voter_id:
+				score += 8
+			if candidate_id == str(party.get("president_member_id", "")):
+				score += 3
+			if candidate_id == "founder":
+				score += int(reputation / 10.0)
+			else:
+				for member_variant in records:
+					var candidate_member: Dictionary = member_variant
+					if str(candidate_member.get("id", "")) == candidate_id:
+						var candidate_duty := str(candidate_member.get("duty", "Volunteer"))
+						if candidate_duty == voter_duty:
+							score += 3
+						if candidate_duty in ["Treasurer", "District Secretary", "State Organizer"]:
+							score += 2
+						break
+			# Stable tie-breaker avoids random or rerollable results.
+			score += maxi(0, candidates.size() - candidate_index)
+			if score > best_score:
+				best_score = score
+				best_candidate = candidate
+		var chosen_id := str(best_candidate.get("candidate_id", ""))
+		vote_totals[chosen_id] = int(vote_totals.get(chosen_id, 0)) + 1
+		ballots.append({"voter_id": voter_id, "voter_name": str(voter.get("name", "Member")), "candidate_id": chosen_id, "candidate_name": str(best_candidate.get("candidate_name", "Candidate"))})
+
+	var winner: Dictionary = {}
+	var winning_votes := -1
+	var results: Array[Dictionary] = []
+	for candidate in candidates:
+		var candidate_id := str(candidate.get("candidate_id", ""))
+		var votes := int(vote_totals.get(candidate_id, 0))
+		results.append({"candidate_id": candidate_id, "candidate_name": str(candidate.get("candidate_name", "Candidate")), "votes": votes, "vote_percent": (float(votes) * 100.0 / float(maxi(1, voters.size())))})
+		if votes > winning_votes:
+			winning_votes = votes
+			winner = candidate
+	if winner.is_empty():
+		return "The election could not be completed because no valid candidates remain."
+
+	var previous_president := str(party.get("president_name", "Not assigned"))
+	party["president_name"] = str(winner.get("candidate_name", ""))
+	party["president_member_id"] = str(winner.get("candidate_id", ""))
+	party["president_elected_year"] = year
+	party["president_elected_month"] = month
+	var history: Array = election.get("history", [])
+	history.append({
+		"year": year,
+		"month": month,
+		"previous_president": previous_president,
+		"winner": str(winner.get("candidate_name", "")),
+		"results": results,
+		"ballots": ballots,
+		"eligible_voters": voters.size(),
+		"votes_cast": ballots.size(),
+		"turnout_percent": 100.0
+	})
+	election["history"] = history
+	election["nominations"] = []
+	party["internal_election"] = election
+	parties[player_party_id] = party
+	if str(winner.get("candidate_id", "")) == "founder":
+		player_role = "Party President"
+		career_rank = "Party President"
+	else:
+		player_role = "Party Member"
+		career_rank = "Party Member"
+	var result_lines: Array[String] = ["Party presidential election held in %s %d." % [_month_name(month), year]]
+	result_lines.append("Ballots cast: %d of %d eligible voters." % [ballots.size(), voters.size()])
+	for result in results:
+		result_lines.append("%s: %d votes (%.1f%%)" % [str(result.get("candidate_name", "")), int(result.get("votes", 0)), float(result.get("vote_percent", 0.0))])
+	result_lines.append("Winner: %s. Party leadership does not grant government office." % str(winner.get("candidate_name", "")))
+	return "\n".join(result_lines)
+
+func party_internal_election_summary() -> String:
+	if player_party_id == "" or not parties.has(player_party_id):
+		return "No party available."
+	var party: Dictionary = parties[player_party_id]
+	var election: Dictionary = party.get("internal_election", {})
+	var lines: Array[String] = ["Current president: %s" % str(party.get("president_name", "Not assigned")), "Current nominations:"]
+	var nominations: Array = election.get("nominations", [])
+	lines.append("Nominated candidates: %d / 2 minimum" % nominations.size())
+	for candidate in nominations:
+		lines.append("• %s" % str(candidate.get("candidate_name", "Candidate")))
+	var history: Array = election.get("history", [])
+	if not history.is_empty():
+		var last: Dictionary = history[history.size() - 1]
+		lines.append("Most recent completed election: %s %d — winner %s" % [_month_name(int(last.get("month", 1))), int(last.get("year", year)), str(last.get("winner", ""))])
+	return "\n".join(lines)
+
+func appoint_party_office_bearer(member_id: String, office: String) -> String:
+	if player_party_id == "" or not parties.has(player_party_id):
+		return "You must belong to a party first."
+	if office not in ["General Secretary", "Treasurer", "Vice President", "Organization Secretary"]:
+		return "Choose a valid internal party office."
+	var party: Dictionary = parties[player_party_id]
+	var records: Array = party.get("member_records", [])
+	for member_variant in records:
+		var member: Dictionary = member_variant
+		if str(member.get("id", "")) == member_id:
+			var bearers: Dictionary = party.get("office_bearers", {})
+			bearers[office] = {"member_id": member_id, "name": str(member.get("name", "Member"))}
+			party["office_bearers"] = bearers
+			parties[player_party_id] = party
+			return "%s appointed as %s. This is an internal party role, not a government office." % [str(member.get("name", "Member")), office]
+	return "Selected party member was not found."
+
 func start_career(name: String, age: int, city: String, path: String, party_name: String = "", founder_contribution: int = 10000) -> bool:
 	var clean_name := name.strip_edges()
 	var clean_city := city.strip_edges()
@@ -1508,7 +1723,7 @@ const SAVE_PATH := "user://political_world_save.json"
 
 func save_game() -> bool:
 	var save_data: Dictionary = {
-		"save_version": 10,
+		"save_version": 11,
 		"year": year,
 		"month": month,
 		"character_name": character_name,
