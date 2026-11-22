@@ -1,44 +1,31 @@
-# Political World — recurring local election foundation
+# Political World — Election Engine milestone
 
-This is a changed-files update for the current Godot project. It keeps the existing UI and save format compatible.
+Changed files only. Apply to the current project after the World Simulation Foundation update.
 
 ## Replace in this order
+1. `political-world-main/scripts/world_simulation.gd`
 
-1. `scripts/world_simulation.gd`
-
-Keep `project.godot`, `main.tscn`, `scripts/main.gd`, and all other files unchanged.
+Keep `project.godot`, `main.tscn`, `scripts/main.gd`, your signing key, and save data unchanged.
 
 ## Included
+- Adds three-month AI campaign windows for modeled state assembly and Lok Sabha elections.
+- AI parties spend only from their own party funds, within a monthly campaign cap.
+- Resolves election results into modeled party vote shares and seat totals using a largest-remainder allocation.
+- Stores election history, seat results, campaign phase, turnout estimate, and last result in the existing world-state save.
+- Feeds election performance back into state-level support or national party popularity.
+- Uses recognized state assembly seat counts and the 543-seat Lok Sabha model.
+- Migrates older world-state data by adding missing election fields and calendars.
 
-- Local elections now recur on a simplified five-year prototype cycle instead of being a one-time event.
-- The election screen shows the next scheduled local election and the previous result.
-- A local elected mandate continues until the next modeled local election. An incumbent who loses or does not stand loses that office and returns to their party role; they do not retain government authority.
-- New election-history fields are saved, and older saves are migrated to a usable upcoming local-election date.
+## Scope
+This milestone is an election simulation layer, not a full official election model. Constituency-level first-past-the-post contests, nomination screens, player-controlled Karnataka high-command decisions, coalition formation, and office appointment are not included yet. Election schedules remain explicitly modeled game dates rather than official dates. Election results do not directly grant the player an office.
 
-## Scope and realism note
+## Test
+1. Replace the file listed above.
+2. Run the project in Godot and advance month by month toward the next listed state or Lok Sabha election.
+3. Confirm the campaign phase appears in Overview, party funds decrease during campaign months, and a result is recorded in the monthly report.
+4. Save and reload after a campaign month and after an election result.
 
-The five-year interval is a game-model placeholder, not a claim that every Indian local-body election follows one uniform term. Municipal, panchayat, state, national, and international systems need separate schedules, jurisdictions, eligibility rules, and authority boundaries. Those are planned as separate layers rather than being represented by one generic election.
-
-## Test on device
-
-1. Replace the file above and run the project.
-2. Load your existing save. Confirm the Elections page shows the next local election.
-3. Advance to December of the scheduled year. Confirm the result is recorded and the next election date moves five years ahead.
-4. If you hold local office, test a later election where you do not stand or lose; confirm the Office tab and government authority are removed.
-5. Save, close, and reopen to check that the next election date and previous result persist.
-
-I inspected the source and packaged this update, but I have not run it in the Godot runtime.
+The patch was prepared from the supplied source ZIP. It has not been run in Godot; verify in the editor/device before treating it as runtime-tested.
 
 ## Git commit message
-
-`feat: add recurring local election terms and incumbent transitions`
-
-## Political World shared simulation foundation (Milestone 1)
-
-- Adds a persistent shared world-state layer with separate regional party support for India's 28 states.
-- Advances modeled state assembly and Lok Sabha election calendars through the same monthly simulation step.
-- Runs rival-party monthly recruitment and operating accounts, regional support drift, and periodic modest member movement between parties.
-- If the player does not stand in the recurring local election, the player's party now runs an AI campaign, spends from party funds, and records an AI party win/loss without granting the player an elected office.
-- Saves the world-state data in save version 9 and initializes it when loading older saves.
-
-These are initial game-model rules, not real election dates, statutory campaign limits, or official forecasts. The world-state foundation is being expanded in later milestones; this update does not yet implement player-controlled Karnataka state/national campaign decisions, full seat-by-seat election results, government formation, or global diplomacy.
+`feat: add AI campaign phases and modeled election seat results`
