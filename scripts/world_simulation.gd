@@ -49,6 +49,10 @@ var office_action_counter: int = 0
 var party_counter: int = 0
 var parties: Dictionary = {}
 var notifications: Array[String] = []
+var local_infrastructure: float = 50.0
+var local_service_quality: float = 50.0
+var public_trust: float = 50.0
+var monthly_income: int = 1500
 
 func initialize() -> void:
     parties = {
@@ -329,15 +333,54 @@ func _process_office_work() -> void:
                 notifications.append("Council returned '%s' for revision. Improve its public support or revise and resubmit it." % str(proposal.get("title", "proposal")))
         elif status == "Approved — awaiting AI implementation" and current_index > int(proposal.get("approved_index", current_index)):
             proposal["status"] = "Implemented by AI department"
-            notifications.append("AI officials completed the approved proposal: %s." % str(proposal.get("title", "proposal")))
+            var project_title := str(proposal.get("title", "proposal"))
+            _apply_project_impact(project_title)
+            notifications.append("AI officials completed '%s'. Local infrastructure is now %.1f/100, service quality %.1f/100, and public trust %.1f/100." % [project_title, local_infrastructure, local_service_quality, public_trust])
         office_proposals[i] = proposal
 
     for i in range(constituency_issues.size()):
         var issue: Dictionary = constituency_issues[i]
         if str(issue.get("status", "")) == "Submitted to AI department" and current_index > int(issue.get("submitted_index", current_index)):
             issue["status"] = "Resolved by AI department"
-            notifications.append("The responsible AI department resolved the constituency issue: %s." % str(issue.get("topic", "issue")))
+            local_service_quality = minf(100.0, local_service_quality + 0.6)
+            public_trust = minf(100.0, public_trust + 0.4)
+            _increase_party_popularity(0.03)
+            notifications.append("The AI department resolved '%s'. Service quality rose to %.1f/100 and public trust to %.1f/100." % [str(issue.get("topic", "issue")), local_service_quality, public_trust])
         constituency_issues[i] = issue
+
+func _process_party_monthly() -> void:
+    if player_party_id == "" or not parties.has(player_party_id):
+        return
+    var party: Dictionary = parties[player_party_id]
+    var members := int(party.get("members", 0))
+    var popularity := float(party.get("popularity", 0.0))
+    var funds := int(party.get("funds", 0))
+
+    # AI party staff handle routine operations; the player does not manually run every unit.
+    var monthly_recruits := clampi(roundi(popularity / 15.0), 0, 8)
+    var donations := 100 + members * 2
+    var operating_cost := 250 + members
+    members += monthly_recruits
+    funds = maxi(0, funds + donations - operating_cost)
+    if monthly_recruits > 0:
+        popularity = minf(100.0, popularity + float(monthly_recruits) * 0.015)
+    party["members"] = members
+    party["funds"] = funds
+    party["popularity"] = popularity
+    parties[player_party_id] = party
+    notifications.append("AI party operations: +%d members; donations ₹%d; operating costs ₹%d. Party funds: ₹%d." % [monthly_recruits, donations, operating_cost, funds])
+
+func _apply_project_impact(project_title: String) -> void:
+    if project_title.contains("road") or project_title.contains("drainage") or project_title.contains("lighting"):
+        local_infrastructure = minf(100.0, local_infrastructure + 3.0)
+    else:
+        local_service_quality = minf(100.0, local_service_quality + 3.0)
+    public_trust = minf(100.0, public_trust + 2.0)
+    reputation = minf(100.0, reputation + 0.5)
+    _increase_party_popularity(0.25)
+
+func local_conditions_summary() -> String:
+    return "Local infrastructure: %.1f/100\nPublic-service quality: %.1f/100\nPublic trust: %.1f/100" % [local_infrastructure, local_service_quality, public_trust]
 
 func office_summary() -> String:
     if not has_elected_office:
@@ -384,14 +427,14 @@ func advance_month() -> Array[String]:
         year += 1
 
     if career_started:
-        personal_funds += 1500
-        if month % 3 == 0:
-            var party: Dictionary = parties[player_party_id]
-            party["members"] = int(party["members"]) + 2
-            party["funds"] = int(party["funds"]) + 2000
-            party["popularity"] = minf(100.0, float(party["popularity"]) + 0.1)
-            parties[player_party_id] = party
-            notifications.append("AI local unit completed routine administration and recruited two members.")
+        # Monthly transition order is deliberate: household finances, party operations,
+        # then council/department work. Every downstream system reads the updated state.
+        personal_funds += monthly_income
+        notifications.append("Monthly personal income: +₹%d. Personal funds: ₹%d." % [monthly_income, personal_funds])
+        if month == 1:
+            character_age += 1
+            notifications.append("Birthday: you are now %d. Personal income and political activity continue on the monthly calendar." % character_age)
+        _process_party_monthly()
         _process_office_work()
         if month == LOCAL_ELECTION_MONTH and not local_election_completed:
             _resolve_local_election()
@@ -416,6 +459,8 @@ func _resolve_local_election() -> void:
             + campaign_effort * 2.0
             + local_leader_relationship * 0.35
             + membership_strength * 2.4
+            + (public_trust - 50.0) * 0.15
+            + (local_service_quality - 50.0) * 0.1
         )
         var rival_score: float = 24.0 + randf_range(-5.0, 5.0)
         election_vote_share = clampf(50.0 + (candidate_score - rival_score) * 1.6, 5.0, 95.0)
@@ -503,7 +548,7 @@ const SAVE_PATH := "user://political_world_save.json"
 
 func save_game() -> bool:
     var save_data: Dictionary = {
-        "save_version": 3,
+        "save_version": 4,
         "year": year,
         "month": month,
         "character_name": character_name,
@@ -535,7 +580,11 @@ func save_game() -> bool:
         "constituency_issues": constituency_issues,
         "office_action_counter": office_action_counter,
         "party_counter": party_counter,
-        "parties": parties
+        "parties": parties,
+        "local_infrastructure": local_infrastructure,
+        "local_service_quality": local_service_quality,
+        "public_trust": public_trust,
+        "monthly_income": monthly_income
     }
     var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
     if file == null:
@@ -591,5 +640,9 @@ func load_game() -> bool:
     var saved_parties: Variant = parsed.get("parties", {})
     if typeof(saved_parties) == TYPE_DICTIONARY and not saved_parties.is_empty():
         parties = saved_parties
+    local_infrastructure = float(parsed.get("local_infrastructure", 50.0))
+    local_service_quality = float(parsed.get("local_service_quality", 50.0))
+    public_trust = float(parsed.get("public_trust", 50.0))
+    monthly_income = int(parsed.get("monthly_income", 1500))
     notifications = ["Saved career loaded."]
     return true

@@ -7,6 +7,7 @@ var date_label: Label
 var career_label: Label
 var party_label: Label
 var election_label: Label
+var conditions_label: Label
 var office_tab: VBoxContainer
 var office_label: Label
 var office_log_label: Label
@@ -177,6 +178,8 @@ func _build_dashboard() -> void:
     party_label = _add_body(overview, "")
     _add_section_title(overview, "ELECTION SNAPSHOT")
     election_label = _add_body(overview, "")
+    _add_section_title(overview, "LOCAL CONDITIONS")
+    conditions_label = _add_body(overview, "")
     _add_button(overview, "ADVANCE ONE MONTH", _on_advance_month)
     _add_button(overview, "SAVE GAME NOW", _on_save_game)
     _add_section_title(overview, "WORLD REPORT")
@@ -347,6 +350,7 @@ func _refresh() -> void:
         career_label.text = world.career_summary()
         party_label.text = world.party_summary()
         election_label.text = world.election_summary()
+        conditions_label.text = world.local_conditions_summary()
         office_tab.visible = world.has_elected_office
         if main_tab_buttons.size() > 4:
             main_tab_buttons[4].visible = world.has_elected_office
