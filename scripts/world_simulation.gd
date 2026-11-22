@@ -15,6 +15,23 @@ const LOCAL_LEADER_RELATIONSHIP := 8.0
 const TICKET_XP := 12
 const TICKET_REPUTATION := 3.0
 const TICKET_RELATIONSHIP := 5.0
+const STATE_ASSEMBLY_SEATS: Dictionary = {
+    "Andhra Pradesh": 175, "Arunachal Pradesh": 60, "Assam": 126,
+    "Bihar": 243, "Chhattisgarh": 90, "Goa": 40, "Gujarat": 182,
+    "Haryana": 90, "Himachal Pradesh": 68, "Jharkhand": 81,
+    "Karnataka": 224, "Kerala": 140, "Madhya Pradesh": 230,
+    "Maharashtra": 288, "Manipur": 60, "Meghalaya": 60,
+    "Mizoram": 40, "Nagaland": 60, "Odisha": 147, "Punjab": 117,
+    "Rajasthan": 200, "Sikkim": 32, "Tamil Nadu": 234,
+    "Telangana": 119, "Tripura": 60, "Uttar Pradesh": 403,
+    "Uttarakhand": 70, "West Bengal": 294
+}
+const MODELED_CAMPAIGN_MONTHS := 3
+const MODELED_CAMPAIGN_BASE_COST := 25000
+const MODELED_CAMPAIGN_MEMBER_COST := 2
+const MODELED_CAMPAIGN_MAX_MONTHLY_COST := 200000
+const MODELED_ELECTION_CYCLE_YEARS := 5
+
 const FICTIONAL_AI_NAMES: Array[String] = [
     "Aarav Kulkarni", "Meera Hegde", "Rohan Shetty", "Ananya Rao",
     "Vikram Nayak", "Kavya Bhat", "Nikhil Gowda", "Ishita Desai",
@@ -150,7 +167,7 @@ func _initialize_world_state() -> void:
             "state": state_names[i],
             "next_year": 2028 + (i % 4),
             "month": 5 if i % 2 == 0 else 11,
-            "assembly_seats": 60 + (i % 7) * 30,
+            "assembly_seats": int(STATE_ASSEMBLY_SEATS.get(state_names[i], 60)),
             "last_result": "Not yet held",
             "last_winner": ""
         })
@@ -160,6 +177,8 @@ func _initialize_world_state() -> void:
         "state_elections": state_elections,
         "national_election": {"next_year": 2029, "month": 5, "seats": 543, "last_result": "Not yet held", "last_winner": ""},
         "global_relations": {},
+        "seat_results": {},
+        "election_history": [],
         "last_monthly_report": "The political world is ready. Regional party organization and election calendars are initialized."
     }
 
@@ -182,9 +201,62 @@ func _ensure_party_world_presence(party_id: String) -> void:
     regional[party_id] = support_by_state
     world_state["regional_support"] = regional
 
+func _ensure_election_schema() -> void:
+    if not world_state.has("state_elections") or not (world_state.get("state_elections") is Array):
+        var state_names: Array[String] = [
+            "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+            "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+            "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+            "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan",
+            "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+            "Uttarakhand", "West Bengal"
+        ]
+        var elections: Array[Dictionary] = []
+        for i in range(state_names.size()):
+            elections.append({
+                "state": state_names[i],
+                "next_year": 2028 + (i % 4),
+                "month": 5 if i % 2 == 0 else 11,
+                "assembly_seats": int(STATE_ASSEMBLY_SEATS.get(state_names[i], 60)),
+                "last_result": "Not yet held",
+                "last_winner": "",
+                "phase": "Scheduled",
+                "campaign_spend_by_party": {}
+            })
+        world_state["state_elections"] = elections
+    else:
+        var saved_elections: Array = world_state.get("state_elections", [])
+        for i in range(saved_elections.size()):
+            var election: Dictionary = saved_elections[i]
+            var state_name := str(election.get("state", ""))
+            election["assembly_seats"] = int(election.get("assembly_seats", STATE_ASSEMBLY_SEATS.get(state_name, 60)))
+            election["phase"] = str(election.get("phase", "Scheduled"))
+            election["campaign_spend_by_party"] = election.get("campaign_spend_by_party", {})
+            saved_elections[i] = election
+        world_state["state_elections"] = saved_elections
+
+    if not world_state.has("national_election") or not (world_state.get("national_election") is Dictionary):
+        world_state["national_election"] = {
+            "next_year": 2029, "month": 5, "seats": 543,
+            "last_result": "Not yet held", "last_winner": "",
+            "phase": "Scheduled", "campaign_spend_by_party": {}
+        }
+    else:
+        var national: Dictionary = world_state.get("national_election", {})
+        national["phase"] = str(national.get("phase", "Scheduled"))
+        national["campaign_spend_by_party"] = national.get("campaign_spend_by_party", {})
+        world_state["national_election"] = national
+
+    if not world_state.has("election_history"):
+        world_state["election_history"] = []
+    if not world_state.has("seat_results"):
+        world_state["seat_results"] = {}
+
+
 func _process_world_politics_monthly() -> void:
     if world_state.is_empty():
         _initialize_world_state()
+    _ensure_election_schema()
     for party_id_variant in parties.keys():
         var party_id := str(party_id_variant)
         _ensure_party_world_presence(party_id)
@@ -265,60 +337,221 @@ func _process_world_politics_monthly() -> void:
         regional[party_id] = support_by_state
     world_state["regional_support"] = regional
 
-    # Resolve scheduled state assembly elections automatically. The player's
-    # organization contests Karnataka under AI management unless a later player
-    # control action is added; other states are always AI-administered.
+    # Each election has a three-month AI campaign window. Results are resolved
+    # only on the scheduled month, and seat outcomes are stored in shared world state.
     var state_elections: Array = world_state.get("state_elections", [])
     for i in range(state_elections.size()):
         var election: Dictionary = state_elections[i]
-        if int(election.get("next_year", 0)) != year or int(election.get("month", 0)) != month:
-            continue
         var state_name := str(election.get("state", ""))
-        var winner_id := ""
-        var winner_score := -1.0
-        var state_support: Dictionary = {}
-        for party_id_variant in parties.keys():
-            var party_id := str(party_id_variant)
-            var party: Dictionary = parties[party_id]
-            var party_support: Dictionary = regional.get(party_id, {})
-            var support := float(party_support.get(state_name, float(party.get("popularity", 0.0))))
-            var score := support + log(maxf(1.0, float(party.get("members", 1))) / 100.0) * 1.5
-            state_support[party_id] = score
-            if score > winner_score:
-                winner_score = score
-                winner_id = party_id
-        var winner_party: Dictionary = parties.get(winner_id, {})
-        var winner_name := str(winner_party.get("name", "AI party"))
-        election["last_result"] = "%s won the modeled assembly election" % winner_name
-        election["last_winner"] = winner_id
-        election["next_year"] = int(election.get("next_year", year)) + 5
-        state_elections[i] = election
-        report_lines.append("AI election: %s assembly — %s won; next modeled election %s." % [state_name, winner_name, str(election["next_year"])])
+        var seats := int(election.get("assembly_seats", STATE_ASSEMBLY_SEATS.get(state_name, 60)))
+        state_elections[i] = _advance_modeled_election(
+            election, "%s Assembly" % state_name, seats, state_name, regional, report_lines
+        )
     world_state["state_elections"] = state_elections
 
     var national: Dictionary = world_state.get("national_election", {})
-    if int(national.get("next_year", 0)) == year and int(national.get("month", 0)) == month:
-        var national_winner := ""
-        var national_score := -1.0
-        for party_id_variant in parties.keys():
-            var party_id := str(party_id_variant)
-            var party: Dictionary = parties[party_id]
-            var score := float(party.get("popularity", 0.0)) + log(maxf(1.0, float(party.get("members", 1))) / 100.0)
-            if score > national_score:
-                national_score = score
-                national_winner = party_id
-        var national_winner_party: Dictionary = parties.get(national_winner, {})
-        var national_name := str(national_winner_party.get("name", "AI party"))
-        national["last_result"] = "%s formed the modeled largest Lok Sabha bloc" % national_name
-        national["last_winner"] = national_winner
-        national["next_year"] = int(national.get("next_year", year)) + 5
-        report_lines.append("AI national election: %s became the largest modeled Lok Sabha bloc; next modeled election %s." % [national_name, str(national["next_year"])])
+    national = _advance_modeled_election(
+        national, "Lok Sabha", int(national.get("seats", 543)), "", regional, report_lines
+    )
     world_state["national_election"] = national
 
     if report_lines.is_empty():
         report_lines.append("AI party organizations reviewed regional support and continued routine activity across India.")
     world_state["last_monthly_report"] = "\n".join(report_lines)
     notifications.append_array(report_lines)
+
+func _months_until_election(election: Dictionary) -> int:
+    var election_year := int(election.get("next_year", year))
+    var election_month := clampi(int(election.get("month", 1)), 1, 12)
+    return (election_year - year) * 12 + (election_month - month)
+
+
+func _advance_modeled_election(
+    election: Dictionary,
+    jurisdiction: String,
+    seat_count: int,
+    state_name: String,
+    regional: Dictionary,
+    report_lines: Array[String]
+) -> Dictionary:
+    if election.is_empty():
+        return election
+
+    var months_remaining := _months_until_election(election)
+    if months_remaining > MODELED_CAMPAIGN_MONTHS:
+        election["phase"] = "Scheduled"
+        return election
+
+    if months_remaining > 0:
+        if str(election.get("phase", "")) != "Campaigning":
+            report_lines.append("Campaign period opened for %s. AI party organizations are campaigning automatically." % jurisdiction)
+        election["phase"] = "Campaigning"
+        election["months_to_poll"] = months_remaining
+        _run_modeled_ai_campaigns(election)
+        return election
+
+    var result := _resolve_modeled_election(election, jurisdiction, seat_count, state_name, regional)
+    election["last_result"] = str(result.get("summary", "Election completed"))
+    election["last_winner"] = str(result.get("winner_id", ""))
+    election["last_seats"] = result.get("seats_by_party", {})
+    election["last_vote_shares"] = result.get("vote_shares", {})
+    election["last_year"] = year
+    election["last_turnout_percent"] = float(result.get("turnout_percent", 0.0))
+    election["phase"] = "Completed"
+    election["last_campaign_spending"] = election.get("campaign_spend_by_party", {})
+
+    var history: Array = world_state.get("election_history", [])
+    history.append({
+        "jurisdiction": jurisdiction,
+        "year": year,
+        "month": month,
+        "summary": election["last_result"],
+        "winner_id": election["last_winner"],
+        "seats_by_party": election["last_seats"],
+        "vote_shares": election["last_vote_shares"]
+    })
+    while history.size() > 40:
+        history.pop_front()
+    world_state["election_history"] = history
+
+    var seat_results: Dictionary = world_state.get("seat_results", {})
+    seat_results[jurisdiction] = election["last_seats"]
+    world_state["seat_results"] = seat_results
+
+    # Election performance feeds back into support without guaranteeing future wins.
+    var vote_shares: Dictionary = result.get("vote_shares", {})
+    if not state_name.is_empty():
+        var regional_support: Dictionary = world_state.get("regional_support", {})
+        for party_id_variant in parties.keys():
+            var state_party_id := str(party_id_variant)
+            var party_regions: Dictionary = regional_support.get(state_party_id, {})
+            var current_support := float(party_regions.get(state_name, 0.0))
+            var state_vote_share := float(vote_shares.get(state_party_id, 0.0))
+            party_regions[state_name] = clampf(current_support + (state_vote_share - 20.0) * 0.025, 0.5, 95.0)
+            regional_support[state_party_id] = party_regions
+        world_state["regional_support"] = regional_support
+    else:
+        for party_id_variant in parties.keys():
+            var national_party_id := str(party_id_variant)
+            var party: Dictionary = parties.get(national_party_id, {})
+            var national_vote_share := float(vote_shares.get(national_party_id, 0.0))
+            party["popularity"] = clampf(float(party.get("popularity", 0.0)) + (national_vote_share - 20.0) * 0.025, 0.5, 100.0)
+            parties[national_party_id] = party
+
+    report_lines.append("%s result: %s. Turnout %.1f%%. Campaigns were AI-managed; this result does not directly appoint the player to office." % [
+        jurisdiction, election["last_result"], election["last_turnout_percent"]
+    ])
+
+    var next_year := int(election.get("next_year", year))
+    while next_year <= year:
+        next_year += MODELED_ELECTION_CYCLE_YEARS
+    election["next_year"] = next_year
+    election["phase"] = "Scheduled"
+    election["months_to_poll"] = -1
+    election["campaign_spend_by_party"] = {}
+    election["campaign_months_run"] = 0
+    return election
+
+
+func _run_modeled_ai_campaigns(election: Dictionary) -> void:
+    var spending_by_party: Dictionary = election.get("campaign_spend_by_party", {})
+    for party_id_variant in parties.keys():
+        var party_id := str(party_id_variant)
+        var party: Dictionary = parties.get(party_id, {})
+        if party.is_empty():
+            continue
+        var members := maxi(0, int(party.get("members", 0)))
+        var monthly_budget := mini(
+            MODELED_CAMPAIGN_MAX_MONTHLY_COST,
+            MODELED_CAMPAIGN_BASE_COST + members * MODELED_CAMPAIGN_MEMBER_COST
+        )
+        var available_funds := maxi(0, int(party.get("funds", 0)))
+        var spend := mini(available_funds, monthly_budget)
+        if spend <= 0:
+            continue
+        party["funds"] = available_funds - spend
+        parties[party_id] = party
+        spending_by_party[party_id] = int(spending_by_party.get(party_id, 0)) + spend
+    election["campaign_spend_by_party"] = spending_by_party
+    election["campaign_months_run"] = int(election.get("campaign_months_run", 0)) + 1
+
+
+func _resolve_modeled_election(
+    election: Dictionary,
+    jurisdiction: String,
+    seat_count: int,
+    state_name: String,
+    regional: Dictionary
+) -> Dictionary:
+    var scores: Dictionary = {}
+    var total_score := 0.0
+    var spending_by_party: Dictionary = election.get("campaign_spend_by_party", {})
+    for party_id_variant in parties.keys():
+        var party_id := str(party_id_variant)
+        var party: Dictionary = parties.get(party_id, {})
+        var base_support := float(party.get("popularity", 0.0))
+        if not state_name.is_empty():
+            var support_by_state: Dictionary = regional.get(party_id, {})
+            base_support = float(support_by_state.get(state_name, base_support))
+        var members := maxi(1, int(party.get("members", 1)))
+        var campaign_score := minf(7.0, float(spending_by_party.get(party_id, 0)) / 100000.0)
+        var score := maxf(0.5, base_support + log(maxf(1.0, float(members)) / 1000.0) * 2.0 + campaign_score + randf_range(-1.5, 1.5))
+        scores[party_id] = score
+        total_score += score
+
+    if scores.is_empty() or total_score <= 0.0:
+        return {"summary": "No eligible party was available to contest.", "winner_id": "", "seats_by_party": {}, "vote_shares": {}, "turnout_percent": 0.0}
+
+    var seats_by_party: Dictionary = {}
+    var vote_shares: Dictionary = {}
+    var remainders: Dictionary = {}
+    var allocated_seats := 0
+    for party_id_variant in scores.keys():
+        var party_id := str(party_id_variant)
+        var share := float(scores[party_id]) / total_score
+        var raw_seats := share * float(seat_count)
+        var whole_seats := int(floor(raw_seats))
+        seats_by_party[party_id] = whole_seats
+        remainders[party_id] = raw_seats - float(whole_seats)
+        vote_shares[party_id] = share * 100.0
+        allocated_seats += whole_seats
+
+    var remaining := maxi(0, seat_count - allocated_seats)
+    while remaining > 0:
+        var best_id := ""
+        var best_remainder := -1.0
+        for party_id_variant in remainders.keys():
+            var party_id := str(party_id_variant)
+            var fraction := float(remainders[party_id])
+            if fraction > best_remainder:
+                best_remainder = fraction
+                best_id = party_id
+        if best_id.is_empty():
+            break
+        seats_by_party[best_id] = int(seats_by_party.get(best_id, 0)) + 1
+        remainders[best_id] = -1.0
+        remaining -= 1
+
+    var winner_id := ""
+    var winner_seats := -1
+    for party_id_variant in seats_by_party.keys():
+        var party_id := str(party_id_variant)
+        var party_seats := int(seats_by_party[party_id])
+        if party_seats > winner_seats:
+            winner_seats = party_seats
+            winner_id = party_id
+    var winner_party: Dictionary = parties.get(winner_id, {})
+    var winner_name := str(winner_party.get("name", "Leading party"))
+    var turnout_percent := clampf(54.0 + (total_score / maxf(1.0, float(scores.size()))) * 0.22 + randf_range(-4.0, 4.0), 45.0, 82.0)
+    var summary := "%s won the most seats (%d of %d); coalition formation is not yet modeled." % [winner_name, winner_seats, seat_count]
+    return {
+        "summary": summary,
+        "winner_id": winner_id,
+        "seats_by_party": seats_by_party,
+        "vote_shares": vote_shares,
+        "turnout_percent": turnout_percent
+    }
+
 
 func world_politics_summary() -> String:
     if world_state.is_empty():
@@ -331,6 +564,7 @@ func world_politics_summary() -> String:
     var next_state_name := ""
     var next_state_year := 99999
     var next_state_month := 13
+    var next_state_phase := "Scheduled"
     for election_variant in world_state.get("state_elections", []):
         var election: Dictionary = election_variant
         var election_year := int(election.get("next_year", 99999))
@@ -339,8 +573,18 @@ func world_politics_summary() -> String:
             next_state_year = election_year
             next_state_month = election_month
             next_state_name = str(election.get("state", ""))
+            next_state_phase = str(election.get("phase", "Scheduled"))
     var national: Dictionary = world_state.get("national_election", {})
-    return "INDIA-WIDE POLITICAL WORLD\nRegional party support in %s: %.1f / 100\nNext modeled state assembly election: %s — %s %d\nNext modeled Lok Sabha election: %s %d\nAI organizations manage routine campaigning and participation when you do not act. Election calendars are game-model schedules, not official dates." % [home_state, player_support, next_state_name, _month_name(next_state_month), next_state_year, _month_name(int(national.get("month", 5))), int(national.get("next_year", 2029))]
+    var history: Array = world_state.get("election_history", [])
+    var latest_result := "No state or national election has been resolved yet."
+    if not history.is_empty():
+        var latest: Dictionary = history[history.size() - 1]
+        latest_result = "%s (%d): %s" % [str(latest.get("jurisdiction", "Election")), int(latest.get("year", year)), str(latest.get("summary", "Result recorded"))]
+    return "INDIA-WIDE POLITICAL WORLD\nRegional party support in %s: %.1f / 100\nNext modeled state assembly election: %s — %s %d\nState election phase: %s\nNext modeled Lok Sabha election: %s %d — %s\nLatest modeled result: %s\nAI organizations campaign automatically when you do not take direct action. Schedules are simulation models, not official dates." % [
+        home_state, player_support, next_state_name, _month_name(next_state_month), next_state_year,
+        next_state_phase, _month_name(int(national.get("month", 5))), int(national.get("next_year", 2029)),
+        str(national.get("phase", "Scheduled")), latest_result
+    ]
 
 func local_election_area() -> String:
     return "%s, %s" % [home_city.strip_edges(), home_state]
