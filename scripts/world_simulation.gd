@@ -694,7 +694,7 @@ func _month_name(value: int) -> String:
 	var names := ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 	return names[clampi(value - 1, 0, 11)]
 
-func start_career(name: String, age: int, city: String, path: String, party_name: String = "") -> bool:
+func start_career(name: String, age: int, city: String, path: String, party_name: String = "", founder_contribution: int = 10000) -> bool:
 	var clean_name := name.strip_edges()
 	var clean_city := city.strip_edges()
 	if clean_name.is_empty() or clean_city.is_empty():
@@ -708,6 +708,10 @@ func start_career(name: String, age: int, city: String, path: String, party_name
 	var clean_party_name := party_name.strip_edges()
 	if path == "found" and clean_party_name.is_empty():
 		notifications = ["Enter a name for your new political party."]
+		return false
+	var contribution := clampi(founder_contribution, 0, 50000)
+	if path == "found" and contribution > 50000:
+		notifications = ["Your initial party contribution cannot exceed your available starting savings."]
 		return false
 
 	character_name = clean_name
@@ -756,18 +760,25 @@ func start_career(name: String, age: int, city: String, path: String, party_name
 	else:
 		party_counter += 1
 		player_party_id = "player_party_%d" % party_counter
+		personal_funds -= contribution
 		parties[player_party_id] = {
 			"name": clean_party_name,
+			"founder_name": character_name,
+			"president_name": character_name,
+			"president_member_id": "founder",
+			"founding_year": year,
+			"founding_month": month,
+			"founder_contribution": contribution,
 			"members": 5,
-			"funds": 25000,
+			"funds": 25000 + contribution,
 			"debt": 0,
 			"popularity": 1.0,
 			"is_player_created": true
 		}
-		player_role = "Party founder"
-		career_rank = "Party founder"
+		player_role = "Founding President"
+		career_rank = "Founding President"
 		local_leader_relationship = 5.0
-		notifications = ["You founded %s with five initial supporters. Founding a party gives you organizational responsibility, not an elected office." % clean_party_name]
+		notifications = ["You founded %s and became its founding president and initial funder. Your ₹%s contribution was transferred from personal savings to party funds. Party leadership grants no elected office." % [clean_party_name, _format_number(contribution)]]
 	_ensure_party_world_presence(player_party_id)
 	_ensure_party_roster(player_party_id)
 	return true
@@ -1419,9 +1430,12 @@ func party_summary() -> String:
 	if not career_started or player_party_id == "" or not parties.has(player_party_id):
 		return "No party membership\nYou are an ordinary citizen."
 	var party: Dictionary = parties[player_party_id]
-	return "%s\nRole: %s\nMembers: %s\nParty funds: ₹%s\nParty popularity: %.1f%%" % [
-		party["name"], player_role, _format_number(int(party["members"])),
-		_format_number(int(party["funds"])), float(party["popularity"])
+	var leadership := "President: %s" % str(party.get("president_name", "Not assigned"))
+	var founder_line := "Founder: %s" % str(party.get("founder_name", "Not recorded"))
+	var contribution := int(party.get("founder_contribution", 0))
+	return "%s\n%s\n%s\nRole: %s\nMembers: %s\nParty funds: ₹%s\nFounder contribution: ₹%s\nParty popularity: %.1f%%" % [
+		party["name"], founder_line, leadership, player_role, _format_number(int(party["members"])),
+		_format_number(int(party["funds"])), _format_number(contribution), float(party["popularity"])
 	]
 
 func set_karnataka_slate_approved(approved: bool) -> String:
@@ -1640,7 +1654,17 @@ func load_game() -> bool:
 		var party_record: Dictionary = parties[party_id]
 		if not party_record.has("debt"):
 			party_record["debt"] = 0
+		if bool(party_record.get("is_player_created", false)):
+			if not party_record.has("founder_name"):
+				party_record["founder_name"] = character_name
+			if not party_record.has("president_name"):
+				party_record["president_name"] = character_name if career_rank == "Party founder" else str(party_record.get("founder_name", character_name))
+			if not party_record.has("founder_contribution"):
+				party_record["founder_contribution"] = 0
 		parties[party_id] = party_record
+	if career_path == "found" and career_rank == "Party founder" and not has_elected_office:
+		career_rank = "Founding President"
+		player_role = "Founding President"
 	if has_elected_office and office_missions.is_empty():
 		generate_monthly_office_missions()
 	notifications = ["Saved career loaded."]

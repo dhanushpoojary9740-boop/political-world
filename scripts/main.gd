@@ -12,7 +12,9 @@ var conditions_label: Label
 var office_tab: VBoxContainer
 var office_label: Label
 var office_log_list: VBoxContainer
+var office_case_filter: String = "ALL"
 var office_mission_list: VBoxContainer
+var office_action_feedback: Label
 var district_label: Label
 var career_page_summary: Label
 var party_page_summary: Label
@@ -23,6 +25,7 @@ var name_input: LineEdit
 var age_input: SpinBox
 var city_input: LineEdit
 var party_name_input: LineEdit
+var party_founder_contribution_input: SpinBox
 var setup_box: VBoxContainer
 var dashboard_box: TabContainer
 var main_tab_bar: ScrollContainer
@@ -251,6 +254,8 @@ func _build_bottom_navigation(parent: VBoxContainer) -> void:
 func _select_main_tab(index: int) -> void:
 	if not is_instance_valid(dashboard_box):
 		return
+	if index < 0 or index >= dashboard_box.get_tab_count():
+		return
 	if index == 5 and not world.has_elected_office:
 		return
 	dashboard_box.current_tab = index
@@ -279,31 +284,30 @@ func _build_setup() -> void:
 	setup_box.add_child(age_input)
 	city_input = _add_line_input(setup_box, "Hometown", "Brahmavara")
 	party_name_input = _add_line_input(setup_box, "New party name (founding path only)", "Enter your party name")
+	party_founder_contribution_input = SpinBox.new()
+	party_founder_contribution_input.name = "FounderInitialContribution"
+	party_founder_contribution_input.min_value = 0
+	party_founder_contribution_input.max_value = 50000
+	party_founder_contribution_input.step = 1000
+	party_founder_contribution_input.value = 10000
+	party_founder_contribution_input.prefix = "Founder contribution ₹"
+	party_founder_contribution_input.tooltip_text = "Transferred from your personal savings into the party treasury when founding."
+	setup_box.add_child(party_founder_contribution_input)
 
 	_add_body(setup_box, "Choose your entry into politics:")
 	_add_button(setup_box, "JOIN AN ESTABLISHED PARTY", _on_join_party)
 	_add_button(setup_box, "FOUND MY OWN PARTY", _on_found_party)
-	_add_body(setup_box, "Joining starts you as a volunteer. Founding starts you with five supporters and limited funds. Neither path grants an elected office.")
+	_add_body(setup_box, "Founding makes you party founder and president. Choose an initial contribution from personal savings; it transfers to party funds. Founding grants no elected office.")
 
 func _build_dashboard() -> void:
 	var overview := _new_tab(dashboard_box, "Overview")
 	_add_dashboard_hero(overview)
 	_add_section_title(overview, "YOUR STANDING")
 	_add_overview_metrics(overview)
-	_add_section_title(overview, "CAREER SNAPSHOT")
-	career_label = _add_body(overview, "")
-	_add_section_title(overview, "PARTY SNAPSHOT")
-	party_label = _add_body(overview, "")
-	_add_section_title(overview, "ELECTION SNAPSHOT")
-	election_label = _add_body(overview, "")
-	_add_section_title(overview, "LOCAL CONDITIONS")
-	conditions_label = _add_body(overview, "")
+	_add_section_title(overview, "YOUR NEXT STEP")
+	_add_body(overview, "Advance the simulation month by month. Detailed career, party, election, district, office, and world activity information lives in its own tab.")
 	_add_button(overview, "ADVANCE ONE MONTH", _on_advance_month)
 	_add_button(overview, "SAVE GAME NOW", _on_save_game)
-	_add_section_title(overview, "WORLD POLITICS")
-	world_politics_label = _add_body(overview, "India-wide political simulation will initialize with your career.")
-	_add_section_title(overview, "WORLD REPORT")
-	report_label = _add_body(overview, "Your political journey is ready to begin.")
 
 	var career_page := _new_tab(dashboard_box, "Career")
 	_add_section_title(career_page, "POLITICAL CAREER")
@@ -406,6 +410,56 @@ func _build_dashboard() -> void:
 	var national_elections := _new_tab(election_tabs, "Lok Sabha")
 	_add_section_title(national_elections, "LOK SABHA ELECTION")
 	election_detail_labels["national"] = _add_body(national_elections, "")
+
+
+
+	# District progression is an internal party path, not government authority.
+	var district_page := _new_tab(dashboard_box, "District")
+	_add_section_title(district_page, "DISTRICT ORGANIZATION")
+	district_label = _add_page_summary(district_page, "DISTRICT PROGRESSION", "Build local standing", "Your district progression appears here.")
+	_add_body(district_page, "District party positions are internal organization roles. They do not grant public office, government authority, or access to public funds.")
+	_add_section_title(district_page, "PROGRESSION REQUIREMENTS")
+	_add_body(district_page, "Build experience and reputation, strengthen your relationship with party leadership, grow party membership, complete local responsibilities, and establish local standing before requesting a district role.")
+	_add_button(district_page, "REQUEST DISTRICT PARTY ROLE", _on_request_district_role)
+	_add_section_title(district_page, "YOUR CURRENT PROGRESSION")
+	var district_details := _add_body(district_page, "")
+	district_details.name = "DistrictProgressDetails"
+
+	# The Office page is available only after the player personally wins office.
+	office_tab = _new_tab(dashboard_box, "Office")
+	office_tab.visible = false
+	_add_section_title(office_tab, "YOUR ELECTED OFFICE")
+	office_label = _add_page_summary(office_tab, "REPRESENTATIVE BRIEFING", "Constituency responsibilities", "Win an election personally to unlock this page.")
+	_add_body(office_tab, "You may represent residents and submit requests or proposals. Councils, civil servants, and competent departments retain their legal powers and operational duties.")
+	_add_section_title(office_tab, "OFFICIAL ACTIONS")
+	_add_office_action_card(office_tab, "Submit a development proposal", "File a proposal for council review. Approval and implementation are handled by the competent authorities.", "SUBMIT PROPOSAL", _on_submit_office_proposal)
+	_add_office_action_card(office_tab, "Raise a public-service issue", "Refer a local service concern to the responsible department for follow-up.", "RAISE ISSUE", _on_raise_constituency_issue)
+	office_action_feedback = _add_body(office_tab, "Action results will appear here after you submit a proposal or raise an issue.")
+	office_action_feedback.name = "OfficeActionFeedback"
+	office_action_feedback.add_theme_color_override("font_color", Color("#e7bd62"))
+	_add_section_title(office_tab, "MONTHLY RESPONSIBILITIES")
+	office_mission_list = VBoxContainer.new()
+	office_mission_list.add_theme_constant_override("separation", 8)
+	office_tab.add_child(office_mission_list)
+	_add_section_title(office_tab, "OFFICE CASE REGISTER")
+	_add_body(office_tab, "Review submitted matters by category. Statuses are updated by the existing council and departmental simulation.")
+	var case_filter_row := HBoxContainer.new()
+	case_filter_row.add_theme_constant_override("separation", 6)
+	office_tab.add_child(case_filter_row)
+	_add_case_filter_button(case_filter_row, "ALL", "ALL")
+	_add_case_filter_button(case_filter_row, "PROPOSALS", "OFFICIAL REPRESENTATION")
+	_add_case_filter_button(case_filter_row, "PUBLIC ISSUES", "PUBLIC SERVICE FOLLOW-UP")
+	_add_case_filter_button(case_filter_row, "COMPLETED", "MONTHLY RESPONSIBILITY")
+	office_log_list = VBoxContainer.new()
+	office_log_list.add_theme_constant_override("separation", 8)
+	office_tab.add_child(office_log_list)
+
+	var reports_page := _new_tab(dashboard_box, "Reports")
+	_add_section_title(reports_page, "WORLD POLITICS")
+	world_politics_label = _add_body(reports_page, "India-wide political simulation will initialize with your career.")
+	_add_section_title(reports_page, "WORLD & ACTIVITY REPORT")
+	report_label = _add_body(reports_page, "Your political journey is ready to begin.")
+
 
 	_configure_touch_scroll_passthrough(overview)
 
@@ -676,6 +730,22 @@ func _refresh_office_missions() -> void:
 		# their newly-created descendants each time.
 		_configure_touch_scroll_passthrough(card)
 
+func _add_case_filter_button(parent: HBoxContainer, button_text: String, filter_value: String) -> void:
+	var button := Button.new()
+	button.text = button_text
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.custom_minimum_size = Vector2(0, 44)
+	button.add_theme_font_size_override("font_size", 11)
+	button.add_theme_color_override("font_color", Color("#f4ead6"))
+	button.add_theme_stylebox_override("normal", _button_style("#203345"))
+	button.add_theme_stylebox_override("hover", _button_style("#2b465b"))
+	button.pressed.connect(_set_office_case_filter.bind(filter_value))
+	parent.add_child(button)
+
+func _set_office_case_filter(filter_value: String) -> void:
+	office_case_filter = filter_value
+	_refresh_office_log()
+
 func _refresh_office_log() -> void:
 	if not is_instance_valid(office_log_list):
 		return
@@ -705,17 +775,46 @@ func _refresh_office_log() -> void:
 			"location": str(mission.get("location", world.local_election_area())),
 			"status": str(mission.get("status", "Completed"))
 		})
-	if entries.is_empty():
-		_add_info_card(office_log_list, "No matters filed yet", "Submitted representations, service referrals, and official responses will be recorded here.", "READY")
+	var filtered_entries: Array[Dictionary] = []
+	for entry_value in entries:
+		var entry: Dictionary = entry_value
+		if office_case_filter == "ALL" or str(entry.get("kind", "")) == office_case_filter:
+			filtered_entries.append(entry)
+	if filtered_entries.is_empty():
+		_add_info_card(office_log_list, "No cases in this section", "New submissions and completed responsibilities will appear here when available.", "EMPTY REGISTER")
 		return
-	var start_index := maxi(0, entries.size() - 16)
-	for i in range(start_index, entries.size()):
-		var entry: Dictionary = entries[i]
+	var start_index := maxi(0, filtered_entries.size() - 16)
+	for i in range(start_index, filtered_entries.size()):
+		var entry: Dictionary = filtered_entries[i]
 		var detail_text := "%s\n%s" % [str(entry["department"]), str(entry["location"])]
 		_add_info_card(office_log_list, str(entry["title"]), detail_text, "%s  •  %s" % [str(entry["kind"]), str(entry["status"]).to_upper()])
 
 func _on_complete_office_mission(mission_id: int) -> void:
 	report_label.text = "\n".join(PackedStringArray(world.complete_office_mission(mission_id)))
+	_refresh()
+	_save_progress()
+
+func _on_request_district_role() -> void:
+	world.request_district_party_role()
+	report_label.text = "\\n".join(PackedStringArray(world.notifications))
+	_refresh()
+	_save_progress()
+
+func _on_submit_office_proposal() -> void:
+	world.submit_office_proposal()
+	var result_text := str(world.notifications.back()) if not world.notifications.is_empty() else "Proposal action completed."
+	if is_instance_valid(office_action_feedback):
+		office_action_feedback.text = result_text
+	report_label.text = result_text
+	_refresh()
+	_save_progress()
+
+func _on_raise_constituency_issue() -> void:
+	world.raise_constituency_issue()
+	var result_text := str(world.notifications.back()) if not world.notifications.is_empty() else "Issue action completed."
+	if is_instance_valid(office_action_feedback):
+		office_action_feedback.text = result_text
+	report_label.text = result_text
 	_refresh()
 	_save_progress()
 
@@ -807,7 +906,7 @@ func _on_join_party() -> void:
 	_after_start(started)
 
 func _on_found_party() -> void:
-	var started: bool = world.start_career(name_input.text, int(age_input.value), city_input.text, "found", party_name_input.text)
+	var started: bool = world.start_career(name_input.text, int(age_input.value), city_input.text, "found", party_name_input.text, int(party_founder_contribution_input.value))
 	_after_start(started)
 
 func _after_start(started: bool) -> void:
@@ -845,19 +944,15 @@ func _refresh() -> void:
 	date_label.text = world.date_label()
 	if world.career_started:
 		_refresh_overview_metrics()
-		career_label.text = world.career_summary()
 		if is_instance_valid(career_page_summary):
 			career_page_summary.text = world.career_summary()
-		party_label.text = world.party_summary()
 		if is_instance_valid(party_page_summary):
 			party_page_summary.text = world.party_summary()
 		finance_label.text = world.finance_summary()
 		_refresh_party_members()
-		election_label.text = world.election_summary()
 		if is_instance_valid(election_page_summary):
 			election_page_summary.text = world.election_summary()
 		_refresh_election_tabs()
-		conditions_label.text = world.local_conditions_summary()
 		if is_instance_valid(world_politics_label):
 			world_politics_label.text = world.world_politics_summary()
 		if is_instance_valid(office_tab):
@@ -866,9 +961,17 @@ func _refresh() -> void:
 			main_tab_buttons[5].visible = world.has_elected_office
 		if is_instance_valid(district_label):
 			district_label.text = world.district_progression_summary()
+		var district_details := dashboard_box.find_child("DistrictProgressDetails", true, false)
+		if is_instance_valid(district_details) and district_details is Label:
+			district_details.text = "Career rank: %s\\nExperience: %d / 30\\nReputation: %.1f / 10\\nParty leadership relationship: %.1f / 20\\nParty membership: %d / 50\\nLocal responsibilities completed: %d / 3\\nDistrict role: %s" % [
+				world.career_rank, world.experience, world.reputation, world.local_leader_relationship,
+				int(world.parties.get(world.player_party_id, {}).get("members", 0)),
+				world.district_service_record,
+				world.district_party_role if world.district_role_approved else ("Application pending" if world.district_role_application_pending else "Not appointed")
+			]
 		if world.has_elected_office:
 			if is_instance_valid(office_label):
-				office_label.text = world.office_summary().replace("\\n", "\n")
+				office_label.text = world.office_summary()
 			_refresh_office_missions()
 			_refresh_office_log()
 
