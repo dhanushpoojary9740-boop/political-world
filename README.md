@@ -32,3 +32,13 @@ I inspected the source and packaged this update, but I have not run it in the Go
 ## Git commit message
 
 `feat: add recurring local election terms and incumbent transitions`
+
+## Political World shared simulation foundation (Milestone 1)
+
+- Adds a persistent shared world-state layer with separate regional party support for India's 28 states.
+- Advances modeled state assembly and Lok Sabha election calendars through the same monthly simulation step.
+- Runs rival-party monthly recruitment and operating accounts, regional support drift, and periodic modest member movement between parties.
+- If the player does not stand in the recurring local election, the player's party now runs an AI campaign, spends from party funds, and records an AI party win/loss without granting the player an elected office.
+- Saves the world-state data in save version 9 and initializes it when loading older saves.
+
+These are initial game-model rules, not real election dates, statutory campaign limits, or official forecasts. The world-state foundation is being expanded in later milestones; this update does not yet implement player-controlled Karnataka state/national campaign decisions, full seat-by-seat election results, government formation, or global diplomacy.
