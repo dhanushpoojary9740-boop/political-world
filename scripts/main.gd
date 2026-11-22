@@ -14,6 +14,9 @@ var office_label: Label
 var office_log_list: VBoxContainer
 var office_mission_list: VBoxContainer
 var district_label: Label
+var career_page_summary: Label
+var party_page_summary: Label
+var election_page_summary: Label
 var report_label: Label
 var name_input: LineEdit
 var age_input: SpinBox
@@ -287,9 +290,10 @@ func _build_dashboard() -> void:
     report_label = _add_body(overview, "Your political journey is ready to begin.")
 
     var career_page := _new_tab(dashboard_box, "Career")
+    _add_section_title(career_page, "POLITICAL CAREER")
+    career_page_summary = _add_page_summary(career_page, "CAREER PROFILE", "Your path into public life", "Your current rank, experience, reputation, and available personal funds.")
     var career_tabs := TabContainer.new()
     career_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    career_tabs.custom_minimum_size = Vector2(0, 320)
     career_page.add_child(career_tabs)
     var career_profile := _new_tab(career_tabs, "Profile")
     _add_section_title(career_profile, "YOUR CAREER")
@@ -303,9 +307,10 @@ func _build_dashboard() -> void:
     _add_button(career_actions, "Attend a party meeting", func(): _run_activity("meeting"))
 
     var party_page := _new_tab(dashboard_box, "Party")
+    _add_section_title(party_page, "PARTY ORGANIZATION")
+    party_page_summary = _add_page_summary(party_page, "PARTY AT A GLANCE", "Your organization", "Membership, party standing, leadership role, and finances.")
     var party_tabs := TabContainer.new()
     party_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    party_tabs.custom_minimum_size = Vector2(0, 320)
     party_page.add_child(party_tabs)
     var party_profile := _new_tab(party_tabs, "Party profile")
     _add_section_title(party_profile, "YOUR PARTY")
@@ -321,9 +326,10 @@ func _build_dashboard() -> void:
     _add_body(party_finances, "Personal cash, party funds, party debt, and election campaign spending are tracked separately. Values are a simplified game economy, not audited real-world party accounts.")
 
     var elections_page := _new_tab(dashboard_box, "Elections")
+    _add_section_title(elections_page, "DEMOCRATIC COMPETITION")
+    election_page_summary = _add_page_summary(elections_page, "ELECTION BRIEFING", "Your next contest", "Check the election schedule, ticket eligibility, and campaign status.")
     var election_tabs := TabContainer.new()
     election_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    election_tabs.custom_minimum_size = Vector2(0, 320)
     elections_page.add_child(election_tabs)
     var election_status := _new_tab(election_tabs, "Election status")
     _add_section_title(election_status, "LOCAL ELECTION")
@@ -335,6 +341,8 @@ func _build_dashboard() -> void:
     _add_button(election_campaign, "Campaign as approved candidate", func(): _run_activity("campaign"))
 
     var district_page := _new_tab(dashboard_box, "District")
+    _add_section_title(district_page, "PARTY LEADERSHIP")
+    _add_page_summary(district_page, "DISTRICT ORGANIZATION", "Build influence through service", "District party appointments are earned through experience and party standing. They do not confer government authority.")
     _add_section_title(district_page, "DISTRICT-LEVEL PARTY PROGRESSION")
     _add_body(district_page, "Build a record of service and party standing before applying for a district organization role. Party appointment is separate from election to public office.")
     district_label = _add_body(district_page, "")
@@ -366,6 +374,34 @@ func _build_dashboard() -> void:
     office_log_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     office_log_list.add_theme_constant_override("separation", 10)
     office_log.add_child(office_log_list)
+
+func _add_page_summary(parent: VBoxContainer, eyebrow: String, title_text: String, initial_text: String) -> Label:
+    var panel := PanelContainer.new()
+    panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    panel.add_theme_stylebox_override("panel", _card_style())
+    parent.add_child(panel)
+
+    var body := VBoxContainer.new()
+    body.add_theme_constant_override("separation", 7)
+    panel.add_child(body)
+
+    var eyebrow_label := Label.new()
+    eyebrow_label.text = eyebrow.to_upper()
+    eyebrow_label.add_theme_font_size_override("font_size", 11)
+    eyebrow_label.add_theme_color_override("font_color", Color("#c6b06f"))
+    body.add_child(eyebrow_label)
+
+    var title_label := Label.new()
+    title_label.text = title_text
+    title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    title_label.add_theme_font_size_override("font_size", 21)
+    title_label.add_theme_color_override("font_color", Color("#f0e7d4"))
+    body.add_child(title_label)
+
+    var detail_label := _add_body(body, initial_text)
+    detail_label.add_theme_font_size_override("font_size", 14)
+    _configure_touch_scroll_passthrough(panel)
+    return detail_label
 
 func _add_info_card(parent: VBoxContainer, title_text: String, detail_text: String, status_text: String) -> void:
     var card := PanelContainer.new()
@@ -415,7 +451,8 @@ func _card_style() -> StyleBoxFlat:
     style.border_color = Color("#2c3c52")
     style.set_border_width_all(1)
     style.border_width_left = 2
-    style.border_color = Color("#b89a5a")
+    style.border_color = Color("#34485c")
+    style.border_width_left = 3
     style.set_corner_radius_all(15)
     style.set_content_margin_all(17)
     style.shadow_color = Color(0, 0, 0, 0.22)
@@ -434,8 +471,8 @@ func _brand_mark_style() -> StyleBoxFlat:
 
 func _date_capsule_style() -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
-    style.bg_color = Color("#111e2d")
-    style.border_color = Color("#34465b")
+    style.bg_color = Color("#142336")
+    style.border_color = Color("#46566b")
     style.set_border_width_all(1)
     style.set_corner_radius_all(10)
     style.content_margin_left = 11
@@ -672,9 +709,15 @@ func _refresh() -> void:
     date_label.text = world.date_label()
     if world.career_started:
         career_label.text = world.career_summary()
+        if is_instance_valid(career_page_summary):
+            career_page_summary.text = world.career_summary()
         party_label.text = world.party_summary()
+        if is_instance_valid(party_page_summary):
+            party_page_summary.text = world.party_summary()
         finance_label.text = world.finance_summary()
         election_label.text = world.election_summary()
+        if is_instance_valid(election_page_summary):
+            election_page_summary.text = world.election_summary()
         conditions_label.text = world.local_conditions_summary()
         office_tab.visible = world.has_elected_office
         if main_tab_buttons.size() > 5:
