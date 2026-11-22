@@ -6,6 +6,7 @@ var world: WorldSimulation
 var date_label: Label
 var career_label: Label
 var party_label: Label
+var finance_label: Label
 var election_label: Label
 var conditions_label: Label
 var office_tab: VBoxContainer
@@ -214,6 +215,11 @@ func _build_dashboard() -> void:
     _add_body(party_work, "Grow your party through local activity and recruitment. The party's routine organization continues through the simulation.")
     _add_button(party_work, "Recruit a party member", func(): _run_activity("recruit"))
 
+    var party_finances := _new_tab(party_tabs, "Finances")
+    _add_section_title(party_finances, "PERSONAL, PARTY & CAMPAIGN ACCOUNTS")
+    finance_label = _add_body(party_finances, "Financial accounts appear after your career begins.")
+    _add_body(party_finances, "Personal cash, party funds, party debt, and election campaign spending are tracked separately. Values are a simplified game economy, not audited real-world party accounts.")
+
     var elections_page := _new_tab(dashboard_box, "Elections")
     var election_tabs := TabContainer.new()
     election_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -349,6 +355,7 @@ func _refresh() -> void:
     if world.career_started:
         career_label.text = world.career_summary()
         party_label.text = world.party_summary()
+        finance_label.text = world.finance_summary()
         election_label.text = world.election_summary()
         conditions_label.text = world.local_conditions_summary()
         office_tab.visible = world.has_elected_office

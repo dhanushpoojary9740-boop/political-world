@@ -2,6 +2,10 @@ extends RefCounted
 class_name WorldSimulation
 
 const LOCAL_ELECTION_MONTH := 12
+const LOCAL_CAMPAIGN_MODEL_BUDGET := 500000 # In-game budget assumption, not a statutory limit.
+const CAMPAIGN_ACTION_COST := 5000
+const VOLUNTEER_ACTIVITY_COST := 1000
+const COMMUNITY_ACTIVITY_COST := 2500
 const ACTIVE_WORKER_XP := 6
 const ACTIVE_WORKER_REPUTATION := 1.5
 const LOCAL_LEADER_XP := 16
@@ -28,6 +32,9 @@ var player_party_id: String = ""
 var player_role: String = "Ordinary citizen"
 var career_rank: String = "Ordinary citizen"
 var personal_funds: int = 50000
+var personal_debt: int = 0
+var monthly_living_expenses: int = 22000
+var campaign_expenditure: int = 0
 var experience: int = 0
 var reputation: float = 0.0
 var local_leader_relationship: float = 0.0
@@ -52,7 +59,7 @@ var notifications: Array[String] = []
 var local_infrastructure: float = 50.0
 var local_service_quality: float = 50.0
 var public_trust: float = 50.0
-var monthly_income: int = 1500
+var monthly_income: int = 35000
 
 func initialize() -> void:
     parties = {
@@ -60,6 +67,7 @@ func initialize() -> void:
             "name": "People's Unity Party",
             "members": 12500,
             "funds": 25000000,
+            "debt": 0,
             "popularity": 24.0,
             "is_player_created": false
         },
@@ -67,6 +75,7 @@ func initialize() -> void:
             "name": "Progressive Reform Front",
             "members": 7800,
             "funds": 12000000,
+            "debt": 0,
             "popularity": 16.0,
             "is_player_created": false
         }
@@ -106,6 +115,10 @@ func start_career(name: String, age: int, city: String, path: String, party_name
     experience = 0
     reputation = 0.0
     personal_funds = 50000
+    personal_debt = 0
+    monthly_income = 35000
+    monthly_living_expenses = 22000
+    campaign_expenditure = 0
     local_leader_relationship = 2.0
     campaign_effort = 0.0
     ticket_requested = false
@@ -134,6 +147,7 @@ func start_career(name: String, age: int, city: String, path: String, party_name
             "name": clean_party_name,
             "members": 5,
             "funds": 25000,
+            "debt": 0,
             "popularity": 1.0,
             "is_player_created": true
         }
@@ -151,18 +165,24 @@ func perform_activity(activity: String) -> Array[String]:
 
     match activity:
         "volunteer":
+            if personal_funds < VOLUNTEER_ACTIVITY_COST:
+                notifications.append("Not enough personal cash for this activity. Review your personal finances before spending.")
+                return notifications.duplicate()
+            personal_funds -= VOLUNTEER_ACTIVITY_COST
             experience += 2
             reputation += 0.4
-            personal_funds = maxi(0, personal_funds - 500)
             campaign_effort += 1.5
             _increase_party_popularity(0.15)
-            notifications.append("You worked on a local campaign. Experience +2; reputation and campaign experience improved.")
+            notifications.append("You volunteered in a local campaign. Personal expense: ₹%s. Experience +2; reputation and campaign experience improved." % _format_number(VOLUNTEER_ACTIVITY_COST))
         "community":
+            if personal_funds < COMMUNITY_ACTIVITY_COST:
+                notifications.append("Not enough personal cash for this community event. Review your personal finances before spending.")
+                return notifications.duplicate()
+            personal_funds -= COMMUNITY_ACTIVITY_COST
             experience += 2
             reputation += 0.7
-            personal_funds = maxi(0, personal_funds - 800)
             _increase_party_popularity(0.25)
-            notifications.append("You organized a community service event in %s. Experience +2; local reputation improved." % home_city)
+            notifications.append("You organized a community service event in %s. Personal expense: ₹%s. Experience +2; local reputation improved." % [home_city, _format_number(COMMUNITY_ACTIVITY_COST)])
         "meeting":
             experience += 1
             reputation += 0.2
@@ -221,13 +241,26 @@ func _run_local_campaign() -> void:
     if local_election_completed:
         notifications.append("The local election has already concluded.")
         return
-    if personal_funds < 300:
-        notifications.append("You do not have enough personal funds for this campaign activity.")
+    if campaign_expenditure + CAMPAIGN_ACTION_COST > LOCAL_CAMPAIGN_MODEL_BUDGET:
+        notifications.append("The modeled local campaign budget is exhausted. No further campaign spending is allowed in this election.")
         return
-    personal_funds -= 300
+    if not parties.has(player_party_id):
+        notifications.append("Your party finance account is unavailable.")
+        return
+    var party: Dictionary = parties[player_party_id]
+    var party_funds := int(party.get("funds", 0))
+    if party_funds < CAMPAIGN_ACTION_COST:
+        notifications.append("Your party does not have enough available funds for this campaign action. Personal and party funds are separate.")
+        return
+    party["funds"] = party_funds - CAMPAIGN_ACTION_COST
+    parties[player_party_id] = party
+    campaign_expenditure += CAMPAIGN_ACTION_COST
     campaign_effort += 2.0
     reputation += 0.25
-    notifications.append("You campaigned in your local constituency. Campaign effort and public reputation improved.")
+    notifications.append("Campaign activity completed in %s. Party campaign expense: ₹%s. Candidate campaign spending: ₹%s / ₹%s. Personal funds were not used." % [
+        local_election_area(), _format_number(CAMPAIGN_ACTION_COST),
+        _format_number(campaign_expenditure), _format_number(LOCAL_CAMPAIGN_MODEL_BUDGET)
+    ])
 
 func submit_office_proposal() -> void:
     if not has_elected_office:
@@ -355,20 +388,73 @@ func _process_party_monthly() -> void:
     var members := int(party.get("members", 0))
     var popularity := float(party.get("popularity", 0.0))
     var funds := int(party.get("funds", 0))
+    var debt := int(party.get("debt", 0))
 
-    # AI party staff handle routine operations; the player does not manually run every unit.
+    # Illustrative game economy: routine donations and operating costs scale with membership.
+    # This is not a claim about any real party's accounts.
     var monthly_recruits := clampi(roundi(popularity / 15.0), 0, 8)
-    var donations := 100 + members * 2
-    var operating_cost := 250 + members
+    var donations := 2000 + members * 15
+    var operating_cost := 1000 + members * 10
     members += monthly_recruits
-    funds = maxi(0, funds + donations - operating_cost)
+    var net := donations - operating_cost
+    if net >= 0:
+        var debt_payment := mini(debt, net)
+        debt -= debt_payment
+        funds += net - debt_payment
+    else:
+        var shortfall := -net
+        var paid_from_cash := mini(funds, shortfall)
+        funds -= paid_from_cash
+        debt += shortfall - paid_from_cash
     if monthly_recruits > 0:
         popularity = minf(100.0, popularity + float(monthly_recruits) * 0.015)
     party["members"] = members
     party["funds"] = funds
+    party["debt"] = debt
     party["popularity"] = popularity
     parties[player_party_id] = party
-    notifications.append("AI party operations: +%d members; donations ₹%d; operating costs ₹%d. Party funds: ₹%d." % [monthly_recruits, donations, operating_cost, funds])
+    notifications.append("AI party accounts: +%d members; modeled donations ₹%s; operating costs ₹%s; party cash ₹%s; party debt ₹%s." % [
+        monthly_recruits, _format_number(donations), _format_number(operating_cost),
+        _format_number(funds), _format_number(debt)
+    ])
+
+func _process_personal_monthly_finances() -> void:
+    var net_cashflow := monthly_income - monthly_living_expenses
+    if net_cashflow >= 0:
+        var debt_payment := mini(personal_debt, net_cashflow)
+        personal_debt -= debt_payment
+        personal_funds += net_cashflow - debt_payment
+    else:
+        var shortfall := -net_cashflow
+        var paid_from_cash := mini(personal_funds, shortfall)
+        personal_funds -= paid_from_cash
+        personal_debt += shortfall - paid_from_cash
+    notifications.append("Personal finances: income ₹%s; living costs ₹%s; net ₹%s. Cash ₹%s; debt ₹%s." % [
+        _format_number(monthly_income), _format_number(monthly_living_expenses),
+        _format_number(net_cashflow), _format_number(personal_funds), _format_number(personal_debt)
+    ])
+
+func finance_summary() -> String:
+    var party_cash := 0
+    var party_debt := 0
+    var party_members := 0
+    var party_donations := 0
+    var party_operating_cost := 0
+    if player_party_id != "" and parties.has(player_party_id):
+        var party: Dictionary = parties[player_party_id]
+        party_cash = int(party.get("funds", 0))
+        party_debt = int(party.get("debt", 0))
+        party_members = int(party.get("members", 0))
+        party_donations = 2000 + party_members * 15
+        party_operating_cost = 1000 + party_members * 10
+    var monthly_net := monthly_income - monthly_living_expenses
+    return "PERSONAL FINANCES\nCash savings: ₹%s\nMonthly income: ₹%s\nLiving costs: ₹%s\nNet monthly cash flow: ₹%s\nPersonal debt: ₹%s\n\nPARTY FINANCES\nParty cash: ₹%s\nParty debt: ₹%s\nModeled monthly donations: ₹%s\nModeled operating costs: ₹%s\n\nCAMPAIGN ACCOUNTING\nCampaign spending this election: ₹%s / ₹%s\nCampaign actions are paid from party funds; personal and party money stay separate. The campaign budget is a simplified game rule, not a statement of the legal limit for every local election." % [
+        _format_number(personal_funds), _format_number(monthly_income),
+        _format_number(monthly_living_expenses), _format_number(monthly_net),
+        _format_number(personal_debt), _format_number(party_cash), _format_number(party_debt),
+        _format_number(party_donations), _format_number(party_operating_cost),
+        _format_number(campaign_expenditure), _format_number(LOCAL_CAMPAIGN_MODEL_BUDGET)
+    ]
 
 func _apply_project_impact(project_title: String) -> void:
     if project_title.contains("road") or project_title.contains("drainage") or project_title.contains("lighting"):
@@ -429,8 +515,7 @@ func advance_month() -> Array[String]:
     if career_started:
         # Monthly transition order is deliberate: household finances, party operations,
         # then council/department work. Every downstream system reads the updated state.
-        personal_funds += monthly_income
-        notifications.append("Monthly personal income: +₹%d. Personal funds: ₹%d." % [monthly_income, personal_funds])
+        _process_personal_monthly_finances()
         if month == 1:
             character_age += 1
             notifications.append("Birthday: you are now %d. Personal income and political activity continue on the monthly calendar." % character_age)
@@ -541,14 +626,25 @@ func election_summary() -> String:
     return "Local election: December %d\\nApply for a party ticket when you meet the eligibility requirements."
 
 func _format_number(value: int) -> String:
-    return str(value)
+    var negative := value < 0
+    var raw := str(absi(value))
+    if raw.length() <= 3:
+        return ("-" if negative else "") + raw
+    var formatted := raw.substr(raw.length() - 3, 3)
+    var prefix := raw.substr(0, raw.length() - 3)
+    while prefix.length() > 2:
+        formatted = prefix.substr(prefix.length() - 2, 2) + "," + formatted
+        prefix = prefix.substr(0, prefix.length() - 2)
+    if not prefix.is_empty():
+        formatted = prefix + "," + formatted
+    return ("-" if negative else "") + formatted
 
 
 const SAVE_PATH := "user://political_world_save.json"
 
 func save_game() -> bool:
     var save_data: Dictionary = {
-        "save_version": 4,
+        "save_version": 5,
         "year": year,
         "month": month,
         "character_name": character_name,
@@ -561,6 +657,9 @@ func save_game() -> bool:
         "player_role": player_role,
         "career_rank": career_rank,
         "personal_funds": personal_funds,
+        "personal_debt": personal_debt,
+        "monthly_living_expenses": monthly_living_expenses,
+        "campaign_expenditure": campaign_expenditure,
         "experience": experience,
         "reputation": reputation,
         "local_leader_relationship": local_leader_relationship,
@@ -604,6 +703,7 @@ func load_game() -> bool:
     if typeof(parsed) != TYPE_DICTIONARY or not bool(parsed.get("career_started", false)):
         return false
 
+    var loaded_save_version := int(parsed.get("save_version", 1))
     year = int(parsed.get("year", 2026))
     month = clampi(int(parsed.get("month", 1)), 1, 12)
     character_name = str(parsed.get("character_name", "New Politician"))
@@ -616,6 +716,9 @@ func load_game() -> bool:
     player_role = str(parsed.get("player_role", "Ordinary citizen"))
     career_rank = str(parsed.get("career_rank", "Ordinary citizen"))
     personal_funds = int(parsed.get("personal_funds", 50000))
+    personal_debt = int(parsed.get("personal_debt", 0))
+    monthly_living_expenses = int(parsed.get("monthly_living_expenses", 22000))
+    campaign_expenditure = int(parsed.get("campaign_expenditure", 0))
     experience = int(parsed.get("experience", 0))
     reputation = float(parsed.get("reputation", 0.0))
     local_leader_relationship = float(parsed.get("local_leader_relationship", 0.0))
@@ -643,6 +746,15 @@ func load_game() -> bool:
     local_infrastructure = float(parsed.get("local_infrastructure", 50.0))
     local_service_quality = float(parsed.get("local_service_quality", 50.0))
     public_trust = float(parsed.get("public_trust", 50.0))
-    monthly_income = int(parsed.get("monthly_income", 1500))
+    monthly_income = int(parsed.get("monthly_income", 35000))
+    if loaded_save_version < 5:
+        # Migrate older saves from the prototype's nominal stipend to the new modeled household budget.
+        monthly_income = 35000
+        monthly_living_expenses = 22000
+    for party_id in parties.keys():
+        var party_record: Dictionary = parties[party_id]
+        if not party_record.has("debt"):
+            party_record["debt"] = 0
+        parties[party_id] = party_record
     notifications = ["Saved career loaded."]
     return true
