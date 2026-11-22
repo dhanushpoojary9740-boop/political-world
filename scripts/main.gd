@@ -33,6 +33,7 @@ var party_member_area: VBoxContainer
 var duty_member_picker: OptionButton
 var duty_role_picker: OptionButton
 var party_member_status: Label
+var election_detail_labels: Dictionary = {}
 
 func _ready() -> void:
     world = WorldSimulationScript.new()
@@ -358,19 +359,34 @@ func _build_dashboard() -> void:
     _add_body(party_finances, "Personal cash, party funds, party debt, and election campaign spending are tracked separately. Values are a simplified game economy, not audited real-world party accounts.")
 
     var elections_page := _new_tab(dashboard_box, "Elections")
-    _add_section_title(elections_page, "DEMOCRATIC COMPETITION")
-    election_page_summary = _add_page_summary(elections_page, "ELECTION BRIEFING", "Your next contest", "Check the election schedule, ticket eligibility, and campaign status.")
+    _add_section_title(elections_page, "ELECTIONS & CAMPAIGNS")
+    election_page_summary = _add_page_summary(elections_page, "ELECTION BRIEFING", "Election calendar", "Each election type has its own schedule and campaign rules.")
     var election_tabs := TabContainer.new()
     election_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    election_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
     elections_page.add_child(election_tabs)
-    var election_status := _new_tab(election_tabs, "Election status")
-    _add_section_title(election_status, "LOCAL ELECTION")
-    _add_body(election_status, "Election date, ticket status, and result are summarized on Overview.")
-    var election_campaign := _new_tab(election_tabs, "Campaign")
-    _add_section_title(election_campaign, "CANDIDATE ACTIONS")
-    _add_body(election_campaign, "Apply when eligible. Campaigning is available only after your party approves your ticket.")
-    _add_button(election_campaign, "Apply for local election ticket", func(): _run_activity("request_ticket"))
-    _add_button(election_campaign, "Campaign as approved candidate", func(): _run_activity("campaign"))
+
+    var local_elections := _new_tab(election_tabs, "Local bodies")
+    _add_section_title(local_elections, "LOCAL-BODY ELECTION")
+    election_detail_labels["local"] = _add_body(local_elections, "")
+    _add_button(local_elections, "Apply for local election ticket", func(): _run_activity("request_ticket"))
+    _add_button(local_elections, "Campaign as approved candidate", func(): _run_activity("campaign"))
+    _add_body(local_elections, "If you do not register or receive a ticket, your party’s AI organization can still field a candidate and campaign. You do not gain office unless you personally contest and win.")
+
+    var karnataka_elections := _new_tab(election_tabs, "Karnataka")
+    _add_section_title(karnataka_elections, "KARNATAKA ASSEMBLY")
+    election_detail_labels["karnataka"] = _add_body(karnataka_elections, "")
+    _add_body(karnataka_elections, "You act as party high command in Karnataka. Until a separate candidate-selection workflow is available, the AI organization handles campaign operations and candidate participation; no public office is granted automatically to you.")
+
+    var other_state_elections := _new_tab(election_tabs, "Other states")
+    _add_section_title(other_state_elections, "OTHER STATE ASSEMBLIES")
+    election_detail_labels["other_states"] = _add_body(other_state_elections, "")
+    _add_body(other_state_elections, "Your party’s state units autonomously select candidates, campaign, and contest in other states. Their results affect regional support and party strength.")
+
+    var national_elections := _new_tab(election_tabs, "Lok Sabha")
+    _add_section_title(national_elections, "LOK SABHA ELECTION")
+    election_detail_labels["national"] = _add_body(national_elections, "")
+    _add_body(national_elections, "National campaigning and seat allocation are AI-managed in this simulation. Election results update the shared political world; they do not appoint you to office unless your own candidacy and victory are explicitly modeled.")
 
     var district_page := _new_tab(dashboard_box, "District")
     _add_section_title(district_page, "PARTY LEADERSHIP")
@@ -851,6 +867,7 @@ func _refresh() -> void:
         election_label.text = world.election_summary()
         if is_instance_valid(election_page_summary):
             election_page_summary.text = world.election_summary()
+        _refresh_election_tabs()
         conditions_label.text = world.local_conditions_summary()
         if is_instance_valid(world_politics_label):
             world_politics_label.text = world.world_politics_summary()
@@ -863,6 +880,41 @@ func _refresh() -> void:
             office_label.text = world.office_summary().replace("\\n", "\n")
             _refresh_office_missions()
             _refresh_office_log()
+
+
+func _refresh_election_tabs() -> void:
+    if election_detail_labels.is_empty() or world.world_state.is_empty():
+        return
+    var local_text := "Area: %s\nNext local election: December %d\nCurrent status: %s\nPrevious result: %s\nYour party’s AI campaign is the fallback if you do not register or receive approval. The AI result does not grant you an elected office." % [
+        world.local_election_area(), world.local_election_year,
+        "Completed" if world.local_election_completed else "Scheduled",
+        world.last_local_election_result if world.last_local_election_year > 0 else "No result recorded"
+    ]
+    election_detail_labels["local"].text = local_text
+
+    var state_elections: Array = world.world_state.get("state_elections", [])
+    var karnataka_text := "Karnataka Assembly election schedule and AI campaign status.\n"
+    var other_text := "State | Next poll | Phase | Last result\n"
+    for election_variant in state_elections:
+        var election: Dictionary = election_variant
+        var state_name := str(election.get("state", ""))
+        var line := "%s | %s %d | %s | %s\n" % [
+            state_name, world._month_name(int(election.get("month", 1))), int(election.get("next_year", world.year)),
+            str(election.get("phase", "Scheduled")), str(election.get("last_result", "Not yet held"))
+        ]
+        if state_name == "Karnataka":
+            karnataka_text += line
+        else:
+            other_text += line
+    election_detail_labels["karnataka"].text = karnataka_text
+    election_detail_labels["other_states"].text = other_text
+
+    var national: Dictionary = world.world_state.get("national_election", {})
+    election_detail_labels["national"].text = "Next Lok Sabha poll: %s %d\nPhase: %s\nSeats modeled: %d\nLast result: %s\nAI-managed national campaigning and participation." % [
+        world._month_name(int(national.get("month", 5))), int(national.get("next_year", 2029)),
+        str(national.get("phase", "Scheduled")), int(national.get("seats", 543)),
+        str(national.get("last_result", "Not yet held"))
+    ]
 
 func _refresh_overview_metrics() -> void:
     if overview_metric_values.size() < 4:
