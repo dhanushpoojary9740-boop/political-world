@@ -18,6 +18,7 @@ var career_page_summary: Label
 var party_page_summary: Label
 var election_page_summary: Label
 var report_label: Label
+var world_politics_label: Label
 var name_input: LineEdit
 var age_input: SpinBox
 var city_input: LineEdit
@@ -290,6 +291,8 @@ func _build_dashboard() -> void:
     conditions_label = _add_body(overview, "")
     _add_button(overview, "ADVANCE ONE MONTH", _on_advance_month)
     _add_button(overview, "SAVE GAME NOW", _on_save_game)
+    _add_section_title(overview, "WORLD POLITICS")
+    world_politics_label = _add_body(overview, "India-wide political simulation will initialize with your career.")
     _add_section_title(overview, "WORLD REPORT")
     report_label = _add_body(overview, "Your political journey is ready to begin.")
 
@@ -823,6 +826,8 @@ func _refresh() -> void:
         if is_instance_valid(election_page_summary):
             election_page_summary.text = world.election_summary()
         conditions_label.text = world.local_conditions_summary()
+        if is_instance_valid(world_politics_label):
+            world_politics_label.text = world.world_politics_summary()
         office_tab.visible = world.has_elected_office
         if main_tab_buttons.size() > 5:
             main_tab_buttons[5].visible = world.has_elected_office
