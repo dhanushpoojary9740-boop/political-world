@@ -846,7 +846,8 @@ func _refresh() -> void:
         party_label.text = world.party_summary()
         if is_instance_valid(party_page_summary):
             party_page_summary.text = world.party_summary()
-        finance_label.text = world.finance_summary()\n        _refresh_party_members()
+        finance_label.text = world.finance_summary()
+        _refresh_party_members()
         election_label.text = world.election_summary()
         if is_instance_valid(election_page_summary):
             election_page_summary.text = world.election_summary()
