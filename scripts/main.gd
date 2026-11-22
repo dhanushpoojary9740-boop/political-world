@@ -13,6 +13,7 @@ var office_tab: VBoxContainer
 var office_label: Label
 var office_log_list: VBoxContainer
 var office_mission_list: VBoxContainer
+var district_label: Label
 var report_label: Label
 var name_input: LineEdit
 var age_input: SpinBox
@@ -136,7 +137,7 @@ func _build_bottom_navigation(parent: VBoxContainer) -> void:
     nav_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     main_tab_bar.add_child(nav_row)
 
-    var tab_names: Array[String] = ["Overview", "Career", "Party", "Elections", "Office"]
+    var tab_names: Array[String] = ["Overview", "Career", "Party", "Elections", "District", "Office"]
     for index in range(tab_names.size()):
         var tab_button := Button.new()
         tab_button.text = tab_names[index]
@@ -154,7 +155,7 @@ func _build_bottom_navigation(parent: VBoxContainer) -> void:
 func _select_main_tab(index: int) -> void:
     if not is_instance_valid(dashboard_box):
         return
-    if index == 4 and not world.has_elected_office:
+    if index == 5 and not world.has_elected_office:
         return
     dashboard_box.current_tab = index
     _update_bottom_navigation()
@@ -250,6 +251,13 @@ func _build_dashboard() -> void:
     _add_body(election_campaign, "Apply when eligible. Campaigning is available only after your party approves your ticket.")
     _add_button(election_campaign, "Apply for local election ticket", func(): _run_activity("request_ticket"))
     _add_button(election_campaign, "Campaign as approved candidate", func(): _run_activity("campaign"))
+
+    var district_page := _new_tab(dashboard_box, "District")
+    _add_section_title(district_page, "DISTRICT-LEVEL PARTY PROGRESSION")
+    _add_body(district_page, "Build a record of service and party standing before applying for a district organization role. Party appointment is separate from election to public office.")
+    district_label = _add_body(district_page, "")
+    _add_info_card(district_page, "Authority boundary", "A district party role is internal party leadership. It does not grant a government seat, control over district officials, public money, or statutory decision-making powers.", "PARTY ORGANIZATION ONLY")
+    _add_button(district_page, "Apply for district party role", func(): _run_activity("district_apply"))
 
     office_tab = _new_tab(dashboard_box, "Elected Office")
     var office_tabs := TabContainer.new()
@@ -540,8 +548,10 @@ func _refresh() -> void:
         election_label.text = world.election_summary()
         conditions_label.text = world.local_conditions_summary()
         office_tab.visible = world.has_elected_office
-        if main_tab_buttons.size() > 4:
-            main_tab_buttons[4].visible = world.has_elected_office
+        if main_tab_buttons.size() > 5:
+            main_tab_buttons[5].visible = world.has_elected_office
+        if is_instance_valid(district_label):
+            district_label.text = world.district_progression_summary()
         if world.has_elected_office:
             office_label.text = world.office_summary().replace("\\n", "\n")
             _refresh_office_missions()

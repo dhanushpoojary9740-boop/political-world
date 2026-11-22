@@ -96,6 +96,10 @@ var local_infrastructure: float = 50.0
 var local_service_quality: float = 50.0
 var public_trust: float = 50.0
 var monthly_income: int = 35000
+var district_party_role: String = ""
+var district_role_application_pending: bool = false
+var district_role_approved: bool = false
+var district_service_record: int = 0
 
 func initialize() -> void:
     parties = {
@@ -176,6 +180,10 @@ func start_career(name: String, age: int, city: String, path: String, party_name
     office_missions.clear()
     office_mission_history.clear()
     office_mission_counter = 0
+    district_party_role = ""
+    district_role_application_pending = false
+    district_role_approved = false
+    district_service_record = 0
 
     if path == "join":
         player_party_id = "party_established"
@@ -247,6 +255,8 @@ func perform_activity(activity: String) -> Array[String]:
             _request_local_ticket()
         "campaign":
             _run_local_campaign()
+        "district_apply":
+            request_district_party_role()
         "office_proposal":
             submit_office_proposal()
         "office_issue":
@@ -403,6 +413,7 @@ func complete_office_mission(mission_id: int) -> Array[String]:
             public_trust = minf(100.0, public_trust + 0.25)
             mission["status"] = "Follow-up completed"
             notifications.append("You requested written updates from %s and recorded the follow-up for %s." % [department, title_text])
+        district_service_record += 1
         mission["completed_index"] = current_index
         office_missions[i] = mission
         office_mission_history.append(mission.duplicate(true))
@@ -651,6 +662,40 @@ func office_activity_summary() -> String:
         return "No office matters filed yet."
     return "\n".join(lines)
 
+func district_progression_summary() -> String:
+    var status := "Not yet eligible"
+    if district_role_approved:
+        status = "Approved: %s" % district_party_role
+    elif district_role_application_pending:
+        status = "Application pending party review"
+    var party_members := 0
+    if parties.has(player_party_id):
+        party_members = int(parties[player_party_id].get("members", 0))
+    return "DISTRICT-LEVEL PARTY PROGRESSION\nStatus: %s\nService record: %d / 3 completed local-office responsibilities\nExperience: %d / 30\nReputation: %.1f / 10\nParty leadership relationship: %.1f / 20\nParty membership: %d / 50\n\nDistrict party roles are organizational positions, not elected government offices. Approval grants no statutory or administrative authority. District government roles and elections will be added as a separate progression system." % [status, district_service_record, experience, reputation, local_leader_relationship, party_members]
+
+func request_district_party_role() -> void:
+    if district_role_approved:
+        notifications.append("You already hold the district-level party role: %s." % district_party_role)
+        return
+    if district_role_application_pending:
+        notifications.append("Your district-level party role application is already pending review.")
+        return
+    var party_members := 0
+    if parties.has(player_party_id):
+        party_members = int(parties[player_party_id].get("members", 0))
+    var has_local_standing := career_rank == "Local Party Leader" or has_elected_office
+    if experience < 30 or reputation < 10.0 or local_leader_relationship < 20.0 or party_members < 50 or district_service_record < 3 or not has_local_standing:
+        notifications.append("Your district-level application was not accepted. Complete at least 3 local-office responsibilities, build experience (30), reputation (10), party leadership relationship (20), party membership (50), and local standing as a Local Party Leader or elected representative.")
+        return
+    district_role_application_pending = true
+    # Party review is modeled as an eligibility-based decision, not an instant public mandate.
+    district_role_approved = true
+    district_role_application_pending = false
+    district_party_role = "District Organization Secretary"
+    player_role = district_party_role
+    career_rank = district_party_role
+    notifications.append("Party review approved your appointment as District Organization Secretary. This is an internal party role only; it does not confer an elected seat, public funds, or government powers.")
+
 func _check_promotion() -> void:
     if career_path == "join" and career_rank == "Party volunteer" and experience >= ACTIVE_WORKER_XP and reputation >= ACTIVE_WORKER_REPUTATION:
         career_rank = "Active Party Worker"
@@ -832,7 +877,7 @@ const SAVE_PATH := "user://political_world_save.json"
 
 func save_game() -> bool:
     var save_data: Dictionary = {
-        "save_version": 7,
+        "save_version": 8,
         "year": year,
         "month": month,
         "character_name": character_name,
@@ -877,7 +922,11 @@ func save_game() -> bool:
         "local_infrastructure": local_infrastructure,
         "local_service_quality": local_service_quality,
         "public_trust": public_trust,
-        "monthly_income": monthly_income
+        "monthly_income": monthly_income,
+        "district_party_role": district_party_role,
+        "district_role_application_pending": district_role_application_pending,
+        "district_role_approved": district_role_approved,
+        "district_service_record": district_service_record
     }
     var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
     if file == null:
@@ -949,6 +998,10 @@ func load_game() -> bool:
     local_service_quality = float(parsed.get("local_service_quality", 50.0))
     public_trust = float(parsed.get("public_trust", 50.0))
     monthly_income = int(parsed.get("monthly_income", 35000))
+    district_party_role = str(parsed.get("district_party_role", ""))
+    district_role_application_pending = bool(parsed.get("district_role_application_pending", false))
+    district_role_approved = bool(parsed.get("district_role_approved", false))
+    district_service_record = int(parsed.get("district_service_record", 0))
     if loaded_save_version < 5:
         # Migrate older saves from the prototype's nominal stipend to the new modeled household budget.
         monthly_income = 35000
