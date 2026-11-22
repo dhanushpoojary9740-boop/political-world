@@ -11,7 +11,7 @@ var election_label: Label
 var conditions_label: Label
 var office_tab: VBoxContainer
 var office_label: Label
-var office_log_label: Label
+var office_log_list: VBoxContainer
 var report_label: Label
 var name_input: LineEdit
 var age_input: SpinBox
@@ -237,18 +237,89 @@ func _build_dashboard() -> void:
     office_tab = _new_tab(dashboard_box, "Elected Office")
     var office_tabs := TabContainer.new()
     office_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    office_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
     office_tabs.custom_minimum_size = Vector2(0, 320)
     office_tab.add_child(office_tabs)
+
     var office_responsibilities := _new_tab(office_tabs, "Responsibilities")
     _add_section_title(office_responsibilities, "YOUR ELECTED OFFICE")
     office_label = _add_body(office_responsibilities, "")
-    _add_button(office_responsibilities, "Submit constituency development proposal", func(): _run_activity("office_proposal"))
-    _add_button(office_responsibilities, "Raise constituency public-service issue", func(): _run_activity("office_issue"))
-    _add_button(office_responsibilities, "Revise and resubmit returned proposal", func(): _run_activity("office_resubmit"))
+    _add_info_card(office_responsibilities, "Your mandate", "Represent residents, raise local concerns, and submit development proposals. Council review and department execution remain with responsible officials.", "AUTHORITY")
+    _add_office_action_card(office_responsibilities, "Constituency development", "Submit a project proposal for council review. If approved, the responsible department schedules and implements the work.", "SUBMIT PROPOSAL", func(): _run_activity("office_proposal"))
+    _add_office_action_card(office_responsibilities, "Public-service issue", "Report a service problem for the relevant AI department to investigate and resolve.", "RAISE ISSUE", func(): _run_activity("office_issue"))
+    _add_office_action_card(office_responsibilities, "Returned proposal", "Revise a proposal returned by the council and send it back for review.", "REVISE & RESUBMIT", func(): _run_activity("office_resubmit"))
+
     var office_log := _new_tab(office_tabs, "Work log")
     _add_section_title(office_log, "OFFICE WORK LOG")
-    office_log_label = _add_body(office_log, "")
-    _add_body(office_responsibilities, "Council review and routine administration remain with AI officials. Your authority is limited to representing constituents and submitting proposals or issues.")
+    _add_body(office_log, "Track each submission from review to implementation.")
+    office_log_list = VBoxContainer.new()
+    office_log_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    office_log_list.add_theme_constant_override("separation", 10)
+    office_log.add_child(office_log_list)
+
+func _add_info_card(parent: VBoxContainer, title_text: String, detail_text: String, status_text: String) -> void:
+    var card := PanelContainer.new()
+    card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    card.add_theme_stylebox_override("panel", _card_style())
+    parent.add_child(card)
+    var body := VBoxContainer.new()
+    body.add_theme_constant_override("separation", 6)
+    card.add_child(body)
+    var title := Label.new()
+    title.text = title_text
+    title.add_theme_font_size_override("font_size", 16)
+    title.add_theme_color_override("font_color", Color("#f0d18a"))
+    body.add_child(title)
+    var detail := _add_body(body, detail_text)
+    detail.add_theme_font_size_override("font_size", 14)
+    var status := Label.new()
+    status.text = status_text
+    status.add_theme_font_size_override("font_size", 11)
+    status.add_theme_color_override("font_color", Color("#9db5c8"))
+    body.add_child(status)
+
+func _add_office_action_card(parent: VBoxContainer, title_text: String, detail_text: String, button_text: String, callback: Callable) -> void:
+    var card := PanelContainer.new()
+    card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    card.add_theme_stylebox_override("panel", _card_style())
+    parent.add_child(card)
+    var body := VBoxContainer.new()
+    body.add_theme_constant_override("separation", 7)
+    card.add_child(body)
+    var title := Label.new()
+    title.text = title_text
+    title.add_theme_font_size_override("font_size", 16)
+    title.add_theme_color_override("font_color", Color("#f0d18a"))
+    body.add_child(title)
+    var detail := _add_body(body, detail_text)
+    detail.add_theme_font_size_override("font_size", 14)
+    _add_button(body, button_text, callback)
+
+func _card_style() -> StyleBoxFlat:
+    var style := StyleBoxFlat.new()
+    style.bg_color = Color("#142333")
+    style.border_color = Color("#30465a")
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(12)
+    style.set_content_margin_all(14)
+    return style
+
+func _refresh_office_log() -> void:
+    if not is_instance_valid(office_log_list):
+        return
+    _clear_children(office_log_list)
+    var entries: Array[Dictionary] = []
+    for proposal in world.office_proposals:
+        entries.append({"kind": "PROPOSAL", "title": str(proposal.get("title", "Development proposal")), "status": str(proposal.get("status", "Pending"))})
+    for issue in world.constituency_issues:
+        entries.append({"kind": "PUBLIC SERVICE", "title": str(issue.get("topic", "Constituency issue")), "status": str(issue.get("status", "Submitted"))})
+    if entries.is_empty():
+        _add_info_card(office_log_list, "No matters filed yet", "Your submissions and their progress will appear here.", "READY")
+        return
+    var start_index := maxi(0, entries.size() - 12)
+    for i in range(start_index, entries.size()):
+        var entry: Dictionary = entries[i]
+        _add_info_card(office_log_list, str(entry["title"]), str(entry["kind"]), str(entry["status"]).to_upper())
 
 func _new_tab(parent: TabContainer, tab_title: String) -> VBoxContainer:
     var page := VBoxContainer.new()
@@ -281,6 +352,7 @@ func _add_body(parent: VBoxContainer, text_value: String) -> Label:
     var label := Label.new()
     label.text = text_value
     label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     label.add_theme_color_override("font_color", Color("#d4dce3"))
     parent.add_child(label)
     return label
@@ -363,7 +435,7 @@ func _refresh() -> void:
             main_tab_buttons[4].visible = world.has_elected_office
         if world.has_elected_office:
             office_label.text = world.office_summary()
-            office_log_label.text = world.office_activity_summary()
+            _refresh_office_log()
 
 func _notification(what: int) -> void:
     if not is_instance_valid(world) or not world.career_started:

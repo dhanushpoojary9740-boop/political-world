@@ -479,7 +479,7 @@ func office_summary() -> String:
     for issue in constituency_issues:
         if str(issue.get("status", "")) == "Submitted to AI department":
             active_issues += 1
-    return "Office: %s\\nConstituency: %s, %s\\nOpen proposals: %d / 2\\nIssues awaiting AI department: %d / 3\\nYour authority: represent constituents, submit proposals, and raise issues. Council review and routine administration remain with AI officials." % [
+    return "Office: %s\nConstituency: %s, %s\nOpen proposals: %d / 2\nIssues awaiting AI department: %d / 3\nYour authority: represent constituents, submit proposals, and raise issues. Council review and routine administration remain with AI officials." % [
         elected_office_name, home_city, home_state, pending_proposals, active_issues
     ]
 
@@ -493,7 +493,7 @@ func office_activity_summary() -> String:
         lines.append("Issue: %s — %s" % [str(issue.get("topic", "")), str(issue.get("status", ""))])
     if lines.is_empty():
         return "No office matters filed yet."
-    return "\\n".join(lines)
+    return "\n".join(lines)
 
 func _check_promotion() -> void:
     if career_path == "join" and career_rank == "Party volunteer" and experience >= ACTIVE_WORKER_XP and reputation >= ACTIVE_WORKER_REPUTATION:
@@ -611,19 +611,19 @@ func party_summary() -> String:
 func election_summary() -> String:
     if local_election_completed:
         if local_election_result == "WON":
-            return "Local election: completed (%d)\\nArea: %s\\nResult: WON — %.1f%% of votes\\nAI opponent: %s\\nElected office: %s" % [
+            return "Local election: completed (%d)\nArea: %s\nResult: WON — %.1f%% of votes\nAI opponent: %s\nElected office: %s" % [
                 local_election_year, local_election_area(), election_vote_share, rival_candidate_name, elected_office_name
             ]
         if local_election_result == "LOST":
-            return "Local election: completed (%d)\\nArea: %s\\nResult: LOST — %.1f%% of votes\\nAI opponent: %s\\nNo elected office or government authority." % [
+            return "Local election: completed (%d)\nArea: %s\nResult: LOST — %.1f%% of votes\nAI opponent: %s\nNo elected office or government authority." % [
                 local_election_year, local_election_area(), election_vote_share, rival_candidate_name
             ]
-        return "Local election: completed (%d)\\nArea: %s\\nYou were not an approved candidate." % [local_election_year, local_election_area()]
+        return "Local election: completed (%d)\nArea: %s\nYou were not an approved candidate." % [local_election_year, local_election_area()]
     if local_candidate_selected:
-        return "Local election: December %d\\nArea: %s\\nYour party ticket is approved. Campaigning is open." % [local_election_year, local_election_area()]
+        return "Local election: December %d\nArea: %s\nYour party ticket is approved. Campaigning is open." % [local_election_year, local_election_area()]
     if ticket_requested:
-        return "Local election: December %d\\nArea: %s\\nYour ticket application is under review." % [local_election_year, local_election_area()]
-    return "Local election: December %d\\nApply for a party ticket when you meet the eligibility requirements."
+        return "Local election: December %d\nArea: %s\nYour ticket application is under review." % [local_election_year, local_election_area()]
+    return "Local election: December %d\nApply for a party ticket when you meet the eligibility requirements."
 
 func _format_number(value: int) -> String:
     var negative := value < 0
