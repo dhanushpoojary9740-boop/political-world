@@ -37,7 +37,54 @@ func _ready() -> void:
         report_label.text = "Saved career restored automatically."
     _refresh()
 
+func _apply_premium_theme() -> void:
+    var premium := Theme.new()
+    premium.default_font_size = 15
+    premium.set_color("font_color", "Label", Color("#e8edf2"))
+    premium.set_color("font_color", "Button", Color("#f4ead6"))
+    premium.set_color("font_hover_color", "Button", Color("#ffffff"))
+    premium.set_color("font_pressed_color", "Button", Color("#10202a"))
+    premium.set_color("font_color", "LineEdit", Color("#f4ead6"))
+    premium.set_color("font_color", "SpinBox", Color("#f4ead6"))
+    premium.set_color("font_placeholder_color", "LineEdit", Color("#8193a5"))
+    premium.set_color("caret_color", "LineEdit", Color("#e7bd62"))
+    premium.set_color("selection_color", "LineEdit", Color("#6d572e"))
+    premium.set_color("font_color", "TabBar", Color("#b9c6d2"))
+    premium.set_color("font_selected_color", "TabBar", Color("#f0d18a"))
+    premium.set_font_size("font_size", "Button", 14)
+    premium.set_font_size("font_size", "Label", 15)
+
+    var input_style := StyleBoxFlat.new()
+    input_style.bg_color = Color("#111f2c")
+    input_style.border_color = Color("#344b5e")
+    input_style.set_border_width_all(1)
+    input_style.set_corner_radius_all(10)
+    input_style.set_content_margin_all(12)
+    premium.set_stylebox("normal", "LineEdit", input_style)
+    premium.set_stylebox("focus", "LineEdit", input_style)
+    premium.set_stylebox("normal", "SpinBox", input_style)
+    premium.set_stylebox("focus", "SpinBox", input_style)
+
+    var button_normal := _button_style("#203345")
+    button_normal.border_color = Color("#3a5265")
+    button_normal.set_border_width_all(1)
+    premium.set_stylebox("normal", "Button", button_normal)
+    premium.set_stylebox("hover", "Button", _button_style("#2b465b"))
+    premium.set_stylebox("pressed", "Button", _button_style("#b98b42"))
+    premium.set_stylebox("disabled", "Button", _button_style("#172633"))
+
+    var panel_style := StyleBoxFlat.new()
+    panel_style.bg_color = Color("#101d2a")
+    panel_style.border_color = Color("#263b4d")
+    panel_style.set_border_width_all(1)
+    panel_style.set_corner_radius_all(14)
+    panel_style.set_content_margin_all(12)
+    premium.set_stylebox("panel", "PanelContainer", panel_style)
+    premium.set_stylebox("panel", "TabContainer", panel_style)
+    theme = premium
+
 func _build_ui() -> void:
+    _apply_premium_theme()
     var background := ColorRect.new()
     background.color = Color("#0b1420")
     background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -123,17 +170,17 @@ func _configure_touch_scroll_passthrough(node: Node) -> void:
 func _build_bottom_navigation(parent: VBoxContainer) -> void:
     main_tab_bar = ScrollContainer.new()
     main_tab_bar.name = "BottomNavigation"
-    main_tab_bar.custom_minimum_size = Vector2(0, 64)
+    main_tab_bar.custom_minimum_size = Vector2(0, 72)
     main_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     main_tab_bar.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
     main_tab_bar.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    main_tab_bar.add_theme_stylebox_override("panel", _button_style("#101f2d"))
+    main_tab_bar.add_theme_stylebox_override("panel", _button_style("#0e1b28"))
     main_tab_bar.size_flags_vertical = Control.SIZE_SHRINK_END
     main_tab_bar.visible = false
     parent.add_child(main_tab_bar)
 
     var nav_row := HBoxContainer.new()
-    nav_row.add_theme_constant_override("separation", 8)
+    nav_row.add_theme_constant_override("separation", 10)
     nav_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     main_tab_bar.add_child(nav_row)
 
@@ -141,11 +188,11 @@ func _build_bottom_navigation(parent: VBoxContainer) -> void:
     for index in range(tab_names.size()):
         var tab_button := Button.new()
         tab_button.text = tab_names[index]
-        tab_button.custom_minimum_size = Vector2(104, 48)
-        tab_button.add_theme_font_size_override("font_size", 13)
+        tab_button.custom_minimum_size = Vector2(112, 54)
+        tab_button.add_theme_font_size_override("font_size", 14)
         tab_button.add_theme_color_override("font_color", Color("#f2e8d5"))
-        tab_button.add_theme_stylebox_override("normal", _button_style("#1b2a38"))
-        tab_button.add_theme_stylebox_override("hover", _button_style("#2c4354"))
+        tab_button.add_theme_stylebox_override("normal", _button_style("#172a39"))
+        tab_button.add_theme_stylebox_override("hover", _button_style("#29465a"))
         tab_button.add_theme_stylebox_override("pressed", _button_style("#b98b42"))
         tab_button.pressed.connect(_select_main_tab.bind(index))
         nav_row.add_child(tab_button)
@@ -329,11 +376,15 @@ func _add_office_action_card(parent: VBoxContainer, title_text: String, detail_t
 
 func _card_style() -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
-    style.bg_color = Color("#142333")
-    style.border_color = Color("#30465a")
+    style.bg_color = Color("#142638")
+    style.border_color = Color("#3a5264")
     style.set_border_width_all(1)
-    style.set_corner_radius_all(12)
-    style.set_content_margin_all(14)
+    style.border_width_left = 3
+    style.set_corner_radius_all(14)
+    style.set_content_margin_all(16)
+    style.shadow_color = Color(0, 0, 0, 0.22)
+    style.shadow_size = 4
+    style.shadow_offset = Vector2(0, 2)
     return style
 
 func _refresh_office_missions() -> void:
@@ -461,8 +512,8 @@ func _add_line_input(parent: VBoxContainer, label_text: String, placeholder_text
 func _add_section_title(parent: VBoxContainer, text_value: String) -> void:
     var label := Label.new()
     label.text = text_value
-    label.add_theme_font_size_override("font_size", 18)
-    label.add_theme_color_override("font_color", Color("#d9b56d"))
+    label.add_theme_font_size_override("font_size", 19)
+    label.add_theme_color_override("font_color", Color("#e8c579"))
     parent.add_child(label)
 
 func _add_body(parent: VBoxContainer, text_value: String) -> Label:
@@ -487,10 +538,10 @@ func _add_button(parent: VBoxContainer, text_value: String, callback: Callable) 
 func _button_style(color_value: String) -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
     style.bg_color = Color(color_value)
-    style.corner_radius_top_left = 10
-    style.corner_radius_top_right = 10
-    style.corner_radius_bottom_left = 10
-    style.corner_radius_bottom_right = 10
+    style.corner_radius_top_left = 12
+    style.corner_radius_top_right = 12
+    style.corner_radius_bottom_left = 12
+    style.corner_radius_bottom_right = 12
     style.content_margin_left = 12
     style.content_margin_right = 12
     return style
