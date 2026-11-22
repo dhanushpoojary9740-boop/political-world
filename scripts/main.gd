@@ -1,7 +1,7 @@
 extends Control
 
 const WorldSimulationScript = preload("res://scripts/world_simulation.gd")
-var world: WorldSimulation
+var world: PoliticalWorldSimulation
 
 var date_label: Label
 var career_label: Label

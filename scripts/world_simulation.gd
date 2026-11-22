@@ -1,5 +1,5 @@
 extends RefCounted
-class_name WorldSimulation
+class_name PoliticalWorldSimulation
 
 const LOCAL_ELECTION_MONTH := 12
 const LOCAL_ELECTION_CYCLE_YEARS := 5 # Simplified prototype cycle; real local-body terms vary by jurisdiction.
