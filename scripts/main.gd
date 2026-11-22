@@ -26,6 +26,7 @@ var setup_box: VBoxContainer
 var dashboard_box: TabContainer
 var main_tab_bar: ScrollContainer
 var main_tab_buttons: Array[Button] = []
+var overview_metric_values: Array[Label] = []
 
 func _ready() -> void:
     world = WorldSimulationScript.new()
@@ -276,6 +277,9 @@ func _build_setup() -> void:
 
 func _build_dashboard() -> void:
     var overview := _new_tab(dashboard_box, "Overview")
+    _add_dashboard_hero(overview)
+    _add_section_title(overview, "YOUR STANDING")
+    _add_overview_metrics(overview)
     _add_section_title(overview, "CAREER SNAPSHOT")
     career_label = _add_body(overview, "")
     _add_section_title(overview, "PARTY SNAPSHOT")
@@ -374,6 +378,105 @@ func _build_dashboard() -> void:
     office_log_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     office_log_list.add_theme_constant_override("separation", 10)
     office_log.add_child(office_log_list)
+
+func _add_dashboard_hero(parent: VBoxContainer) -> void:
+    var hero := PanelContainer.new()
+    hero.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    hero.add_theme_stylebox_override("panel", _hero_style())
+    parent.add_child(hero)
+
+    var copy := VBoxContainer.new()
+    copy.add_theme_constant_override("separation", 5)
+    hero.add_child(copy)
+
+    var eyebrow := Label.new()
+    eyebrow.text = "POLITICAL CAREER  /  INDIA"
+    eyebrow.add_theme_font_size_override("font_size", 10)
+    eyebrow.add_theme_color_override("font_color", Color("#c6b06f"))
+    copy.add_child(eyebrow)
+
+    var headline := Label.new()
+    headline.text = "Your political journey"
+    headline.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    headline.add_theme_font_size_override("font_size", 23)
+    headline.add_theme_color_override("font_color", Color("#f2e9d7"))
+    copy.add_child(headline)
+
+    var supporting := Label.new()
+    supporting.text = "Build trust, earn responsibility, and grow through public service."
+    supporting.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    supporting.add_theme_font_size_override("font_size", 13)
+    supporting.add_theme_color_override("font_color", Color("#aebdcb"))
+    copy.add_child(supporting)
+    _configure_touch_scroll_passthrough(hero)
+
+func _add_overview_metrics(parent: VBoxContainer) -> void:
+    var grid := GridContainer.new()
+    grid.name = "StandingMetricGrid"
+    grid.columns = 2
+    grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    grid.add_theme_constant_override("h_separation", 9)
+    grid.add_theme_constant_override("v_separation", 9)
+    parent.add_child(grid)
+
+    var metric_specs: Array[Dictionary] = [
+        {"label": "CAREER RANK", "value": "Ordinary citizen", "hint": "Your current position"},
+        {"label": "PERSONAL FUNDS", "value": "₹0", "hint": "Personal account"},
+        {"label": "PARTY STANDING", "value": "No party", "hint": "Membership and support"},
+        {"label": "PUBLIC TRUST", "value": "50 / 100", "hint": "Local confidence"}
+    ]
+    for spec in metric_specs:
+        var card := PanelContainer.new()
+        card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        card.custom_minimum_size = Vector2(0, 112)
+        card.add_theme_stylebox_override("panel", _metric_card_style())
+        grid.add_child(card)
+
+        var body := VBoxContainer.new()
+        body.add_theme_constant_override("separation", 4)
+        card.add_child(body)
+
+        var label := Label.new()
+        label.text = str(spec["label"])
+        label.add_theme_font_size_override("font_size", 10)
+        label.add_theme_color_override("font_color", Color("#a8b8c8"))
+        body.add_child(label)
+
+        var value := Label.new()
+        value.text = str(spec["value"])
+        value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        value.add_theme_font_size_override("font_size", 18)
+        value.add_theme_color_override("font_color", Color("#f1e6cf"))
+        body.add_child(value)
+        overview_metric_values.append(value)
+
+        var hint := Label.new()
+        hint.text = str(spec["hint"])
+        hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        hint.add_theme_font_size_override("font_size", 10)
+        hint.add_theme_color_override("font_color", Color("#8298ad"))
+        body.add_child(hint)
+        _configure_touch_scroll_passthrough(card)
+
+func _hero_style() -> StyleBoxFlat:
+    var style := StyleBoxFlat.new()
+    style.bg_color = Color("#142538")
+    style.border_color = Color("#52617a")
+    style.set_border_width_all(1)
+    style.border_width_left = 3
+    style.border_color = Color("#c6a45d")
+    style.set_corner_radius_all(16)
+    style.set_content_margin_all(17)
+    return style
+
+func _metric_card_style() -> StyleBoxFlat:
+    var style := StyleBoxFlat.new()
+    style.bg_color = Color("#132235")
+    style.border_color = Color("#2c4056")
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(13)
+    style.set_content_margin_all(13)
+    return style
 
 func _add_page_summary(parent: VBoxContainer, eyebrow: String, title_text: String, initial_text: String) -> Label:
     var panel := PanelContainer.new()
@@ -708,6 +811,7 @@ func _save_progress() -> void:
 func _refresh() -> void:
     date_label.text = world.date_label()
     if world.career_started:
+        _refresh_overview_metrics()
         career_label.text = world.career_summary()
         if is_instance_valid(career_page_summary):
             career_page_summary.text = world.career_summary()
@@ -728,6 +832,18 @@ func _refresh() -> void:
             office_label.text = world.office_summary().replace("\\n", "\n")
             _refresh_office_missions()
             _refresh_office_log()
+
+func _refresh_overview_metrics() -> void:
+    if overview_metric_values.size() < 4:
+        return
+    overview_metric_values[0].text = world.career_rank
+    overview_metric_values[1].text = "₹" + world._format_number(world.personal_funds)
+    var party_status := "No party"
+    if world.player_party_id != "" and world.parties.has(world.player_party_id):
+        var party: Dictionary = world.parties[world.player_party_id]
+        party_status = "%s members" % world._format_number(int(party.get("members", 0)))
+    overview_metric_values[2].text = party_status
+    overview_metric_values[3].text = "%.0f / 100" % world.public_trust
 
 func _notification(what: int) -> void:
     if not is_instance_valid(world) or not world.career_started:
