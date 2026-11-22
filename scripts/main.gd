@@ -7,7 +7,7 @@ var date_label: Label
 var career_label: Label
 var party_label: Label
 var election_label: Label
-var office_box: VBoxContainer
+var office_tab: VBoxContainer
 var office_label: Label
 var office_log_label: Label
 var report_label: Label
@@ -16,7 +16,7 @@ var age_input: SpinBox
 var city_input: LineEdit
 var party_name_input: LineEdit
 var setup_box: VBoxContainer
-var dashboard_box: VBoxContainer
+var dashboard_box: TabContainer
 
 func _ready() -> void:
     world = WorldSimulationScript.new()
@@ -69,8 +69,11 @@ func _build_ui() -> void:
     root.add_child(setup_box)
     _build_setup()
 
-    dashboard_box = VBoxContainer.new()
-    dashboard_box.add_theme_constant_override("separation", 10)
+    dashboard_box = TabContainer.new()
+    dashboard_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    dashboard_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    dashboard_box.custom_minimum_size = Vector2(0, 520)
+    dashboard_box.add_theme_constant_override("side_margin", 6)
     dashboard_box.visible = false
     root.add_child(dashboard_box)
     _build_dashboard()
@@ -96,35 +99,85 @@ func _build_setup() -> void:
     _add_body(setup_box, "Joining starts you as a volunteer. Founding starts you with five supporters and limited funds. Neither path grants an elected office.")
 
 func _build_dashboard() -> void:
-    _add_section_title(dashboard_box, "YOUR CAREER")
-    career_label = _add_body(dashboard_box, "")
-    _add_section_title(dashboard_box, "YOUR PARTY")
-    party_label = _add_body(dashboard_box, "")
-    _add_section_title(dashboard_box, "LOCAL ELECTION")
-    election_label = _add_body(dashboard_box, "")
+    var overview := _new_tab(dashboard_box, "Overview")
+    _add_section_title(overview, "CAREER SNAPSHOT")
+    career_label = _add_body(overview, "")
+    _add_section_title(overview, "PARTY SNAPSHOT")
+    party_label = _add_body(overview, "")
+    _add_section_title(overview, "ELECTION SNAPSHOT")
+    election_label = _add_body(overview, "")
+    _add_button(overview, "ADVANCE ONE MONTH", _on_advance_month)
+    _add_button(overview, "SAVE GAME NOW", _on_save_game)
+    _add_section_title(overview, "WORLD REPORT")
+    report_label = _add_body(overview, "Your political journey is ready to begin.")
 
-    office_box = VBoxContainer.new()
-    office_box.add_theme_constant_override("separation", 8)
-    office_box.visible = false
-    dashboard_box.add_child(office_box)
-    _add_section_title(office_box, "YOUR ELECTED OFFICE")
-    office_label = _add_body(office_box, "")
-    _add_button(office_box, "Submit constituency development proposal", func(): _run_activity("office_proposal"))
-    _add_button(office_box, "Raise constituency public-service issue", func(): _run_activity("office_issue"))
-    _add_button(office_box, "Revise and resubmit returned proposal", func(): _run_activity("office_resubmit"))
-    _add_section_title(office_box, "OFFICE WORK LOG")
-    office_log_label = _add_body(office_box, "")
+    var career_page := _new_tab(dashboard_box, "Career")
+    var career_tabs := TabContainer.new()
+    career_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    career_tabs.custom_minimum_size = Vector2(0, 400)
+    career_page.add_child(career_tabs)
+    var career_profile := _new_tab(career_tabs, "Profile")
+    _add_section_title(career_profile, "YOUR CAREER")
+    var career_profile_label := _add_body(career_profile, "Career details are shown on Overview.")
+    career_profile_label.text = "Your rank, experience, reputation, leadership relationship, and personal funds are summarized on Overview."
+    var career_actions := _new_tab(career_tabs, "Activities")
+    _add_section_title(career_actions, "BUILD YOUR CAREER")
+    _add_body(career_actions, "Activities improve your standing over time. Your current political role limits what you can do.")
+    _add_button(career_actions, "Volunteer in a local campaign", func(): _run_activity("volunteer"))
+    _add_button(career_actions, "Organize community service", func(): _run_activity("community"))
+    _add_button(career_actions, "Attend a party meeting", func(): _run_activity("meeting"))
 
-    _add_button(dashboard_box, "Volunteer in a local campaign", func(): _run_activity("volunteer"))
-    _add_button(dashboard_box, "Organize community service", func(): _run_activity("community"))
-    _add_button(dashboard_box, "Attend a party meeting", func(): _run_activity("meeting"))
-    _add_button(dashboard_box, "Recruit a party member", func(): _run_activity("recruit"))
-    _add_button(dashboard_box, "Apply for local election ticket", func(): _run_activity("request_ticket"))
-    _add_button(dashboard_box, "Campaign as approved candidate", func(): _run_activity("campaign"))
-    _add_button(dashboard_box, "ADVANCE ONE MONTH", _on_advance_month)
-    _add_button(dashboard_box, "SAVE GAME NOW", _on_save_game)
-    _add_section_title(dashboard_box, "WORLD REPORT")
-    report_label = _add_body(dashboard_box, "Your political journey is ready to begin.")
+    var party_page := _new_tab(dashboard_box, "Party")
+    var party_tabs := TabContainer.new()
+    party_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    party_tabs.custom_minimum_size = Vector2(0, 400)
+    party_page.add_child(party_tabs)
+    var party_profile := _new_tab(party_tabs, "Party profile")
+    _add_section_title(party_profile, "YOUR PARTY")
+    _add_body(party_profile, "Party membership, funds, popularity, and your party role are summarized on Overview.")
+    var party_work := _new_tab(party_tabs, "Organization")
+    _add_section_title(party_work, "PARTY ORGANIZATION")
+    _add_body(party_work, "Grow your party through local activity and recruitment. The party's routine organization continues through the simulation.")
+    _add_button(party_work, "Recruit a party member", func(): _run_activity("recruit"))
+
+    var elections_page := _new_tab(dashboard_box, "Elections")
+    var election_tabs := TabContainer.new()
+    election_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    election_tabs.custom_minimum_size = Vector2(0, 400)
+    elections_page.add_child(election_tabs)
+    var election_status := _new_tab(election_tabs, "Election status")
+    _add_section_title(election_status, "LOCAL ELECTION")
+    _add_body(election_status, "Election date, ticket status, and result are summarized on Overview.")
+    var election_campaign := _new_tab(election_tabs, "Campaign")
+    _add_section_title(election_campaign, "CANDIDATE ACTIONS")
+    _add_body(election_campaign, "Apply when eligible. Campaigning is available only after your party approves your ticket.")
+    _add_button(election_campaign, "Apply for local election ticket", func(): _run_activity("request_ticket"))
+    _add_button(election_campaign, "Campaign as approved candidate", func(): _run_activity("campaign"))
+
+    office_tab = _new_tab(dashboard_box, "Elected Office")
+    var office_tabs := TabContainer.new()
+    office_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    office_tabs.custom_minimum_size = Vector2(0, 400)
+    office_tab.add_child(office_tabs)
+    var office_responsibilities := _new_tab(office_tabs, "Responsibilities")
+    _add_section_title(office_responsibilities, "YOUR ELECTED OFFICE")
+    office_label = _add_body(office_responsibilities, "")
+    _add_button(office_responsibilities, "Submit constituency development proposal", func(): _run_activity("office_proposal"))
+    _add_button(office_responsibilities, "Raise constituency public-service issue", func(): _run_activity("office_issue"))
+    _add_button(office_responsibilities, "Revise and resubmit returned proposal", func(): _run_activity("office_resubmit"))
+    var office_log := _new_tab(office_tabs, "Work log")
+    _add_section_title(office_log, "OFFICE WORK LOG")
+    office_log_label = _add_body(office_log, "")
+    _add_body(office_responsibilities, "Council review and routine administration remain with AI officials. Your authority is limited to representing constituents and submitting proposals or issues.")
+
+func _new_tab(parent: TabContainer, tab_title: String) -> VBoxContainer:
+    var page := VBoxContainer.new()
+    page.name = tab_title
+    page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    page.add_theme_constant_override("separation", 10)
+    parent.add_child(page)
+    parent.set_tab_title(parent.get_tab_count() - 1, tab_title)
+    return page
 
 func _add_line_input(parent: VBoxContainer, label_text: String, placeholder_text: String) -> LineEdit:
     var label := Label.new()
@@ -222,7 +275,7 @@ func _refresh() -> void:
         career_label.text = world.career_summary()
         party_label.text = world.party_summary()
         election_label.text = world.election_summary()
-        office_box.visible = world.has_elected_office
+        office_tab.visible = world.has_elected_office
         if world.has_elected_office:
             office_label.text = world.office_summary()
             office_log_label.text = world.office_activity_summary()
