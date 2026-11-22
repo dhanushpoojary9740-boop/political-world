@@ -234,9 +234,9 @@ func _ensure_election_schema() -> void:
             election["assembly_seats"] = int(election.get("assembly_seats", STATE_ASSEMBLY_SEATS.get(state_name, 60)))
             election["phase"] = str(election.get("phase", "Scheduled"))
             election["campaign_spend_by_party"] = election.get("campaign_spend_by_party", {})
-        election["high_command_slate_approved"] = bool(election.get("high_command_slate_approved", false))
-        election["high_command_priority"] = str(election.get("high_command_priority", "Balanced outreach"))
-        election["high_command_monthly_budget"] = int(election.get("high_command_monthly_budget", 50000))
+            election["high_command_slate_approved"] = bool(election.get("high_command_slate_approved", false))
+            election["high_command_priority"] = str(election.get("high_command_priority", "Balanced outreach"))
+            election["high_command_monthly_budget"] = int(election.get("high_command_monthly_budget", 50000))
             saved_elections[i] = election
         world_state["state_elections"] = saved_elections
 
