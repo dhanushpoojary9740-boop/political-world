@@ -17,6 +17,8 @@ var city_input: LineEdit
 var party_name_input: LineEdit
 var setup_box: VBoxContainer
 var dashboard_box: TabContainer
+var main_tab_bar: ScrollContainer
+var main_tab_buttons: Array[Button] = []
 
 func _ready() -> void:
     world = WorldSimulationScript.new()
@@ -26,12 +28,13 @@ func _ready() -> void:
     if has_saved_game and world.career_started:
         setup_box.visible = false
         dashboard_box.visible = true
+        main_tab_bar.visible = true
         report_label.text = "Saved career restored automatically."
     _refresh()
 
 func _build_ui() -> void:
     var background := ColorRect.new()
-    background.color = Color("#101820")
+    background.color = Color("#0b1420")
     background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     add_child(background)
 
@@ -51,7 +54,7 @@ func _build_ui() -> void:
     var title := Label.new()
     title.text = "POLITICAL WORLD"
     title.add_theme_font_size_override("font_size", 28)
-    title.add_theme_color_override("font_color", Color("#f1d28a"))
+    title.add_theme_color_override("font_color", Color("#d9b56d"))
     root.add_child(title)
 
     date_label = Label.new()
@@ -72,11 +75,60 @@ func _build_ui() -> void:
     dashboard_box = TabContainer.new()
     dashboard_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     dashboard_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    dashboard_box.custom_minimum_size = Vector2(0, 520)
+    dashboard_box.custom_minimum_size = Vector2(0, 390)
+    dashboard_box.tabs_visible = false
     dashboard_box.add_theme_constant_override("side_margin", 6)
     dashboard_box.visible = false
     root.add_child(dashboard_box)
     _build_dashboard()
+    _build_bottom_navigation(root)
+
+func _build_bottom_navigation(parent: VBoxContainer) -> void:
+    main_tab_bar = ScrollContainer.new()
+    main_tab_bar.name = "BottomNavigation"
+    main_tab_bar.custom_minimum_size = Vector2(0, 60)
+    main_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    main_tab_bar.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+    main_tab_bar.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED\n    main_tab_bar.add_theme_stylebox_override("panel", _button_style("#101f2d"))
+    main_tab_bar.visible = false
+    parent.add_child(main_tab_bar)
+
+    var nav_row := HBoxContainer.new()
+    nav_row.add_theme_constant_override("separation", 8)
+    nav_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    main_tab_bar.add_child(nav_row)
+
+    var tab_names: Array[String] = ["Overview", "Career", "Party", "Elections", "Office"]
+    for index in range(tab_names.size()):
+        var tab_button := Button.new()
+        tab_button.text = tab_names[index]
+        tab_button.custom_minimum_size = Vector2(96, 46)
+        tab_button.add_theme_font_size_override("font_size", 14)
+        tab_button.add_theme_color_override("font_color", Color("#f2e8d5"))
+        tab_button.add_theme_stylebox_override("normal", _button_style("#1b2a38"))
+        tab_button.add_theme_stylebox_override("hover", _button_style("#2c4354"))
+        tab_button.add_theme_stylebox_override("pressed", _button_style("#b98b42"))
+        tab_button.pressed.connect(_select_main_tab.bind(index))
+        nav_row.add_child(tab_button)
+        main_tab_buttons.append(tab_button)
+    _update_bottom_navigation()
+
+func _select_main_tab(index: int) -> void:
+    if not is_instance_valid(dashboard_box):
+        return
+    if index == 4 and not world.has_elected_office:
+        return
+    dashboard_box.current_tab = index
+    _update_bottom_navigation()
+
+func _update_bottom_navigation() -> void:
+    for i in range(main_tab_buttons.size()):
+        var button := main_tab_buttons[i]
+        button.add_theme_stylebox_override(
+            "normal",
+            _button_style("#b98b42" if i == dashboard_box.current_tab else "#1b2a38")
+        )
+        button.add_theme_color_override("font_color", Color("#101820") if i == dashboard_box.current_tab else Color("#f2e8d5"))
 
 func _build_setup() -> void:
     _clear_children(setup_box)
@@ -114,7 +166,7 @@ func _build_dashboard() -> void:
     var career_page := _new_tab(dashboard_box, "Career")
     var career_tabs := TabContainer.new()
     career_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    career_tabs.custom_minimum_size = Vector2(0, 400)
+    career_tabs.custom_minimum_size = Vector2(0, 320)
     career_page.add_child(career_tabs)
     var career_profile := _new_tab(career_tabs, "Profile")
     _add_section_title(career_profile, "YOUR CAREER")
@@ -130,7 +182,7 @@ func _build_dashboard() -> void:
     var party_page := _new_tab(dashboard_box, "Party")
     var party_tabs := TabContainer.new()
     party_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    party_tabs.custom_minimum_size = Vector2(0, 400)
+    party_tabs.custom_minimum_size = Vector2(0, 320)
     party_page.add_child(party_tabs)
     var party_profile := _new_tab(party_tabs, "Party profile")
     _add_section_title(party_profile, "YOUR PARTY")
@@ -143,7 +195,7 @@ func _build_dashboard() -> void:
     var elections_page := _new_tab(dashboard_box, "Elections")
     var election_tabs := TabContainer.new()
     election_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    election_tabs.custom_minimum_size = Vector2(0, 400)
+    election_tabs.custom_minimum_size = Vector2(0, 320)
     elections_page.add_child(election_tabs)
     var election_status := _new_tab(election_tabs, "Election status")
     _add_section_title(election_status, "LOCAL ELECTION")
@@ -157,7 +209,7 @@ func _build_dashboard() -> void:
     office_tab = _new_tab(dashboard_box, "Elected Office")
     var office_tabs := TabContainer.new()
     office_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    office_tabs.custom_minimum_size = Vector2(0, 400)
+    office_tabs.custom_minimum_size = Vector2(0, 320)
     office_tab.add_child(office_tabs)
     var office_responsibilities := _new_tab(office_tabs, "Responsibilities")
     _add_section_title(office_responsibilities, "YOUR ELECTED OFFICE")
@@ -194,7 +246,7 @@ func _add_section_title(parent: VBoxContainer, text_value: String) -> void:
     var label := Label.new()
     label.text = text_value
     label.add_theme_font_size_override("font_size", 18)
-    label.add_theme_color_override("font_color", Color("#f1d28a"))
+    label.add_theme_color_override("font_color", Color("#d9b56d"))
     parent.add_child(label)
 
 func _add_body(parent: VBoxContainer, text_value: String) -> Label:
@@ -244,6 +296,7 @@ func _after_start(started: bool) -> void:
         report_label.text = "\n".join(PackedStringArray(world.notifications))
         setup_box.visible = false
         dashboard_box.visible = true
+        main_tab_bar.visible = true
         _refresh()
         _save_progress()
     else:
@@ -276,6 +329,8 @@ func _refresh() -> void:
         party_label.text = world.party_summary()
         election_label.text = world.election_summary()
         office_tab.visible = world.has_elected_office
+        if main_tab_buttons.size() > 4:
+            main_tab_buttons[4].visible = world.has_elected_office
         if world.has_elected_office:
             office_label.text = world.office_summary()
             office_log_label.text = world.office_activity_summary()

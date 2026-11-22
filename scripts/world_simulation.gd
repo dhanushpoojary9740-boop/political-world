@@ -10,6 +10,11 @@ const LOCAL_LEADER_RELATIONSHIP := 8.0
 const TICKET_XP := 12
 const TICKET_REPUTATION := 3.0
 const TICKET_RELATIONSHIP := 5.0
+const FICTIONAL_AI_NAMES: Array[String] = [
+    "Aarav Kulkarni", "Meera Hegde", "Rohan Shetty", "Ananya Rao",
+    "Vikram Nayak", "Kavya Bhat", "Nikhil Gowda", "Ishita Desai",
+    "Sanjay Menon", "Divya Acharya", "Arjun Patil", "Pooja Kamath"
+]
 
 var year: int = 2026
 var month: int = 1
@@ -35,6 +40,7 @@ var local_election_year: int = 2026
 var local_election_result: String = ""
 var election_vote_share: float = 0.0
 var election_turnout: int = 0
+var rival_candidate_name: String = "Rohan Shetty"
 var has_elected_office: bool = false
 var elected_office_name: String = ""
 var office_proposals: Array = []
@@ -61,6 +67,9 @@ func initialize() -> void:
             "is_player_created": false
         }
     }
+
+func local_election_area() -> String:
+    return "%s, %s" % [home_city.strip_edges(), home_state]
 
 func date_label() -> String:
     return "%s %d" % [_month_name(month), year]
@@ -154,16 +163,18 @@ func perform_activity(activity: String) -> Array[String]:
             experience += 1
             reputation += 0.2
             local_leader_relationship = minf(100.0, local_leader_relationship + 2.0)
-            notifications.append("You attended a party meeting. Experience +1; your relationship with local leadership improved.")
+            var organizer_name: String = FICTIONAL_AI_NAMES[posmod(int(experience + local_leader_relationship), FICTIONAL_AI_NAMES.size())]
+            notifications.append("You attended a party meeting with local organizer %s. Experience +1; your relationship with local leadership improved." % organizer_name)
         "recruit":
             var party: Dictionary = parties[player_party_id]
             if int(party["members"]) < 100000:
+                var recruited_name: String = FICTIONAL_AI_NAMES[posmod(int(party["members"]), FICTIONAL_AI_NAMES.size())]
                 party["members"] = int(party["members"]) + 1
                 party["funds"] = int(party["funds"]) + 500
                 parties[player_party_id] = party
                 experience += 1
                 _increase_party_popularity(0.05)
-                notifications.append("You recruited one new party member. Membership and party funds increased slightly.")
+                notifications.append("%s joined your party. Membership and party funds increased slightly." % recruited_name)
             else:
                 notifications.append("The local recruitment limit has been reached in this prototype.")
         "request_ticket":
@@ -393,6 +404,7 @@ func advance_month() -> Array[String]:
 func _resolve_local_election() -> void:
     # Resolve the scheduled local election once. Party roles do not grant government authority.
     election_turnout = randi_range(5500, 7500)
+    rival_candidate_name = FICTIONAL_AI_NAMES[posmod(local_election_year + month, FICTIONAL_AI_NAMES.size())]
 
     if local_candidate_selected and ticket_approved:
         var party: Dictionary = parties[player_party_id]
@@ -412,22 +424,22 @@ func _resolve_local_election() -> void:
 
         if candidate_votes > rival_votes:
             has_elected_office = true
-            elected_office_name = "Local elected representative"
+            elected_office_name = "Local elected representative — %s" % home_city
             player_role = elected_office_name
             career_rank = elected_office_name
             local_election_result = "WON"
             notifications.append(
-                "ELECTION RESULT — WON. You received %s of %s votes (%.1f%%) with %d%% turnout. You are now a Local elected representative. Your authority is limited to this elected office." % [
-                    _format_number(candidate_votes), _format_number(election_turnout),
+                 "ELECTION RESULT — WON in %s. You received %s of %s votes (%.1f%%) with %d%% turnout. You are now a Local elected representative. Your authority is limited to this elected office." % [
+                    local_election_area(), _format_number(candidate_votes), _format_number(election_turnout),
                     election_vote_share, roundi(float(election_turnout) / 100.0)
                 ]
             )
         else:
             local_election_result = "LOST"
             notifications.append(
-                "ELECTION RESULT — LOST. You received %s of %s votes (%.1f%%); the rival candidate won with %s votes. You remain in your party role and receive no elected-office authority." % [
+                 "ELECTION RESULT — LOST. You received %s of %s votes (%.1f%%); %s won with %s votes in %s. You remain in your party role and receive no elected-office authority." % [
                     _format_number(candidate_votes), _format_number(election_turnout),
-                    election_vote_share, _format_number(rival_votes)
+                    election_vote_share, rival_candidate_name, _format_number(rival_votes), local_election_area()
                 ]
             )
     else:
@@ -469,18 +481,18 @@ func party_summary() -> String:
 func election_summary() -> String:
     if local_election_completed:
         if local_election_result == "WON":
-            return "Local election: completed (%d)\\nResult: WON — %.1f%% of votes\\nElected office: %s" % [
-                local_election_year, election_vote_share, elected_office_name
+            return "Local election: completed (%d)\\nArea: %s\\nResult: WON — %.1f%% of votes\\nAI opponent: %s\\nElected office: %s" % [
+                local_election_year, local_election_area(), election_vote_share, rival_candidate_name, elected_office_name
             ]
         if local_election_result == "LOST":
-            return "Local election: completed (%d)\\nResult: LOST — %.1f%% of votes\\nNo elected office or government authority." % [
-                local_election_year, election_vote_share
+            return "Local election: completed (%d)\\nArea: %s\\nResult: LOST — %.1f%% of votes\\nAI opponent: %s\\nNo elected office or government authority." % [
+                local_election_year, local_election_area(), election_vote_share, rival_candidate_name
             ]
-        return "Local election: completed (%d)\\nYou were not an approved candidate." % local_election_year
+        return "Local election: completed (%d)\\nArea: %s\\nYou were not an approved candidate." % [local_election_year, local_election_area()]
     if local_candidate_selected:
-        return "Local election: December %d\\nYour party ticket is approved. Campaigning is open." % local_election_year
+        return "Local election: December %d\\nArea: %s\\nYour party ticket is approved. Campaigning is open." % [local_election_year, local_election_area()]
     if ticket_requested:
-        return "Local election: December %d\\nYour ticket application is under review." % local_election_year
+        return "Local election: December %d\\nArea: %s\\nYour ticket application is under review." % [local_election_year, local_election_area()]
     return "Local election: December %d\\nApply for a party ticket when you meet the eligibility requirements."
 
 func _format_number(value: int) -> String:
@@ -516,6 +528,7 @@ func save_game() -> bool:
         "local_election_result": local_election_result,
         "election_vote_share": election_vote_share,
         "election_turnout": election_turnout,
+        "rival_candidate_name": rival_candidate_name,
         "has_elected_office": has_elected_office,
         "elected_office_name": elected_office_name,
         "office_proposals": office_proposals,
@@ -566,6 +579,7 @@ func load_game() -> bool:
     local_election_result = str(parsed.get("local_election_result", ""))
     election_vote_share = float(parsed.get("election_vote_share", 0.0))
     election_turnout = int(parsed.get("election_turnout", 0))
+    rival_candidate_name = str(parsed.get("rival_candidate_name", "Rohan Shetty"))
     has_elected_office = bool(parsed.get("has_elected_office", false))
     elected_office_name = str(parsed.get("elected_office_name", ""))
     var saved_proposals: Variant = parsed.get("office_proposals", [])
