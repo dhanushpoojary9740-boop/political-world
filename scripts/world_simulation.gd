@@ -35,7 +35,17 @@ const OFFICE_MISSION_CATALOG := [
     {"department": "Karnataka State Pollution Control Board", "title": "Request inspection of a reported pollution concern", "detail": "Record the reported location and nature of the concern, then refer it for inspection by the competent authority.", "action": "issue", "impact": "service"},
     {"department": "Municipal Administration", "title": "Conduct a public grievance meeting", "detail": "Hear residents' concerns, record the main issues, and send a categorized representation to the relevant local offices.", "action": "meeting", "impact": "trust"},
     {"department": "District Administration", "title": "Review pending inter-department follow-ups", "detail": "Check the status of earlier representations and request written updates from the offices concerned.", "action": "followup", "impact": "trust"},
-    {"department": "Public Works Department (PWD)", "title": "Review a public-building maintenance request", "detail": "Document the reported maintenance need and request a technical assessment and appropriate administrative action.", "action": "proposal", "impact": "infrastructure"}
+    {"department": "Public Works Department (PWD)", "title": "Review a public-building maintenance request", "detail": "Document the reported maintenance need and request a technical assessment and appropriate administrative action.", "action": "proposal", "impact": "infrastructure"},
+    {"department": "Agriculture Department, Government of Karnataka", "title": "Refer a farmer's input-supply concern", "detail": "Record the reported access or supply issue and refer it to the local agriculture office for verification and guidance.", "action": "issue", "impact": "service"},
+    {"department": "Department of Animal Husbandry and Veterinary Services", "title": "Follow up on veterinary-service access", "detail": "Document the affected area and request the local veterinary office to review service availability.", "action": "issue", "impact": "service"},
+    {"department": "Karnataka State Road Transport Corporation (KSRTC)", "title": "Submit a public-bus service representation", "detail": "Collect commuter feedback on a route, stop, or schedule and request a service review from the corporation.", "action": "proposal", "impact": "infrastructure"},
+    {"department": "Mangalore Electricity Supply Company Limited (MESCOM)", "title": "Refer a repeated power-supply complaint", "detail": "Record the affected locality and outage pattern, then request a technical review from the electricity utility.", "action": "issue", "impact": "service"},
+    {"department": "Social Welfare Department, Government of Karnataka", "title": "Review access to a welfare scheme", "detail": "Help residents identify the correct application channel and refer unresolved process issues to the welfare office.", "action": "followup", "impact": "trust"},
+    {"department": "Labour Department, Government of Karnataka", "title": "Refer a worker's labour-service grievance", "detail": "Record the broad nature of the concern with consent and direct the resident to the appropriate labour office or grievance channel.", "action": "followup", "impact": "trust"},
+    {"department": "Department of Fisheries, Government of Karnataka", "title": "Raise a fisheries-community infrastructure concern", "detail": "Record the community's concern and submit a representation seeking assessment by the competent fisheries authority.", "action": "proposal", "impact": "service"},
+    {"department": "Forest Department, Government of Karnataka", "title": "Refer a local human-wildlife conflict concern", "detail": "Record the reported location and refer it promptly to the Forest Department; do not approach wildlife or promise compensation.", "action": "issue", "impact": "service"},
+    {"department": "Directorate of Municipal Administration", "title": "Follow up on municipal solid-waste collection", "detail": "Record missed collection locations and request the urban local body to review the service schedule and response.", "action": "issue", "impact": "service"},
+    {"department": "Rural Development and Panchayat Raj Department", "title": "Review a Gram Panchayat public-facility request", "detail": "Record the facility concern and submit it to the Gram Panchayat for discussion and action within its authority.", "action": "proposal", "impact": "service"}
 ]
 
 
@@ -293,36 +303,51 @@ func generate_monthly_office_missions() -> void:
         office_missions.clear()
         return
     office_missions.clear()
+    # Each monthly brief is assembled from a grounded department assignment plus
+    # independently varied local context. This creates thousands of combinations
+    # without pretending every generated combination is a separately authored mission.
     var situations: Array[String] = [
-        "repeat complaint", "seasonal service pressure", "safety concern", "accessibility concern",
-        "maintenance backlog", "inspection follow-up", "public feedback", "service coverage gap"
+        "new resident petition", "repeat complaint", "seasonal service pressure",
+        "safety concern", "accessibility concern", "maintenance backlog",
+        "inspection follow-up", "public feedback", "service coverage gap",
+        "budget-priority request", "delayed contractor work", "monsoon preparedness",
+        "school-term readiness", "market-area congestion", "public facility upkeep"
     ]
     var urgency_levels: Array[String] = ["routine", "time-sensitive", "priority", "monitoring"]
     var stakeholder_groups: Array[String] = [
         "nearby residents", "commuters and road users", "local service users",
-        "school families", "senior residents", "small businesses"
+        "school families", "senior residents", "small businesses",
+        "farmers and agricultural workers", "women's self-help groups"
+    ]
+    var action_steps: Array[String] = [
+        "Record the affected location and dates, verify the complaint with residents, and submit a written representation to the named office.",
+        "Collect the relevant service details, request an inspection or status report, and log the department's response for follow-up.",
+        "Hold a short public consultation, summarize the concerns without personal data, and refer the matter to the competent authority.",
+        "Check the status of earlier correspondence, seek a written update, and inform residents of the next official step."
     ]
     var seen_signatures: Dictionary = {}
+    var target_count := randi_range(3, 5)
     var attempts := 0
-    while office_missions.size() < 4 and attempts < 100:
+    while office_missions.size() < target_count and attempts < 300:
         attempts += 1
         var source: Dictionary = OFFICE_MISSION_CATALOG[randi_range(0, OFFICE_MISSION_CATALOG.size() - 1)]
         var situation := situations[randi_range(0, situations.size() - 1)]
         var urgency := urgency_levels[randi_range(0, urgency_levels.size() - 1)]
         var stakeholder := stakeholder_groups[randi_range(0, stakeholder_groups.size() - 1)]
-        var signature := "%s|%s|%s|%s" % [str(source["title"]), situation, urgency, stakeholder]
+        var action_step := action_steps[randi_range(0, action_steps.size() - 1)]
+        var signature := "%s|%s|%s|%s|%s" % [str(source["title"]), situation, urgency, stakeholder, action_step]
         if seen_signatures.has(signature):
             continue
         seen_signatures[signature] = true
         office_mission_counter += 1
         office_missions.append({
             "id": office_mission_counter,
-            "title": "%s — %s" % [str(source["title"]), situation.capitalize()],
+            "title": "%s: %s" % [str(source["title"]), situation.capitalize()],
             "department": str(source["department"]),
-            "detail": "%s Priority: %s. Raised by: %s. Review the facts, record the representation, and request an official response; do not promise an outcome outside your authority." % [str(source["detail"]), urgency, stakeholder],
+            "detail": "%s\n\nThis month's brief: %s. Priority: %s. Raised by: %s.\n\nYour representative's task: %s You may submit representations and request updates; the department, elected council, and authorised officers decide and carry out official action." % [str(source["detail"]), situation.capitalize(), urgency, stakeholder, action_step],
             "action": str(source["action"]),
             "impact": str(source["impact"]),
-            "location": "%s area, %s" % [home_city, home_state],
+            "location": "%s, %s" % [home_city, home_state],
             "status": "Available",
             "generated_index": year * 12 + month,
             "deadline": "%s %d" % [_month_name(month), year]
