@@ -139,6 +139,8 @@ func initialize() -> void:
         }
     }
     _initialize_world_state()
+    for party_id_variant in parties.keys():
+        _ensure_party_roster(str(party_id_variant))
 
 func _initialize_world_state() -> void:
     # Shared, serializable world layer. Regional support is tracked independently
@@ -589,6 +591,87 @@ func world_politics_summary() -> String:
 func local_election_area() -> String:
     return "%s, %s" % [home_city.strip_edges(), home_state]
 
+func _ensure_party_roster(party_id: String) -> void:
+    if not parties.has(party_id):
+        return
+    var party: Dictionary = parties[party_id]
+    var records_variant: Variant = party.get("member_records", [])
+    var records: Array = records_variant if typeof(records_variant) == TYPE_ARRAY else []
+    var counter := int(party.get("member_counter", records.size()))
+    if records.is_empty():
+        var seed_count := mini(6, maxi(1, int(party.get("members", 1))))
+        for i in range(seed_count):
+            counter += 1
+            records.append({
+                "id": "member_%d" % counter,
+                "name": FICTIONAL_AI_NAMES[posmod(counter - 1, FICTIONAL_AI_NAMES.size())],
+                "duty": ["Volunteer", "Booth Coordinator", "Ward Organizer", "Media Coordinator", "Treasurer", "District Secretary"][posmod(i, 6)],
+                "region": "Karnataka",
+                "joined_year": year,
+                "joined_month": month,
+                "is_player_added": false
+            })
+    party["member_records"] = records
+    party["member_counter"] = counter
+    parties[party_id] = party
+
+func _next_fictional_member_name(party: Dictionary) -> String:
+    var counter := int(party.get("member_counter", 0)) + 1
+    return "%s %d" % [FICTIONAL_AI_NAMES[posmod(counter - 1, FICTIONAL_AI_NAMES.size())], 100 + counter]
+
+func get_player_party_members() -> Array:
+    if player_party_id == "" or not parties.has(player_party_id):
+        return []
+    var party: Dictionary = parties[player_party_id]
+    var records: Array = party.get("member_records", [])
+    return records.duplicate(true)
+
+func add_party_member(member_name: String) -> String:
+    if player_party_id == "" or not parties.has(player_party_id):
+        return "Join or found a party before adding members."
+    var clean_name := member_name.strip_edges()
+    if clean_name.is_empty():
+        return "Enter a member name."
+    var party: Dictionary = parties[player_party_id]
+    var records: Array = party.get("member_records", [])
+    for member_variant in records:
+        var member: Dictionary = member_variant
+        if str(member.get("name", "")).to_lower() == clean_name.to_lower():
+            return "A member with that name is already in the named roster."
+    var counter := int(party.get("member_counter", 0)) + 1
+    records.append({
+        "id": "member_%d" % counter,
+        "name": clean_name,
+        "duty": "Volunteer",
+        "region": home_state,
+        "joined_year": year,
+        "joined_month": month,
+        "is_player_added": true
+    })
+    party["member_counter"] = counter
+    party["member_records"] = records
+    party["members"] = int(party.get("members", 0)) + 1
+    parties[player_party_id] = party
+    return "%s added as a party member." % clean_name
+
+func assign_party_duty(member_id: String, duty: String) -> String:
+    if player_party_id == "" or not parties.has(player_party_id):
+        return "Join or found a party first."
+    var allowed := ["Volunteer", "Booth Coordinator", "Ward Organizer", "Media Coordinator", "Treasurer", "District Secretary", "State Organizer"]
+    if not allowed.has(duty):
+        return "That party duty is not available."
+    var party: Dictionary = parties[player_party_id]
+    var records: Array = party.get("member_records", [])
+    for i in range(records.size()):
+        var member: Dictionary = records[i]
+        if str(member.get("id", "")) == member_id:
+            member["duty"] = duty
+            records[i] = member
+            party["member_records"] = records
+            parties[player_party_id] = party
+            return "%s assigned as %s." % [str(member.get("name", "Member")), duty]
+    return "Select a valid party member."
+
 func date_label() -> String:
     return "%s %d" % [_month_name(month), year]
 
@@ -671,6 +754,7 @@ func start_career(name: String, age: int, city: String, path: String, party_name
         local_leader_relationship = 5.0
         notifications = ["You founded %s with five initial supporters. Founding a party gives you organizational responsibility, not an elected office." % clean_party_name]
     _ensure_party_world_presence(player_party_id)
+    _ensure_party_roster(player_party_id)
     return true
 
 func perform_activity(activity: String) -> Array[String]:
@@ -707,14 +791,18 @@ func perform_activity(activity: String) -> Array[String]:
             notifications.append("You attended a party meeting with local organizer %s. Experience +1; your relationship with local leadership improved." % organizer_name)
         "recruit":
             var party: Dictionary = parties[player_party_id]
-            if int(party["members"]) < 100000:
-                var recruited_name: String = FICTIONAL_AI_NAMES[posmod(int(party["members"]), FICTIONAL_AI_NAMES.size())]
+            if int(party.get("members", 0)) < 100000:
+                var recruited_name: String = _next_fictional_member_name(party)
+                var records: Array = party.get("member_records", [])
+                records.append({"id": "member_%d" % int(party.get("member_counter", 0) + 1), "name": recruited_name, "duty": "Volunteer", "region": home_state, "joined_year": year, "joined_month": month, "is_player_added": false})
+                party["member_counter"] = int(party.get("member_counter", 0)) + 1
+                party["member_records"] = records
                 party["members"] = int(party["members"]) + 1
                 party["funds"] = int(party["funds"]) + 500
                 parties[player_party_id] = party
                 experience += 1
                 _increase_party_popularity(0.05)
-                notifications.append("%s joined your party. Membership and party funds increased slightly." % recruited_name)
+                notifications.append("%s joined your party and was added to the named roster." % recruited_name)
             else:
                 notifications.append("The local recruitment limit has been reached in this prototype.")
         "request_ticket":
@@ -1363,7 +1451,7 @@ const SAVE_PATH := "user://political_world_save.json"
 
 func save_game() -> bool:
     var save_data: Dictionary = {
-        "save_version": 9,
+        "save_version": 10,
         "year": year,
         "month": month,
         "character_name": character_name,
@@ -1496,6 +1584,7 @@ func load_game() -> bool:
         _initialize_world_state()
     for party_id_variant in parties.keys():
         _ensure_party_world_presence(str(party_id_variant))
+        _ensure_party_roster(str(party_id_variant))
     if loaded_save_version < 5:
         # Migrate older saves from the prototype's nominal stipend to the new modeled household budget.
         monthly_income = 35000

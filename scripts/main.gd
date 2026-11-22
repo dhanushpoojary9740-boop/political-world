@@ -28,6 +28,11 @@ var dashboard_box: TabContainer
 var main_tab_bar: ScrollContainer
 var main_tab_buttons: Array[Button] = []
 var overview_metric_values: Array[Label] = []
+var party_member_name_input: LineEdit
+var party_member_area: VBoxContainer
+var duty_member_picker: OptionButton
+var duty_role_picker: OptionButton
+var party_member_status: Label
 
 func _ready() -> void:
     world = WorldSimulationScript.new()
@@ -319,13 +324,33 @@ func _build_dashboard() -> void:
     var party_tabs := TabContainer.new()
     party_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     party_page.add_child(party_tabs)
-    var party_profile := _new_tab(party_tabs, "Party profile")
+    var party_profile := _new_tab(party_tabs, "Overview")
     _add_section_title(party_profile, "YOUR PARTY")
     _add_body(party_profile, "Party membership, funds, popularity, and your party role are summarized on Overview.")
-    var party_work := _new_tab(party_tabs, "Organization")
-    _add_section_title(party_work, "PARTY ORGANIZATION")
-    _add_body(party_work, "Grow your party through local activity and recruitment. The party's routine organization continues through the simulation.")
-    _add_button(party_work, "Recruit a party member", func(): _run_activity("recruit"))
+    _add_button(party_profile, "Recruit through AI organization", func(): _run_activity("recruit"))
+
+    var party_members := _new_tab(party_tabs, "Members")
+    _add_section_title(party_members, "PARTY MEMBERS")
+    _add_body(party_members, "Fictional Indian political members. Add members manually and assign duties individually.")
+    party_member_name_input = _add_line_input(party_members, "Member name", "Enter a fictional member name")
+    _add_button(party_members, "ADD MEMBER", _on_add_party_member)
+    party_member_status = _add_body(party_members, "")
+    party_member_area = VBoxContainer.new()
+    party_member_area.add_theme_constant_override("separation", 8)
+    party_members.add_child(party_member_area)
+
+    var party_duties := _new_tab(party_tabs, "Duties")
+    _add_section_title(party_duties, "ASSIGN PARTY DUTIES")
+    _add_body(party_duties, "Assign a role to an individual member. These are party responsibilities, not government powers.")
+    duty_member_picker = OptionButton.new()
+    duty_member_picker.custom_minimum_size = Vector2(0, 44)
+    party_duties.add_child(duty_member_picker)
+    duty_role_picker = OptionButton.new()
+    duty_role_picker.custom_minimum_size = Vector2(0, 44)
+    for duty in ["Volunteer", "Booth Coordinator", "Ward Organizer", "Media Coordinator", "Treasurer", "District Secretary", "State Organizer"]:
+        duty_role_picker.add_item(duty)
+    party_duties.add_child(duty_role_picker)
+    _add_button(party_duties, "ASSIGN SELECTED DUTY", _on_assign_party_duty)
 
     var party_finances := _new_tab(party_tabs, "Finances")
     _add_section_title(party_finances, "PERSONAL, PARTY & CAMPAIGN ACCOUNTS")
@@ -821,7 +846,7 @@ func _refresh() -> void:
         party_label.text = world.party_summary()
         if is_instance_valid(party_page_summary):
             party_page_summary.text = world.party_summary()
-        finance_label.text = world.finance_summary()
+        finance_label.text = world.finance_summary()\n        _refresh_party_members()
         election_label.text = world.election_summary()
         if is_instance_valid(election_page_summary):
             election_page_summary.text = world.election_summary()
@@ -849,6 +874,56 @@ func _refresh_overview_metrics() -> void:
         party_status = "%s members" % world._format_number(int(party.get("members", 0)))
     overview_metric_values[2].text = party_status
     overview_metric_values[3].text = "%.0f / 100" % world.public_trust
+
+func _on_add_party_member() -> void:
+    var member_name := party_member_name_input.text.strip_edges()
+    if member_name.is_empty():
+        party_member_status.text = "Enter a member name first."
+        return
+    var result: String = world.add_party_member(member_name)
+    party_member_status.text = result
+    party_member_name_input.text = ""
+    _refresh()
+    _save_progress()
+
+func _on_assign_party_duty() -> void:
+    if duty_member_picker.item_count == 0:
+        party_member_status.text = "Add or recruit a member first."
+        return
+    var member_id := str(duty_member_picker.get_item_metadata(duty_member_picker.selected))
+    var duty := duty_role_picker.get_item_text(duty_role_picker.selected)
+    party_member_status.text = world.assign_party_duty(member_id, duty)
+    _refresh()
+    _save_progress()
+
+func _refresh_party_members() -> void:
+    if not is_instance_valid(party_member_area) or not is_instance_valid(duty_member_picker):
+        return
+    for child in party_member_area.get_children():
+        child.queue_free()
+    duty_member_picker.clear()
+    var roster: Array = world.get_player_party_members()
+    for member_variant in roster:
+        var member: Dictionary = member_variant
+        var row := PanelContainer.new()
+        var row_box := VBoxContainer.new()
+        row_box.add_theme_constant_override("separation", 3)
+        var name_label := Label.new()
+        name_label.text = str(member.get("name", "Unnamed member"))
+        name_label.add_theme_color_override("font_color", Color("#f0d18a"))
+        row_box.add_child(name_label)
+        var detail := Label.new()
+        detail.text = "%s  •  %s" % [str(member.get("duty", "Volunteer")), str(member.get("region", "Karnataka"))]
+        detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        row_box.add_child(detail)
+        row.add_child(row_box)
+        party_member_area.add_child(row)
+        duty_member_picker.add_item(str(member.get("name", "Member")))
+        duty_member_picker.set_item_metadata(duty_member_picker.item_count - 1, str(member.get("id", "")))
+    if roster.is_empty():
+        var empty_label := Label.new()
+        empty_label.text = "No named roster records yet. Add a member above."
+        party_member_area.add_child(empty_label)
 
 func _notification(what: int) -> void:
     if not is_instance_valid(world) or not world.career_started:
