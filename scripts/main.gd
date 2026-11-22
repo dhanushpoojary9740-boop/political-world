@@ -7,6 +7,9 @@ var date_label: Label
 var career_label: Label
 var party_label: Label
 var election_label: Label
+var office_box: VBoxContainer
+var office_label: Label
+var office_log_label: Label
 var report_label: Label
 var name_input: LineEdit
 var age_input: SpinBox
@@ -99,6 +102,19 @@ func _build_dashboard() -> void:
     party_label = _add_body(dashboard_box, "")
     _add_section_title(dashboard_box, "LOCAL ELECTION")
     election_label = _add_body(dashboard_box, "")
+
+    office_box = VBoxContainer.new()
+    office_box.add_theme_constant_override("separation", 8)
+    office_box.visible = false
+    dashboard_box.add_child(office_box)
+    _add_section_title(office_box, "YOUR ELECTED OFFICE")
+    office_label = _add_body(office_box, "")
+    _add_button(office_box, "Submit constituency development proposal", func(): _run_activity("office_proposal"))
+    _add_button(office_box, "Raise constituency public-service issue", func(): _run_activity("office_issue"))
+    _add_button(office_box, "Revise and resubmit returned proposal", func(): _run_activity("office_resubmit"))
+    _add_section_title(office_box, "OFFICE WORK LOG")
+    office_log_label = _add_body(office_box, "")
+
     _add_button(dashboard_box, "Volunteer in a local campaign", func(): _run_activity("volunteer"))
     _add_button(dashboard_box, "Organize community service", func(): _run_activity("community"))
     _add_button(dashboard_box, "Attend a party meeting", func(): _run_activity("meeting"))
@@ -206,6 +222,10 @@ func _refresh() -> void:
         career_label.text = world.career_summary()
         party_label.text = world.party_summary()
         election_label.text = world.election_summary()
+        office_box.visible = world.has_elected_office
+        if world.has_elected_office:
+            office_label.text = world.office_summary()
+            office_log_label.text = world.office_activity_summary()
 
 func _notification(what: int) -> void:
     if not is_instance_valid(world) or not world.career_started:

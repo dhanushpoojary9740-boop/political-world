@@ -37,6 +37,9 @@ var election_vote_share: float = 0.0
 var election_turnout: int = 0
 var has_elected_office: bool = false
 var elected_office_name: String = ""
+var office_proposals: Array = []
+var constituency_issues: Array = []
+var office_action_counter: int = 0
 var party_counter: int = 0
 var parties: Dictionary = {}
 var notifications: Array[String] = []
@@ -102,6 +105,9 @@ func start_career(name: String, age: int, city: String, path: String, party_name
     election_turnout = 0
     has_elected_office = false
     elected_office_name = ""
+    office_proposals.clear()
+    constituency_issues.clear()
+    office_action_counter = 0
 
     if path == "join":
         player_party_id = "party_established"
@@ -164,6 +170,12 @@ func perform_activity(activity: String) -> Array[String]:
             _request_local_ticket()
         "campaign":
             _run_local_campaign()
+        "office_proposal":
+            submit_office_proposal()
+        "office_issue":
+            raise_constituency_issue()
+        "office_resubmit":
+            resubmit_returned_proposal()
         _:
             notifications.append("That activity is not available.")
 
@@ -202,6 +214,147 @@ func _run_local_campaign() -> void:
     reputation += 0.25
     notifications.append("You campaigned in your local constituency. Campaign effort and public reputation improved.")
 
+func submit_office_proposal() -> void:
+    if not has_elected_office:
+        notifications.append("Only a current elected representative can submit an official constituency proposal.")
+        return
+    var open_count := 0
+    for item in office_proposals:
+        if str(item.get("status", "")) in ["Pending council review", "Approved — awaiting AI implementation"]:
+            open_count += 1
+    if open_count >= 2:
+        notifications.append("You already have two proposals awaiting review or implementation. Wait for the council and AI departments to process them.")
+        return
+
+    office_action_counter += 1
+    var titles := [
+        "Repair priority roads",
+        "Improve public drainage",
+        "Upgrade drinking-water access",
+        "Improve street lighting",
+        "Strengthen local health services"
+    ]
+    var title: String = titles[(office_action_counter - 1) % titles.size()]
+    office_proposals.append({
+        "id": office_action_counter,
+        "title": title,
+        "status": "Pending council review",
+        "submitted_index": year * 12 + month,
+        "approved_index": -1
+    })
+    notifications.append("You submitted the constituency proposal: %s. The council must review it; you cannot authorize spending or direct departments yourself." % title)
+
+func raise_constituency_issue() -> void:
+    if not has_elected_office:
+        notifications.append("Only a current elected representative can formally raise a constituency issue.")
+        return
+    var open_count := 0
+    for item in constituency_issues:
+        if str(item.get("status", "")) == "Submitted to AI department":
+            open_count += 1
+    if open_count >= 3:
+        notifications.append("Three constituency issues are already awaiting the AI department. Let the department process them before raising another.")
+        return
+
+    office_action_counter += 1
+    var topics := [
+        "Streetlight outage",
+        "Waste collection delay",
+        "Water-supply complaint",
+        "Road-surface hazard",
+        "Public facility maintenance"
+    ]
+    var topic: String = topics[(office_action_counter - 1) % topics.size()]
+    constituency_issues.append({
+        "id": office_action_counter,
+        "topic": topic,
+        "status": "Submitted to AI department",
+        "submitted_index": year * 12 + month
+    })
+    notifications.append("You formally raised a constituency issue: %s. The responsible AI department handles routine investigation and service delivery." % topic)
+
+func resubmit_returned_proposal() -> void:
+    if not has_elected_office:
+        notifications.append("You need a current elected office to resubmit an official proposal.")
+        return
+    var open_count := 0
+    for proposal in office_proposals:
+        if str(proposal.get("status", "")) in ["Pending council review", "Approved — awaiting AI implementation"]:
+            open_count += 1
+    if open_count >= 2:
+        notifications.append("You already have two proposals awaiting review or implementation. Wait for one to finish before resubmitting.")
+        return
+    for i in range(office_proposals.size()):
+        var item: Dictionary = office_proposals[i]
+        if str(item.get("status", "")) == "Returned for revision":
+            item["status"] = "Pending council review"
+            item["submitted_index"] = year * 12 + month
+            item["approved_index"] = -1
+            office_proposals[i] = item
+            notifications.append("You revised and resubmitted %s. It is pending council review; implementation remains with the responsible departments." % str(item.get("title", "proposal")))
+            return
+    notifications.append("There is no returned proposal to resubmit.")
+
+func _process_office_work() -> void:
+    if not has_elected_office:
+        return
+    var current_index := year * 12 + month
+
+    for i in range(office_proposals.size()):
+        var proposal: Dictionary = office_proposals[i]
+        var status := str(proposal.get("status", ""))
+        var submitted_index := int(proposal.get("submitted_index", current_index))
+        if status == "Pending council review" and current_index > submitted_index:
+            var party_popularity := 0.0
+            if parties.has(player_party_id):
+                party_popularity = float(parties[player_party_id].get("popularity", 0.0))
+            var review_score := reputation + party_popularity * 0.1
+            if review_score >= 5.0:
+                proposal["status"] = "Approved — awaiting AI implementation"
+                proposal["approved_index"] = current_index
+                notifications.append("Council approved '%s'. AI public-works officials now schedule implementation; you do not control department operations." % str(proposal.get("title", "proposal")))
+            else:
+                proposal["status"] = "Returned for revision"
+                notifications.append("Council returned '%s' for revision. Improve its public support or revise and resubmit it." % str(proposal.get("title", "proposal")))
+        elif status == "Approved — awaiting AI implementation" and current_index > int(proposal.get("approved_index", current_index)):
+            proposal["status"] = "Implemented by AI department"
+            notifications.append("AI officials completed the approved proposal: %s." % str(proposal.get("title", "proposal")))
+        office_proposals[i] = proposal
+
+    for i in range(constituency_issues.size()):
+        var issue: Dictionary = constituency_issues[i]
+        if str(issue.get("status", "")) == "Submitted to AI department" and current_index > int(issue.get("submitted_index", current_index)):
+            issue["status"] = "Resolved by AI department"
+            notifications.append("The responsible AI department resolved the constituency issue: %s." % str(issue.get("topic", "issue")))
+        constituency_issues[i] = issue
+
+func office_summary() -> String:
+    if not has_elected_office:
+        return "No elected office. Party roles do not grant government authority."
+    var pending_proposals := 0
+    var active_issues := 0
+    for proposal in office_proposals:
+        if str(proposal.get("status", "")) in ["Pending council review", "Approved — awaiting AI implementation"]:
+            pending_proposals += 1
+    for issue in constituency_issues:
+        if str(issue.get("status", "")) == "Submitted to AI department":
+            active_issues += 1
+    return "Office: %s\\nConstituency: %s, %s\\nOpen proposals: %d / 2\\nIssues awaiting AI department: %d / 3\\nYour authority: represent constituents, submit proposals, and raise issues. Council review and routine administration remain with AI officials." % [
+        elected_office_name, home_city, home_state, pending_proposals, active_issues
+    ]
+
+func office_activity_summary() -> String:
+    var lines: Array[String] = []
+    for i in range(maxi(0, office_proposals.size() - 3), office_proposals.size()):
+        var proposal: Dictionary = office_proposals[i]
+        lines.append("Proposal: %s — %s" % [str(proposal.get("title", "")), str(proposal.get("status", ""))])
+    for i in range(maxi(0, constituency_issues.size() - 3), constituency_issues.size()):
+        var issue: Dictionary = constituency_issues[i]
+        lines.append("Issue: %s — %s" % [str(issue.get("topic", "")), str(issue.get("status", ""))])
+    if lines.is_empty():
+        return "No office matters filed yet."
+    return "\\n".join(lines)
+
 func _check_promotion() -> void:
     if career_path == "join" and career_rank == "Party volunteer" and experience >= ACTIVE_WORKER_XP and reputation >= ACTIVE_WORKER_REPUTATION:
         career_rank = "Active Party Worker"
@@ -228,6 +381,7 @@ func advance_month() -> Array[String]:
             party["popularity"] = minf(100.0, float(party["popularity"]) + 0.1)
             parties[player_party_id] = party
             notifications.append("AI local unit completed routine administration and recruited two members.")
+        _process_office_work()
         if month == LOCAL_ELECTION_MONTH and not local_election_completed:
             _resolve_local_election()
         if notifications.is_empty():
@@ -337,7 +491,7 @@ const SAVE_PATH := "user://political_world_save.json"
 
 func save_game() -> bool:
     var save_data: Dictionary = {
-        "save_version": 2,
+        "save_version": 3,
         "year": year,
         "month": month,
         "character_name": character_name,
@@ -364,6 +518,9 @@ func save_game() -> bool:
         "election_turnout": election_turnout,
         "has_elected_office": has_elected_office,
         "elected_office_name": elected_office_name,
+        "office_proposals": office_proposals,
+        "constituency_issues": constituency_issues,
+        "office_action_counter": office_action_counter,
         "party_counter": party_counter,
         "parties": parties
     }
@@ -411,6 +568,11 @@ func load_game() -> bool:
     election_turnout = int(parsed.get("election_turnout", 0))
     has_elected_office = bool(parsed.get("has_elected_office", false))
     elected_office_name = str(parsed.get("elected_office_name", ""))
+    var saved_proposals: Variant = parsed.get("office_proposals", [])
+    office_proposals = saved_proposals if typeof(saved_proposals) == TYPE_ARRAY else []
+    var saved_issues: Variant = parsed.get("constituency_issues", [])
+    constituency_issues = saved_issues if typeof(saved_issues) == TYPE_ARRAY else []
+    office_action_counter = int(parsed.get("office_action_counter", 0))
     party_counter = int(parsed.get("party_counter", 0))
     var saved_parties: Variant = parsed.get("parties", {})
     if typeof(saved_parties) == TYPE_DICTIONARY and not saved_parties.is_empty():
