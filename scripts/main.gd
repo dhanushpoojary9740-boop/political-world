@@ -39,7 +39,7 @@ func _ready() -> void:
 
 func _apply_premium_theme() -> void:
     var premium := Theme.new()
-    premium.default_font_size = 15
+    premium.default_font_size = 16
     premium.set_color("font_color", "Label", Color("#e8edf2"))
     premium.set_color("font_color", "Button", Color("#f4ead6"))
     premium.set_color("font_hover_color", "Button", Color("#ffffff"))
@@ -51,7 +51,7 @@ func _apply_premium_theme() -> void:
     premium.set_color("selection_color", "LineEdit", Color("#6d572e"))
     premium.set_color("font_color", "TabBar", Color("#b9c6d2"))
     premium.set_color("font_selected_color", "TabBar", Color("#f0d18a"))
-    premium.set_font_size("font_size", "Button", 14)
+    premium.set_font_size("font_size", "Button", 15)
     premium.set_font_size("font_size", "Label", 15)
 
     var input_style := StyleBoxFlat.new()
@@ -86,7 +86,7 @@ func _apply_premium_theme() -> void:
 func _build_ui() -> void:
     _apply_premium_theme()
     var background := ColorRect.new()
-    background.color = Color("#0b1420")
+    background.color = Color("#08151d")
     background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     add_child(background)
 
@@ -94,22 +94,22 @@ func _build_ui() -> void:
     var root := VBoxContainer.new()
     root.name = "AppLayout"
     root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    root.offset_left = 14
-    root.offset_top = 12
-    root.offset_right = -14
-    root.offset_bottom = -12
-    root.add_theme_constant_override("separation", 8)
+    root.offset_left = 18
+    root.offset_top = 16
+    root.offset_right = -18
+    root.offset_bottom = -16
+    root.add_theme_constant_override("separation", 12)
     add_child(root)
 
     var header := VBoxContainer.new()
     header.name = "Header"
-    header.add_theme_constant_override("separation", 3)
+    header.add_theme_constant_override("separation", 5)
     root.add_child(header)
 
     var title := Label.new()
     title.text = "POLITICAL WORLD"
-    title.add_theme_font_size_override("font_size", 24)
-    title.add_theme_color_override("font_color", Color("#d9b56d"))
+    title.add_theme_font_size_override("font_size", 27)
+    title.add_theme_color_override("font_color", Color("#f0d18a"))
     header.add_child(title)
 
     date_label = Label.new()
@@ -118,10 +118,16 @@ func _build_ui() -> void:
     header.add_child(date_label)
 
     var subtitle := Label.new()
-    subtitle.text = "YOUR POLITICAL JOURNEY • INDIA"
+    subtitle.text = "YOUR POLITICAL JOURNEY  •  INDIA"
     subtitle.add_theme_font_size_override("font_size", 12)
-    subtitle.add_theme_color_override("font_color", Color("#a9b6c2"))
+    subtitle.add_theme_color_override("font_color", Color("#b5c6cb"))
     header.add_child(subtitle)
+
+    var header_rule := ColorRect.new()
+    header_rule.color = Color("#c8a45b")
+    header_rule.custom_minimum_size = Vector2(0, 2)
+    header_rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    header.add_child(header_rule)
 
     var content_scroll := ScrollContainer.new()
     content_scroll.name = "PageContent"
@@ -170,17 +176,17 @@ func _configure_touch_scroll_passthrough(node: Node) -> void:
 func _build_bottom_navigation(parent: VBoxContainer) -> void:
     main_tab_bar = ScrollContainer.new()
     main_tab_bar.name = "BottomNavigation"
-    main_tab_bar.custom_minimum_size = Vector2(0, 72)
+    main_tab_bar.custom_minimum_size = Vector2(0, 82)
     main_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     main_tab_bar.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
     main_tab_bar.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    main_tab_bar.add_theme_stylebox_override("panel", _button_style("#0e1b28"))
+    main_tab_bar.add_theme_stylebox_override("panel", _button_style("#10232b"))
     main_tab_bar.size_flags_vertical = Control.SIZE_SHRINK_END
     main_tab_bar.visible = false
     parent.add_child(main_tab_bar)
 
     var nav_row := HBoxContainer.new()
-    nav_row.add_theme_constant_override("separation", 10)
+    nav_row.add_theme_constant_override("separation", 8)
     nav_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     main_tab_bar.add_child(nav_row)
 
@@ -188,8 +194,11 @@ func _build_bottom_navigation(parent: VBoxContainer) -> void:
     for index in range(tab_names.size()):
         var tab_button := Button.new()
         tab_button.text = tab_names[index]
-        tab_button.custom_minimum_size = Vector2(112, 54)
+        tab_button.custom_minimum_size = Vector2(118, 60)
         tab_button.add_theme_font_size_override("font_size", 14)
+        tab_button.add_theme_stylebox_override("normal", _button_style("#19333d"))
+        tab_button.add_theme_stylebox_override("hover", _button_style("#294b53"))
+        tab_button.add_theme_stylebox_override("pressed", _button_style("#d0ad62"))
         tab_button.add_theme_color_override("font_color", Color("#f2e8d5"))
         tab_button.add_theme_stylebox_override("normal", _button_style("#172a39"))
         tab_button.add_theme_stylebox_override("hover", _button_style("#29465a"))
@@ -376,15 +385,15 @@ func _add_office_action_card(parent: VBoxContainer, title_text: String, detail_t
 
 func _card_style() -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
-    style.bg_color = Color("#142638")
-    style.border_color = Color("#3a5264")
+    style.bg_color = Color("#122832")
+    style.border_color = Color("#405960")
     style.set_border_width_all(1)
     style.border_width_left = 3
-    style.set_corner_radius_all(14)
-    style.set_content_margin_all(16)
-    style.shadow_color = Color(0, 0, 0, 0.22)
-    style.shadow_size = 4
-    style.shadow_offset = Vector2(0, 2)
+    style.set_corner_radius_all(16)
+    style.set_content_margin_all(18)
+    style.shadow_color = Color(0, 0, 0, 0.30)
+    style.shadow_size = 6
+    style.shadow_offset = Vector2(0, 3)
     return style
 
 func _refresh_office_missions() -> void:
@@ -510,11 +519,20 @@ func _add_line_input(parent: VBoxContainer, label_text: String, placeholder_text
     return field
 
 func _add_section_title(parent: VBoxContainer, text_value: String) -> void:
+    var title_row := HBoxContainer.new()
+    title_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    title_row.add_theme_constant_override("separation", 10)
+    var accent := ColorRect.new()
+    accent.color = Color("#c8a45b")
+    accent.custom_minimum_size = Vector2(4, 25)
+    title_row.add_child(accent)
     var label := Label.new()
     label.text = text_value
-    label.add_theme_font_size_override("font_size", 19)
-    label.add_theme_color_override("font_color", Color("#e8c579"))
-    parent.add_child(label)
+    label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    label.add_theme_font_size_override("font_size", 18)
+    label.add_theme_color_override("font_color", Color("#f0d18a"))
+    title_row.add_child(label)
+    parent.add_child(title_row)
 
 func _add_body(parent: VBoxContainer, text_value: String) -> Label:
     var label := Label.new()
@@ -528,22 +546,26 @@ func _add_body(parent: VBoxContainer, text_value: String) -> Label:
 func _add_button(parent: VBoxContainer, text_value: String, callback: Callable) -> void:
     var button := Button.new()
     button.text = text_value
-    button.custom_minimum_size = Vector2(0, 46)
-    button.add_theme_color_override("font_color", Color("#101820"))
-    button.add_theme_stylebox_override("normal", _button_style("#e7bd62"))
-    button.add_theme_stylebox_override("hover", _button_style("#f3d58f"))
+    button.custom_minimum_size = Vector2(0, 52)
+    button.add_theme_color_override("font_color", Color("#14232a"))
+    button.add_theme_stylebox_override("normal", _button_style("#d5b36b"))
+    button.add_theme_stylebox_override("hover", _button_style("#ecd08e"))
     button.pressed.connect(callback)
     parent.add_child(button)
 
 func _button_style(color_value: String) -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
     style.bg_color = Color(color_value)
-    style.corner_radius_top_left = 12
-    style.corner_radius_top_right = 12
-    style.corner_radius_bottom_left = 12
-    style.corner_radius_bottom_right = 12
-    style.content_margin_left = 12
-    style.content_margin_right = 12
+    style.border_color = Color("#4a6267")
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(13)
+    style.content_margin_left = 16
+    style.content_margin_right = 16
+    style.content_margin_top = 10
+    style.content_margin_bottom = 10
+    style.shadow_color = Color(0, 0, 0, 0.24)
+    style.shadow_size = 3
+    style.shadow_offset = Vector2(0, 2)
     return style
 
 func _clear_children(parent: Node) -> void:
