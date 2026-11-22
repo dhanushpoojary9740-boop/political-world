@@ -399,6 +399,14 @@ func _build_dashboard() -> void:
 	karnataka_elections.add_child(karnataka_budget)
 	_add_button(karnataka_elections, "SAVE CAMPAIGN PLAN", _on_save_karnataka_plan)
 
+	var other_states_elections := _new_tab(election_tabs, "Other states")
+	_add_section_title(other_states_elections, "OTHER STATE ASSEMBLIES")
+	election_detail_labels["other_states"] = _add_body(other_states_elections, "")
+
+	var national_elections := _new_tab(election_tabs, "Lok Sabha")
+	_add_section_title(national_elections, "LOK SABHA ELECTION")
+	election_detail_labels["national"] = _add_body(national_elections, "")
+
 	_configure_touch_scroll_passthrough(overview)
 
 func _add_dashboard_hero(parent: VBoxContainer) -> void:
