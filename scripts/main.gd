@@ -399,7 +399,41 @@ func _build_dashboard() -> void:
 	karnataka_elections.add_child(karnataka_budget)
 	_add_button(karnataka_elections, "SAVE CAMPAIGN PLAN", _on_save_karnataka_plan)
 
-	_configure_touch_scroll_passthrough(hero)
+	_configure_touch_scroll_passthrough(overview)
+
+func _add_dashboard_hero(parent: VBoxContainer) -> void:
+	var panel := PanelContainer.new()
+	panel.name = "DashboardHero"
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.custom_minimum_size = Vector2(0, 132)
+	panel.add_theme_stylebox_override("panel", _hero_style())
+	parent.add_child(panel)
+
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 7)
+	panel.add_child(content)
+
+	var eyebrow := Label.new()
+	eyebrow.text = "POLITICAL WORLD INDIA"
+	eyebrow.add_theme_font_size_override("font_size", 11)
+	eyebrow.add_theme_color_override("font_color", Color("#d0ad62"))
+	content.add_child(eyebrow)
+
+	var headline := Label.new()
+	headline.text = "Your journey into public life"
+	headline.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	headline.add_theme_font_size_override("font_size", 23)
+	headline.add_theme_color_override("font_color", Color("#f3e8d2"))
+	content.add_child(headline)
+
+	var supporting_text := Label.new()
+	supporting_text.text = "Build trust, earn responsibility, and win authority through elections. The simulation advances month by month."
+	supporting_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	supporting_text.add_theme_font_size_override("font_size", 13)
+	supporting_text.add_theme_color_override("font_color", Color("#b8c6d3"))
+	content.add_child(supporting_text)
+
+	_configure_touch_scroll_passthrough(panel)
 
 func _add_overview_metrics(parent: VBoxContainer) -> void:
 	var grid := GridContainer.new()
