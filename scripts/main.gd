@@ -89,7 +89,8 @@ func _build_bottom_navigation(parent: VBoxContainer) -> void:
     main_tab_bar.custom_minimum_size = Vector2(0, 60)
     main_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     main_tab_bar.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-    main_tab_bar.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED\n    main_tab_bar.add_theme_stylebox_override("panel", _button_style("#101f2d"))
+    main_tab_bar.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    main_tab_bar.add_theme_stylebox_override("panel", _button_style("#101f2d"))
     main_tab_bar.visible = false
     parent.add_child(main_tab_bar)
 
