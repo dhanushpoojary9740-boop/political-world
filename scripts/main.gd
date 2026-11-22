@@ -176,16 +176,29 @@ func _after_start(started: bool) -> void:
         setup_box.visible = false
         dashboard_box.visible = true
         _refresh()
+        _save_progress()
     else:
         report_label.text = "\n".join(PackedStringArray(world.notifications))
 
 func _run_activity(activity: String) -> void:
     report_label.text = "\n".join(PackedStringArray(world.perform_activity(activity)))
     _refresh()
+    _save_progress()
 
 func _on_advance_month() -> void:
     report_label.text = "\n".join(PackedStringArray(world.advance_month()))
     _refresh()
+    _save_progress()
+
+func _on_save_game() -> void:
+    if world.save_game():
+        report_label.text = "Game saved successfully."
+    else:
+        report_label.text = "Save failed. Check available storage and try again."
+
+func _save_progress() -> void:
+    if is_instance_valid(world) and world.career_started:
+        world.save_game()
 
 func _refresh() -> void:
     date_label.text = world.date_label()
