@@ -1,6 +1,16 @@
 extends RefCounted
 class_name WorldSimulation
 
+const LOCAL_ELECTION_MONTH := 12
+const ACTIVE_WORKER_XP := 6
+const ACTIVE_WORKER_REPUTATION := 1.5
+const LOCAL_LEADER_XP := 16
+const LOCAL_LEADER_REPUTATION := 5.0
+const LOCAL_LEADER_RELATIONSHIP := 8.0
+const TICKET_XP := 12
+const TICKET_REPUTATION := 3.0
+const TICKET_RELATIONSHIP := 5.0
+
 var year: int = 2026
 var month: int = 1
 var character_name: String = "New Politician"
@@ -11,9 +21,17 @@ var career_started: bool = false
 var career_path: String = ""
 var player_party_id: String = ""
 var player_role: String = "Ordinary citizen"
+var career_rank: String = "Ordinary citizen"
 var personal_funds: int = 50000
 var experience: int = 0
 var reputation: float = 0.0
+var local_leader_relationship: float = 0.0
+var campaign_effort: float = 0.0
+var ticket_requested: bool = false
+var ticket_approved: bool = false
+var local_candidate_selected: bool = false
+var local_election_completed: bool = false
+var local_election_year: int = 2026
 var party_counter: int = 0
 var parties: Dictionary = {}
 var notifications: Array[String] = []
@@ -50,6 +68,15 @@ func start_career(name: String, age: int, city: String, path: String, party_name
         notifications = ["Enter your character's name and hometown to begin."]
         return false
 
+    if path != "join" and path != "found":
+        notifications = ["Choose a valid political path."]
+        return false
+
+    var clean_party_name := party_name.strip_edges()
+    if path == "found" and clean_party_name.is_empty():
+        notifications = ["Enter a name for your new political party."]
+        return false
+
     character_name = clean_name
     character_age = clampi(age, 18, 90)
     home_city = clean_city
@@ -58,17 +85,20 @@ func start_career(name: String, age: int, city: String, path: String, party_name
     experience = 0
     reputation = 0.0
     personal_funds = 50000
+    local_leader_relationship = 2.0
+    campaign_effort = 0.0
+    ticket_requested = false
+    ticket_approved = false
+    local_candidate_selected = false
+    local_election_completed = false
+    local_election_year = year
 
     if path == "join":
         player_party_id = "party_established"
         player_role = "Party volunteer"
-        notifications = ["You joined People's Unity Party as a volunteer in %s, Karnataka." % home_city]
-    elif path == "found":
-        var clean_party_name := party_name.strip_edges()
-        if clean_party_name.is_empty():
-            career_started = false
-            notifications = ["Enter a name for your new political party."]
-            return false
+        career_rank = "Party volunteer"
+        notifications = ["You joined People's Unity Party as a volunteer in %s, Karnataka. You have no elected office." % home_city]
+    else:
         party_counter += 1
         player_party_id = "player_party_%d" % party_counter
         parties[player_party_id] = {
@@ -79,11 +109,9 @@ func start_career(name: String, age: int, city: String, path: String, party_name
             "is_player_created": true
         }
         player_role = "Party founder"
-        notifications = ["You founded %s with five initial supporters. Your party has no elected seats." % clean_party_name]
-    else:
-        career_started = false
-        notifications = ["Choose a valid political path."]
-        return false
+        career_rank = "Party founder"
+        local_leader_relationship = 5.0
+        notifications = ["You founded %s with five initial supporters. Founding a party gives you organizational responsibility, not an elected office." % clean_party_name]
     return true
 
 func perform_activity(activity: String) -> Array[String]:
@@ -97,18 +125,20 @@ func perform_activity(activity: String) -> Array[String]:
             experience += 2
             reputation += 0.4
             personal_funds = maxi(0, personal_funds - 500)
+            campaign_effort += 1.5
             _increase_party_popularity(0.15)
-            notifications.append("You helped organize a local campaign activity. Experience +2; local reputation improved.")
+            notifications.append("You worked on a local campaign. Experience +2; reputation and campaign experience improved.")
         "community":
             experience += 2
             reputation += 0.7
             personal_funds = maxi(0, personal_funds - 800)
             _increase_party_popularity(0.25)
-            notifications.append("You organized a community service event in %s. Experience +2; reputation improved." % home_city)
+            notifications.append("You organized a community service event in %s. Experience +2; local reputation improved." % home_city)
         "meeting":
             experience += 1
             reputation += 0.2
-            notifications.append("You attended a party meeting and built political relationships. Experience +1.")
+            local_leader_relationship = minf(100.0, local_leader_relationship + 2.0)
+            notifications.append("You attended a party meeting. Experience +1; your relationship with local leadership improved.")
         "recruit":
             var party: Dictionary = parties[player_party_id]
             if int(party["members"]) < 100000:
@@ -117,12 +147,60 @@ func perform_activity(activity: String) -> Array[String]:
                 parties[player_party_id] = party
                 experience += 1
                 _increase_party_popularity(0.05)
-                notifications.append("You recruited one new party member. Party membership and funds increased slightly.")
+                notifications.append("You recruited one new party member. Membership and party funds increased slightly.")
             else:
-                notifications.append("Your party's local recruitment limit has been reached in this prototype.")
+                notifications.append("The local recruitment limit has been reached in this prototype.")
+        "request_ticket":
+            _request_local_ticket()
+        "campaign":
+            _run_local_campaign()
         _:
             notifications.append("That activity is not available.")
+
+    _check_promotion()
     return notifications.duplicate()
+
+func _request_local_ticket() -> void:
+    if local_election_completed:
+        notifications.append("The current local election has already concluded.")
+        return
+    if ticket_requested:
+        notifications.append("Your local election ticket application is already under review.")
+        return
+    ticket_requested = true
+    var eligible := experience >= TICKET_XP and reputation >= TICKET_REPUTATION and local_leader_relationship >= TICKET_RELATIONSHIP
+    if eligible:
+        ticket_approved = true
+        local_candidate_selected = true
+        notifications.append("Your party approved your local election ticket. You are now its candidate for the scheduled local election.")
+    else:
+        ticket_requested = false
+        notifications.append("Your ticket application was reviewed but not approved. You may apply again after improving your experience, reputation, and relationship with local leadership. Requirements: %d experience, %.1f reputation, and %.1f relationship." % [TICKET_XP, TICKET_REPUTATION, TICKET_RELATIONSHIP])
+
+func _run_local_campaign() -> void:
+    if not local_candidate_selected:
+        notifications.append("You cannot campaign as a candidate without an approved party ticket.")
+        return
+    if local_election_completed:
+        notifications.append("The local election has already concluded.")
+        return
+    if personal_funds < 300:
+        notifications.append("You do not have enough personal funds for this campaign activity.")
+        return
+    personal_funds -= 300
+    campaign_effort += 2.0
+    reputation += 0.25
+    notifications.append("You campaigned in your local constituency. Campaign effort and public reputation improved.")
+
+func _check_promotion() -> void:
+    if career_path == "join" and career_rank == "Party volunteer" and experience >= ACTIVE_WORKER_XP and reputation >= ACTIVE_WORKER_REPUTATION:
+        career_rank = "Active Party Worker"
+        player_role = career_rank
+        notifications.append("Promotion: local party leadership recognized your work. You are now an Active Party Worker.")
+    elif career_path == "join" and career_rank == "Active Party Worker" and experience >= LOCAL_LEADER_XP and reputation >= LOCAL_LEADER_REPUTATION and local_leader_relationship >= LOCAL_LEADER_RELATIONSHIP:
+        career_rank = "Local Party Leader"
+        player_role = career_rank
+        notifications.append("Promotion: you became a Local Party Leader. This is a party position, not an elected government office.")
 
 func advance_month() -> Array[String]:
     notifications.clear()
@@ -139,14 +217,33 @@ func advance_month() -> Array[String]:
             party["funds"] = int(party["funds"]) + 2000
             party["popularity"] = minf(100.0, float(party["popularity"]) + 0.1)
             parties[player_party_id] = party
-            notifications.append("Your party's AI local unit recruited two members and completed routine administration.")
-        if experience >= 20 and reputation >= 5.0:
-            notifications.append("You have begun building the experience and reputation needed for local party leadership.")
-        else:
-            notifications.append("You continued building your political career. Your next opportunities depend on experience, reputation, and party standing.")
+            notifications.append("AI local unit completed routine administration and recruited two members.")
+        if month == LOCAL_ELECTION_MONTH and not local_election_completed:
+            _resolve_local_election()
+        if notifications.is_empty():
+            notifications.append("You continued building your political career. Your next opportunities depend on experience, reputation, relationships, and party standing.")
     else:
         notifications.append("The calendar advanced. Your political career has not started.")
     return notifications.duplicate()
+
+func _resolve_local_election() -> void:
+    if local_candidate_selected and ticket_approved:
+        var party: Dictionary = parties[player_party_id]
+        var party_popularity: float = float(party["popularity"])
+        var player_score := party_popularity + reputation * 0.8 + campaign_effort * 1.5 + randf_range(-8.0, 8.0)
+        var rival_score := 24.0 + randf_range(-8.0, 8.0)
+        if player_score >= rival_score:
+            player_role = "Local elected representative"
+            career_rank = "Local elected representative"
+            notifications.append("Election result: you won your local election and became an elected representative.")
+        else:
+            notifications.append("Election result: you lost the local election. Your party retains its membership and organization, but you did not win an elected office.")
+    else:
+        notifications.append("Local election completed. Your party's AI organization handled its campaign, but you were not a candidate.")
+    local_election_completed = true
+    local_candidate_selected = false
+    ticket_approved = false
+    ticket_requested = false
 
 func _increase_party_popularity(amount: float) -> void:
     if player_party_id == "" or not parties.has(player_party_id):
@@ -154,6 +251,14 @@ func _increase_party_popularity(amount: float) -> void:
     var party: Dictionary = parties[player_party_id]
     party["popularity"] = minf(100.0, float(party["popularity"]) + amount)
     parties[player_party_id] = party
+
+func career_summary() -> String:
+    if not career_started:
+        return "You have not entered politics yet."
+    return "%s, age %d\n%s, Karnataka\nCareer rank: %s\nExperience: %d  •  Reputation: %.1f\nLeadership relationship: %.1f\nPersonal funds: ₹%s" % [
+        character_name, character_age, home_city, career_rank, experience, reputation,
+        local_leader_relationship, _format_number(personal_funds)
+    ]
 
 func party_summary() -> String:
     if not career_started or player_party_id == "" or not parties.has(player_party_id):
@@ -164,12 +269,14 @@ func party_summary() -> String:
         _format_number(int(party["funds"])), float(party["popularity"])
     ]
 
-func career_summary() -> String:
-    if not career_started:
-        return "You have not entered politics yet.\nChoose whether to join an established party or found your own."
-    return "%s, age %d\n%s, Karnataka\nExperience: %d  •  Reputation: %.1f\nPersonal funds: ₹%s" % [
-        character_name, character_age, home_city, experience, reputation, _format_number(personal_funds)
-    ]
+func election_summary() -> String:
+    if local_election_completed:
+        return "Local election: completed\nYou are not currently registered as a candidate."
+    if local_candidate_selected:
+        return "Local election: December %d\nYour party ticket is approved. Campaigning is open." % year
+    if ticket_requested:
+        return "Local election: December %d\nYour ticket application is under review." % year
+    return "Local election: December %d\nApply for a party ticket when you meet the eligibility requirements." % year
 
 func _format_number(value: int) -> String:
     return str(value)

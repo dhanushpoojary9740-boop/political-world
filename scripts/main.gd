@@ -3,12 +3,11 @@ extends Control
 const WorldSimulationScript = preload("res://scripts/world_simulation.gd")
 var world: WorldSimulation
 
-var root_layout: VBoxContainer
 var date_label: Label
 var career_label: Label
 var party_label: Label
+var election_label: Label
 var report_label: Label
-var setup_report_label: Label
 var name_input: LineEdit
 var age_input: SpinBox
 var city_input: LineEdit
@@ -36,36 +35,36 @@ func _build_ui() -> void:
     scroll.offset_bottom = -12
     add_child(scroll)
 
-    root_layout = VBoxContainer.new()
-    root_layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    root_layout.add_theme_constant_override("separation", 12)
-    scroll.add_child(root_layout)
+    var root := VBoxContainer.new()
+    root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    root.add_theme_constant_override("separation", 12)
+    scroll.add_child(root)
 
     var title := Label.new()
     title.text = "POLITICAL WORLD"
     title.add_theme_font_size_override("font_size", 28)
     title.add_theme_color_override("font_color", Color("#f1d28a"))
-    root_layout.add_child(title)
+    root.add_child(title)
 
     date_label = Label.new()
     date_label.add_theme_font_size_override("font_size", 18)
     date_label.add_theme_color_override("font_color", Color("#ffffff"))
-    root_layout.add_child(date_label)
+    root.add_child(date_label)
 
     var subtitle := Label.new()
     subtitle.text = "YOUR POLITICAL JOURNEY • INDIA"
     subtitle.add_theme_color_override("font_color", Color("#a9b6c2"))
-    root_layout.add_child(subtitle)
+    root.add_child(subtitle)
 
     setup_box = VBoxContainer.new()
     setup_box.add_theme_constant_override("separation", 10)
-    root_layout.add_child(setup_box)
+    root.add_child(setup_box)
     _build_setup()
 
     dashboard_box = VBoxContainer.new()
     dashboard_box.add_theme_constant_override("separation", 10)
     dashboard_box.visible = false
-    root_layout.add_child(dashboard_box)
+    root.add_child(dashboard_box)
     _build_dashboard()
 
 func _build_setup() -> void:
@@ -87,18 +86,20 @@ func _build_setup() -> void:
     _add_button(setup_box, "JOIN AN ESTABLISHED PARTY", _on_join_party)
     _add_button(setup_box, "FOUND MY OWN PARTY", _on_found_party)
     _add_body(setup_box, "Joining starts you as a volunteer. Founding starts you with five supporters and limited funds. Neither path grants an elected office.")
-    setup_report_label = _add_body(setup_box, "")
 
 func _build_dashboard() -> void:
     _add_section_title(dashboard_box, "YOUR CAREER")
     career_label = _add_body(dashboard_box, "")
     _add_section_title(dashboard_box, "YOUR PARTY")
     party_label = _add_body(dashboard_box, "")
-    _add_section_title(dashboard_box, "POLITICAL ACTIVITIES")
+    _add_section_title(dashboard_box, "LOCAL ELECTION")
+    election_label = _add_body(dashboard_box, "")
     _add_button(dashboard_box, "Volunteer in a local campaign", func(): _run_activity("volunteer"))
     _add_button(dashboard_box, "Organize community service", func(): _run_activity("community"))
     _add_button(dashboard_box, "Attend a party meeting", func(): _run_activity("meeting"))
     _add_button(dashboard_box, "Recruit a party member", func(): _run_activity("recruit"))
+    _add_button(dashboard_box, "Apply for local election ticket", func(): _run_activity("request_ticket"))
+    _add_button(dashboard_box, "Campaign as approved candidate", func(): _run_activity("campaign"))
     _add_button(dashboard_box, "ADVANCE ONE MONTH", _on_advance_month)
     _add_section_title(dashboard_box, "WORLD REPORT")
     report_label = _add_body(dashboard_box, "Your political journey is ready to begin.")
@@ -170,7 +171,7 @@ func _after_start(started: bool) -> void:
         dashboard_box.visible = true
         _refresh()
     else:
-        setup_report_label.text = "\n".join(PackedStringArray(world.notifications))
+        report_label.text = "\n".join(PackedStringArray(world.notifications))
 
 func _run_activity(activity: String) -> void:
     report_label.text = "\n".join(PackedStringArray(world.perform_activity(activity)))
@@ -185,3 +186,4 @@ func _refresh() -> void:
     if world.career_started:
         career_label.text = world.career_summary()
         party_label.text = world.party_summary()
+        election_label.text = world.election_summary()
