@@ -860,13 +860,15 @@ func _refresh() -> void:
 		conditions_label.text = world.local_conditions_summary()
 		if is_instance_valid(world_politics_label):
 			world_politics_label.text = world.world_politics_summary()
-		office_tab.visible = world.has_elected_office
-		if main_tab_buttons.size() > 5:
+		if is_instance_valid(office_tab):
+			office_tab.visible = world.has_elected_office
+		if main_tab_buttons.size() > 5 and is_instance_valid(main_tab_buttons[5]):
 			main_tab_buttons[5].visible = world.has_elected_office
 		if is_instance_valid(district_label):
 			district_label.text = world.district_progression_summary()
 		if world.has_elected_office:
-			office_label.text = world.office_summary().replace("\\n", "\n")
+			if is_instance_valid(office_label):
+				office_label.text = world.office_summary().replace("\\n", "\n")
 			_refresh_office_missions()
 			_refresh_office_log()
 
@@ -879,7 +881,8 @@ func _refresh_election_tabs() -> void:
 		"Completed" if world.local_election_completed else "Scheduled",
 		world.last_local_election_result if world.last_local_election_year > 0 else "No result recorded"
 	]
-	election_detail_labels["local"].text = local_text
+	if election_detail_labels.has("local") and is_instance_valid(election_detail_labels["local"]):
+		election_detail_labels["local"].text = local_text
 
 	var state_elections: Array = world.world_state.get("state_elections", [])
 	var karnataka_text := "Karnataka Assembly election schedule and AI campaign status.\n"
@@ -916,15 +919,18 @@ func _refresh_election_tabs() -> void:
 				if karnataka_priority.get_item_text(pi) == selected_priority:
 					karnataka_priority.select(pi)
 					break
-	election_detail_labels["karnataka"].text = karnataka_text
-	election_detail_labels["other_states"].text = other_text
+	if election_detail_labels.has("karnataka") and is_instance_valid(election_detail_labels["karnataka"]):
+		election_detail_labels["karnataka"].text = karnataka_text
+	if election_detail_labels.has("other_states") and is_instance_valid(election_detail_labels["other_states"]):
+		election_detail_labels["other_states"].text = other_text
 
 	var national: Dictionary = world.world_state.get("national_election", {})
-	election_detail_labels["national"].text = "Next Lok Sabha poll: %s %d\nPhase: %s\nSeats modeled: %d\nLast result: %s\nAI-managed national campaigning and participation." % [
-		world._month_name(int(national.get("month", 5))), int(national.get("next_year", 2029)),
-		str(national.get("phase", "Scheduled")), int(national.get("seats", 543)),
-		str(national.get("last_result", "Not yet held"))
-	]
+	if election_detail_labels.has("national") and is_instance_valid(election_detail_labels["national"]):
+		election_detail_labels["national"].text = "Next Lok Sabha poll: %s %d\nPhase: %s\nSeats modeled: %d\nLast result: %s\nAI-managed national campaigning and participation." % [
+			world._month_name(int(national.get("month", 5))), int(national.get("next_year", 2029)),
+			str(national.get("phase", "Scheduled")), int(national.get("seats", 543)),
+			str(national.get("last_result", "Not yet held"))
+		]
 
 func _on_approve_karnataka_slate() -> void:
 	var result: String = world.set_karnataka_slate_approved(true)
