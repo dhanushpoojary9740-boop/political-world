@@ -33,6 +33,9 @@ var main_tab_buttons: Array[Button] = []
 var overview_metric_values: Array[Label] = []
 var party_member_name_input: LineEdit
 var party_member_area: VBoxContainer
+var party_member_search: LineEdit
+var party_member_count_label: Label
+var duty_member_search: LineEdit
 var duty_member_picker: OptionButton
 var duty_role_picker: OptionButton
 var party_member_status: Label
@@ -40,8 +43,15 @@ var constitution_model_picker: OptionButton
 var constitution_term_picker: OptionButton
 var constitution_status: Label
 var internal_candidate_picker: OptionButton
+var internal_candidate_search: LineEdit
+var internal_ballot_picker: OptionButton
+var internal_ballot_search: LineEdit
 var internal_election_status: Label
 var party_office_picker: OptionButton
+var party_office_mode_picker: OptionButton
+var office_ballot_picker: OptionButton
+var office_ballot_search: LineEdit
+var office_election_status: Label
 var election_detail_labels: Dictionary = {}
 var karnataka_command_status: Label
 var karnataka_budget: SpinBox
@@ -345,26 +355,16 @@ func _build_dashboard() -> void:
 
 	var party_members := _new_tab(party_tabs, "Members")
 	_add_section_title(party_members, "PARTY MEMBERS")
-	_add_body(party_members, "Fictional Indian political members. Add members manually and assign duties individually.")
+	_add_body(party_members, "Fictional Indian political members. Add members and manage party leadership through Constitution.")
 	party_member_name_input = _add_line_input(party_members, "Member name", "Enter a fictional member name")
 	_add_button(party_members, "ADD MEMBER", _on_add_party_member)
 	party_member_status = _add_body(party_members, "")
+	party_member_search = _add_line_input(party_members, "Search members", "Search by name or member ID")
+	party_member_search.text_changed.connect(func(_value: String): _refresh_party_members())
+	party_member_count_label = _add_body(party_members, "")
 	party_member_area = VBoxContainer.new()
 	party_member_area.add_theme_constant_override("separation", 8)
 	party_members.add_child(party_member_area)
-
-	var party_duties := _new_tab(party_tabs, "Duties")
-	_add_section_title(party_duties, "ASSIGN PARTY DUTIES")
-	_add_body(party_duties, "Assign a role to an individual member. These are party responsibilities, not government powers.")
-	duty_member_picker = OptionButton.new()
-	duty_member_picker.custom_minimum_size = Vector2(0, 44)
-	party_duties.add_child(duty_member_picker)
-	duty_role_picker = OptionButton.new()
-	duty_role_picker.custom_minimum_size = Vector2(0, 44)
-	for duty in ["Volunteer", "Booth Coordinator", "Ward Organizer", "Media Coordinator", "Treasurer", "District Secretary", "State Organizer"]:
-		duty_role_picker.add_item(duty)
-	party_duties.add_child(duty_role_picker)
-	_add_button(party_duties, "ASSIGN SELECTED DUTY", _on_assign_party_duty)
 
 	var party_constitution := _new_tab(party_tabs, "Constitution")
 	_add_section_title(party_constitution, "PARTY CONSTITUTION")
@@ -386,20 +386,51 @@ func _build_dashboard() -> void:
 	constitution_status = _add_body(party_constitution, "No constitution adopted yet.")
 	_add_section_title(party_constitution, "INTERNAL PRESIDENTIAL ELECTION")
 	_add_body(party_constitution, "Use Member election or Delegate election for a contested vote. Nominate at least two candidates; current nominations and the most recent completed election are shown separately.")
+	internal_candidate_search = _add_line_input(party_constitution, "Find a candidate", "Search party members")
+	internal_candidate_search.text_changed.connect(func(_value: String): _refresh_party_members())
 	internal_candidate_picker = OptionButton.new()
 	internal_candidate_picker.custom_minimum_size = Vector2(0, 44)
 	party_constitution.add_child(internal_candidate_picker)
 	_add_button(party_constitution, "NOMINATE SELECTED CANDIDATE", _on_nominate_internal_candidate)
-	_add_button(party_constitution, "HOLD PRESIDENTIAL ELECTION", _on_hold_internal_election)
+	_add_body(party_constitution, "YOUR BALLOT — choose one nominated candidate. Your vote is recorded as your own ballot and counted with the party members.")
+	internal_ballot_search = _add_line_input(party_constitution, "Find ballot candidate", "Search nominated candidates")
+	internal_ballot_search.text_changed.connect(func(_value: String): _refresh_party_members())
+	internal_ballot_picker = OptionButton.new()
+	internal_ballot_picker.custom_minimum_size = Vector2(0, 44)
+	party_constitution.add_child(internal_ballot_picker)
+	_add_button(party_constitution, "CAST MY VOTE & HOLD ELECTION", _on_hold_internal_election)
 	internal_election_status = _add_body(party_constitution, "No internal election held yet.")
-	_add_section_title(party_constitution, "APPOINT PARTY OFFICE BEARERS")
+	_add_section_title(party_constitution, "PARTY OFFICE BEARERS")
+	_add_body(party_constitution, "Choose how each office is filled: presidential appointment or internal member election. Search and select members here.")
+	_add_body(party_constitution, "FIND PARTY MEMBER")
+	duty_member_search = _add_line_input(party_constitution, "Search members", "Search by name or member ID")
+	duty_member_search.text_changed.connect(func(_value: String): _refresh_party_members())
+	duty_member_picker = OptionButton.new()
+	duty_member_picker.custom_minimum_size = Vector2(0, 44)
+	party_constitution.add_child(duty_member_picker)
 	party_office_picker = OptionButton.new()
 	party_office_picker.custom_minimum_size = Vector2(0, 44)
 	for office in ["General Secretary", "Treasurer", "Vice President", "Organization Secretary"]:
 		party_office_picker.add_item(office)
 	party_constitution.add_child(party_office_picker)
+	party_office_picker.item_selected.connect(func(_index: int): _refresh_party_members())
+	party_office_mode_picker = OptionButton.new()
+	party_office_mode_picker.custom_minimum_size = Vector2(0, 44)
+	party_office_mode_picker.add_item("President appoints")
+	party_office_mode_picker.add_item("Internal election")
+	party_constitution.add_child(party_office_mode_picker)
+	_add_button(party_constitution, "SAVE OFFICE SELECTION METHOD", _on_set_office_mode)
 	_add_button(party_constitution, "APPOINT SELECTED MEMBER", _on_appoint_party_office)
-	_add_body(party_constitution, "Select a member in Party > Duties before appointing. Office-bearers are internal party officials; the player remains subject to their actual elected mandate.")
+	_add_button(party_constitution, "NOMINATE SELECTED MEMBER FOR OFFICE", _on_nominate_office_candidate)
+	office_ballot_search = _add_line_input(party_constitution, "Find office-election nominee", "Search nominated members")
+	office_ballot_search.text_changed.connect(func(_value: String): _refresh_party_members())
+	_add_body(party_constitution, "YOUR BALLOT — choose a nominee to cast your own vote. The election cannot be held until you select a candidate.")
+	office_ballot_picker = OptionButton.new()
+	office_ballot_picker.custom_minimum_size = Vector2(0, 44)
+	party_constitution.add_child(office_ballot_picker)
+	_add_button(party_constitution, "CAST MY VOTE & HOLD OFFICE-BEARER ELECTION", _on_hold_office_election)
+	office_election_status = _add_body(party_constitution, "No office-bearer election held yet.")
+	_add_body(party_constitution, "Appointments are made by the president. Internal elections use member ballots. These are party roles, not government offices.")
 
 	var party_finances := _new_tab(party_tabs, "Finances")
 	_add_section_title(party_finances, "PERSONAL, PARTY & CAMPAIGN ACCOUNTS")
@@ -1131,11 +1162,38 @@ func _on_adopt_constitution() -> void:
 
 func _on_appoint_party_office() -> void:
 	if duty_member_picker.item_count == 0:
-		constitution_status.text = "Add or recruit a member, then select them under Party > Duties."
+		constitution_status.text = "Add or recruit a member, then search and select them in Party > Constitution."
 		return
 	var member_id := str(duty_member_picker.get_item_metadata(duty_member_picker.selected))
 	var office := party_office_picker.get_item_text(party_office_picker.selected)
 	constitution_status.text = world.appoint_party_office_bearer(member_id, office)
+	_refresh()
+	_save_progress()
+
+func _on_set_office_mode() -> void:
+	var office := party_office_picker.get_item_text(party_office_picker.selected)
+	var mode := party_office_mode_picker.get_item_text(party_office_mode_picker.selected)
+	constitution_status.text = world.set_party_office_selection_mode(office, mode)
+	_refresh_party_members()
+	_save_progress()
+
+func _on_nominate_office_candidate() -> void:
+	if duty_member_picker.item_count == 0:
+		office_election_status.text = "Search for and select a party member first."
+		return
+	var member_id := str(duty_member_picker.get_item_metadata(duty_member_picker.selected))
+	var office := party_office_picker.get_item_text(party_office_picker.selected)
+	office_election_status.text = world.nominate_party_office_candidate(member_id, office)
+	_refresh_party_members()
+	_save_progress()
+
+func _on_hold_office_election() -> void:
+	if office_ballot_picker.item_count < 2 or office_ballot_picker.selected <= 0:
+		office_election_status.text = "Choose a nominee for your own ballot before holding the election."
+		return
+	var office := party_office_picker.get_item_text(party_office_picker.selected)
+	var vote_id := str(office_ballot_picker.get_item_metadata(office_ballot_picker.selected))
+	office_election_status.text = world.hold_party_office_election(office, vote_id)
 	_refresh()
 	_save_progress()
 
@@ -1149,7 +1207,11 @@ func _on_nominate_internal_candidate() -> void:
 	_save_progress()
 
 func _on_hold_internal_election() -> void:
-	internal_election_status.text = world.hold_party_presidential_election()
+	if not is_instance_valid(internal_ballot_picker) or internal_ballot_picker.item_count == 0:
+		internal_election_status.text = "Nominate at least two candidates, then select your ballot."
+		return
+	var selected_vote := str(internal_ballot_picker.get_item_metadata(internal_ballot_picker.selected))
+	internal_election_status.text = world.hold_party_presidential_election(selected_vote)
 	_refresh()
 	_save_progress()
 
@@ -1163,7 +1225,36 @@ func _refresh_party_members() -> void:
 		internal_candidate_picker.clear()
 		internal_candidate_picker.add_item("You (founder)")
 		internal_candidate_picker.set_item_metadata(0, "founder")
+	if is_instance_valid(internal_ballot_picker):
+		internal_ballot_picker.clear()
 	var constitution := world.party_constitution()
+	var ballot_party: Dictionary = world.parties.get(world.player_party_id, {})
+	var ballot_election: Dictionary = ballot_party.get("internal_election", {})
+	for nomination_variant in ballot_election.get("nominations", []):
+		var nomination: Dictionary = nomination_variant
+		var ballot_name := str(nomination.get("candidate_name", "Candidate"))
+		if is_instance_valid(internal_ballot_picker) and (internal_ballot_search.text.strip_edges().is_empty() or ballot_name.to_lower().contains(internal_ballot_search.text.strip_edges().to_lower())):
+			internal_ballot_picker.add_item(ballot_name)
+			internal_ballot_picker.set_item_metadata(internal_ballot_picker.item_count - 1, str(nomination.get("candidate_id", "")))
+	var selected_office := party_office_picker.get_item_text(party_office_picker.selected) if party_office_picker.item_count > 0 else "General Secretary"
+	var office_elections: Dictionary = ballot_party.get("office_elections", {})
+	var selected_office_election: Dictionary = office_elections.get(selected_office, {"nominations": [], "history": []})
+	if is_instance_valid(office_ballot_picker):
+		office_ballot_picker.clear()
+		office_ballot_picker.add_item("Choose your vote…")
+		office_ballot_picker.set_item_metadata(0, "")
+		office_ballot_picker.select(0)
+		for office_nom_variant in selected_office_election.get("nominations", []):
+			var office_nom: Dictionary = office_nom_variant
+			var office_nom_name := str(office_nom.get("candidate_name", "Candidate"))
+			var office_query := office_ballot_search.text.strip_edges().to_lower() if is_instance_valid(office_ballot_search) else ""
+			if office_query.is_empty() or office_nom_name.to_lower().contains(office_query):
+				office_ballot_picker.add_item(office_nom_name)
+				office_ballot_picker.set_item_metadata(office_ballot_picker.item_count - 1, str(office_nom.get("candidate_id", "")))
+	if is_instance_valid(party_office_mode_picker):
+		var mode_map: Dictionary = ballot_party.get("office_selection_modes", {})
+		var saved_mode := str(mode_map.get(selected_office, "President appoints"))
+		party_office_mode_picker.select(1 if saved_mode == "Internal election" else 0)
 	# Keep the controls synchronized with the saved constitution; never show a default
 	# dropdown value that differs from the active party rules.
 	if not constitution.is_empty():
@@ -1188,27 +1279,50 @@ func _refresh_party_members() -> void:
 		constitution_status.text = "\n".join(lines)
 		if is_instance_valid(internal_election_status):
 			internal_election_status.text = world.party_internal_election_summary()
+		if is_instance_valid(office_election_status):
+			var office_election: Dictionary = office_elections.get(selected_office, {})
+			var office_noms: Array = office_election.get("nominations", [])
+			var office_hist: Array = office_election.get("history", [])
+			office_election_status.text = world.party_office_election_summary(selected_office)
 	var roster: Array = world.get_player_party_members()
+	var roster_query_for_count := party_member_search.text.strip_edges() if is_instance_valid(party_member_search) else ""
+	var shown_member_rows := 0
+	var matching_member_count := 0
 	for member_variant in roster:
 		var member: Dictionary = member_variant
-		var row := PanelContainer.new()
-		var row_box := VBoxContainer.new()
-		row_box.add_theme_constant_override("separation", 3)
-		var name_label := Label.new()
-		name_label.text = str(member.get("name", "Unnamed member"))
-		name_label.add_theme_color_override("font_color", Color("#f0d18a"))
-		row_box.add_child(name_label)
-		var detail := Label.new()
-		detail.text = "%s  •  %s" % [str(member.get("duty", "Volunteer")), str(member.get("region", "Karnataka"))]
-		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		row_box.add_child(detail)
-		row.add_child(row_box)
-		party_member_area.add_child(row)
-		duty_member_picker.add_item(str(member.get("name", "Member")))
-		duty_member_picker.set_item_metadata(duty_member_picker.item_count - 1, str(member.get("id", "")))
-		if is_instance_valid(internal_candidate_picker):
-			internal_candidate_picker.add_item(str(member.get("name", "Member")))
+		var member_name := str(member.get("name", "Member"))
+		var roster_query := party_member_search.text.strip_edges().to_lower() if is_instance_valid(party_member_search) else ""
+		var show_in_roster := roster_query.is_empty() or member_name.to_lower().contains(roster_query) or str(member.get("id", "")).to_lower().contains(roster_query)
+		if show_in_roster:
+			matching_member_count += 1
+		if show_in_roster and (not roster_query_for_count.is_empty() or shown_member_rows < 50):
+			shown_member_rows += 1
+			var row := PanelContainer.new()
+			var row_box := VBoxContainer.new()
+			row_box.add_theme_constant_override("separation", 3)
+			var name_label := Label.new()
+			name_label.text = member_name
+			name_label.add_theme_color_override("font_color", Color("#f0d18a"))
+			row_box.add_child(name_label)
+			var detail := Label.new()
+			detail.text = "%s  •  %s" % [str(member.get("duty", "Volunteer")), str(member.get("region", "Karnataka"))]
+			detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			row_box.add_child(detail)
+			row.add_child(row_box)
+			party_member_area.add_child(row)
+		var duty_query := duty_member_search.text.strip_edges().to_lower() if is_instance_valid(duty_member_search) else ""
+		if duty_query.is_empty() or member_name.to_lower().contains(duty_query) or str(member.get("id", "")).to_lower().contains(duty_query):
+			duty_member_picker.add_item(member_name)
+			duty_member_picker.set_item_metadata(duty_member_picker.item_count - 1, str(member.get("id", "")))
+		var candidate_query := internal_candidate_search.text.strip_edges().to_lower() if is_instance_valid(internal_candidate_search) else ""
+		if is_instance_valid(internal_candidate_picker) and (candidate_query.is_empty() or member_name.to_lower().contains(candidate_query) or str(member.get("id", "")).to_lower().contains(candidate_query)):
+			internal_candidate_picker.add_item(member_name)
 			internal_candidate_picker.set_item_metadata(internal_candidate_picker.item_count - 1, str(member.get("id", "")))
+	if is_instance_valid(party_member_count_label):
+		if roster_query_for_count.is_empty() and matching_member_count > 50:
+			party_member_count_label.text = "Showing first 50 of %d members. Search by name or ID to find others." % roster.size()
+		else:
+			party_member_count_label.text = "%d matching members" % matching_member_count
 	if roster.is_empty():
 		var empty_label := Label.new()
 		empty_label.text = "No named roster records yet. Add a member above."
