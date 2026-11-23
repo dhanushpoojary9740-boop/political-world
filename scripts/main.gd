@@ -55,6 +55,7 @@ var office_ballot_picker: OptionButton
 var office_ballot_search: LineEdit
 var office_election_status: Label
 var election_detail_labels: Dictionary = {}
+var state_election_cards: VBoxContainer
 var high_command_status: Label
 var high_command_budget: SpinBox
 var high_command_priority: OptionButton
@@ -119,11 +120,14 @@ func _apply_premium_theme() -> void:
 	premium.set_stylebox("disabled", "Button", _button_style("#203650"))
 
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color("#102036")
-	panel_style.border_color = Color("#334a66")
+	panel_style.bg_color = Color("#0f1b2b")
+	panel_style.border_color = Color("#30445d")
 	panel_style.set_border_width_all(1)
-	panel_style.set_corner_radius_all(14)
-	panel_style.set_content_margin_all(12)
+	panel_style.set_corner_radius_all(17)
+	panel_style.set_content_margin_all(15)
+	panel_style.shadow_color = Color(0.02, 0.06, 0.12, 0.24)
+	panel_style.shadow_size = 4
+	panel_style.shadow_offset = Vector2(0, 2)
 	premium.set_stylebox("panel", "PanelContainer", panel_style)
 	premium.set_stylebox("panel", "TabContainer", panel_style)
 	theme = premium
@@ -514,57 +518,68 @@ func _build_dashboard() -> void:
 	_add_body(party_finances, "Personal cash, party funds, party debt, and election campaign spending are tracked separately. Values are a simplified game economy, not audited real-world party accounts.")
 
 	var elections_page := _new_tab(dashboard_box, "Elections")
-	_add_section_title(elections_page, "ELECTIONS & CAMPAIGNS")
-	election_page_summary = _add_page_summary(elections_page, "ELECTION BRIEFING", "Election calendar", "Each election type has its own schedule and campaign rules.")
+	_add_section_title(elections_page, "ELECTIONS")
+	election_page_summary = _add_page_summary(elections_page, "NEXT POLL / CURRENT PHASE", "Election briefing", "Schedules, campaign actions, and results are grouped by election type.")
 	var election_tabs := TabContainer.new()
+	election_tabs.name = "ElectionWorkspace"
 	election_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	election_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	elections_page.add_child(election_tabs)
 
-	var local_elections := _new_tab(election_tabs, "Local bodies")
-	_add_section_title(local_elections, "AI-MANAGED PARTY LOCAL CONTESTS")
-	_add_body(local_elections, "AI High Command automatically selects a different party nominee for every modeled district-local contest, runs the campaign, and handles routine organization. A winning party controls that modeled local administration through an AI office-holder; it does not appoint you personally.")
-	_add_body(local_elections, "MODEL LIMIT: these are district-level local-administration elections, not separate schedules for every real municipality, Gram Panchayat, ward, or corporation.")
-	_add_section_title(local_elections, "OPTIONAL PERSONAL CANDIDACY")
-	_add_body(local_elections, "These controls apply only if you personally choose to contest your separate home-area election. Your party's AI nominees continue to contest the nationwide modeled contests automatically either way.")
-	election_detail_labels["local"] = _add_body(local_elections, "")
-	_add_button(local_elections, "Apply for personal local election ticket", func(): _run_activity("request_ticket"))
-	_add_button(local_elections, "Campaign as personal candidate", func(): _run_activity("campaign"))
+	var local_elections := _new_tab(election_tabs, "Local")
+	_add_section_title(local_elections, "PERSONAL LOCAL CONTEST")
+	var local_card := _new_election_card(local_elections, "Your constituency", "Personal ticket and campaign actions")
+	election_detail_labels["local"] = _add_body(local_card, "")
+	_add_button(local_card, "REQUEST LOCAL TICKET", func(): _run_activity("request_ticket"))
+	_add_button(local_card, "CAMPAIGN", func(): _run_activity("campaign"))
+	_add_info_card(local_elections, "Model scope", "Local contests represent district-level local administration, not every individual ward or municipality.", "Party-wide local nominees are handled separately.")
 
 	var high_command_page := _new_tab(election_tabs, "High Command")
-	_add_section_title(high_command_page, "NATIONAL PARTY HIGH COMMAND")
-	election_detail_labels["high_command"] = _add_body(high_command_page, "Your party’s nationwide high-command status will appear here.")
-	_add_body(high_command_page, "You act as party High Command. The AI automatically nominates party members for every modeled Lok Sabha and state-assembly constituency, selects local nominees, runs campaigns, manages party resources, and handles routine organization. You make broad strategic and coalition-policy decisions only; you do not directly run a government unless separately elected to a specific office.")
-	_add_body(high_command_page, "CAMPAIGN STRATEGY")
+	_add_section_title(high_command_page, "PARTY-WIDE STRATEGY")
+	var command_card := _new_election_card(high_command_page, "High Command status", "Party-wide candidate deployment and campaign coordination")
+	election_detail_labels["high_command"] = _add_body(command_card, "")
+	var strategy_card := _new_election_card(high_command_page, "Campaign strategy", "Set the party’s monthly direction and spending ceiling")
+	_add_body(strategy_card, "Priority")
 	high_command_priority = OptionButton.new()
 	high_command_priority.custom_minimum_size = Vector2(0, 44)
 	for priority in ["Balanced outreach", "Jobs & economy", "Public services", "Rural development", "Welfare & inclusion", "Infrastructure", "Public safety", "Youth engagement"]:
 		high_command_priority.add_item(priority)
-	high_command_page.add_child(high_command_priority)
-	_add_body(high_command_page, "TOTAL MONTHLY CAMPAIGN BUDGET CEILING (₹)")
+	strategy_card.add_child(high_command_priority)
+	_add_body(strategy_card, "Monthly campaign budget ceiling (₹)")
 	high_command_budget = SpinBox.new()
 	high_command_budget.min_value = 0
-	high_command_budget.max_value = 200000
-	high_command_budget.step = 5000
-	high_command_budget.value = 50000
+	high_command_budget.max_value = 2000000000
+	high_command_budget.step = 50000000
+	high_command_budget.value = 500000000
 	high_command_budget.custom_minimum_size = Vector2(0, 44)
-	high_command_page.add_child(high_command_budget)
-	_add_body(high_command_page, "COALITION DIRECTIVE")
+	strategy_card.add_child(high_command_budget)
+	_add_body(strategy_card, "Coalition preference")
 	high_command_coalition = OptionButton.new()
 	high_command_coalition.custom_minimum_size = Vector2(0, 44)
-	for policy in ["AI negotiate a working majority", "Prefer single-party government", "Avoid coalition agreements"]:
+	for policy in ["Negotiate a working majority", "Prefer single-party government", "Avoid coalition agreements"]:
 		high_command_coalition.add_item(policy)
-	high_command_page.add_child(high_command_coalition)
-	high_command_status = _add_body(high_command_page, "AI candidate selection and campaign operations are automatic.")
-	_add_button(high_command_page, "SAVE HIGH COMMAND DIRECTIVE", _on_save_high_command_policy)
+	strategy_card.add_child(high_command_coalition)
+	high_command_status = _add_body(strategy_card, "")
+	_add_button(strategy_card, "SAVE STRATEGY", _on_save_high_command_policy)
 
 	var other_states_elections := _new_tab(election_tabs, "State Assemblies")
-	_add_section_title(other_states_elections, "ALL STATE ASSEMBLIES")
-	election_detail_labels["other_states"] = _add_body(other_states_elections, "")
+	_add_section_title(other_states_elections, "STATE ASSEMBLIES  ·  INDIA")
+	_add_body(other_states_elections, "Karnataka is shown first. Each state briefing separates election timing, party support, candidate coverage, campaign spending, result, and current government. Figures appear only when recorded in your career save.")
+	var state_card := _new_election_card(other_states_elections, "State performance", "Your party’s footprint across every modeled state")
+	var state_overview := _add_body(state_card, "")
+	state_overview.text = "KARNATAKA FIRST  ·  STATE-BY-STATE BRIEFING"
+	state_overview.add_theme_color_override("font_color", Color("#d6b15a"))
+	state_overview.add_theme_font_size_override("font_size", 12)
+	state_election_cards = VBoxContainer.new()
+	state_election_cards.name = "StateElectionCards"
+	state_election_cards.add_theme_constant_override("separation", 12)
+	state_election_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	state_card.add_child(state_election_cards)
 
 	var national_elections := _new_tab(election_tabs, "Lok Sabha")
-	_add_section_title(national_elections, "LOK SABHA ELECTION")
-	election_detail_labels["national"] = _add_body(national_elections, "")
+	_add_section_title(national_elections, "LOK SABHA")
+	var national_card := _new_election_card(national_elections, "National election tracker", "Constituency coverage, polling, count, and government formation")
+	election_detail_labels["national"] = _add_body(national_card, "")
 
 
 
@@ -624,7 +639,7 @@ func _build_dashboard() -> void:
 	india_map_layer_picker = OptionButton.new()
 	india_map_layer_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	india_map_layer_picker.custom_minimum_size = Vector2(0, 42)
-	for layer_name in ["Political control", "Regional support", "Assembly seats", "Election status"]:
+	for layer_name in ["Political control", "Development index", "Political influence", "Political power", "Economy", "Population", "Public welfare", "Infrastructure", "Election performance", "Public approval", "Social indicators", "Law & order"]:
 		india_map_layer_picker.add_item(layer_name)
 	india_map_layer_picker.item_selected.connect(func(_index: int): _refresh_india_map())
 	map_controls.add_child(india_map_layer_picker)
@@ -636,7 +651,7 @@ func _build_dashboard() -> void:
 	india_map_legend.add_theme_constant_override("h_separation", 10)
 	india_map_legend.add_theme_constant_override("v_separation", 8)
 	india_map_page.add_child(india_map_legend)
-	_add_body(india_map_page, "MAP KEY: Each swatch identifies the party or value range shown on the map. At India level, political control shows the state / Union Territory government; inside a state, it shows the district-level AI administration. Navy means no recorded party; gold marks the selected district. Other layers use the ranges listed above.")
+	_add_body(india_map_page, "MAP KEY: Choose a layer to compare recorded political and administration indicators. Navy means no recorded data; gold marks the selected district. Population remains unavailable until the simulation includes population records.")
 	india_map_grid = preload("res://scripts/india_map_view.gd").new()
 	india_map_grid.name = "InteractiveIndiaMap"
 	india_map_grid.custom_minimum_size = Vector2(0, 620)
@@ -835,17 +850,15 @@ func _add_office_action_card(parent: VBoxContainer, title_text: String, detail_t
 
 func _card_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#102036")
-	style.border_color = Color("#334a66")
+	style.bg_color = Color("#101d2e")
+	style.border_color = Color("#30445d")
 	style.set_border_width_all(1)
-	style.border_width_left = 2
-	style.border_color = Color("#334a66")
 	style.border_width_left = 3
-	style.set_corner_radius_all(16)
-	style.set_content_margin_all(17)
-	style.shadow_color = Color(0.12, 0.19, 0.14, 0.08)
-	style.shadow_size = 3
-	style.shadow_offset = Vector2(0, 2)
+	style.set_corner_radius_all(18)
+	style.set_content_margin_all(19)
+	style.shadow_color = Color(0.02, 0.06, 0.12, 0.32)
+	style.shadow_size = 5
+	style.shadow_offset = Vector2(0, 3)
 	return style
 
 func _brand_mark_style() -> StyleBoxFlat:
@@ -1025,6 +1038,28 @@ func _new_tab(parent: TabContainer, tab_title: String) -> VBoxContainer:
 	parent.set_tab_title(parent.get_tab_count() - 1, tab_title)
 	return page
 
+func _new_election_card(parent: VBoxContainer, title_text: String, subtitle_text: String) -> VBoxContainer:
+	var panel := PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_theme_stylebox_override("panel", _card_style())
+	parent.add_child(panel)
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", 9)
+	panel.add_child(body)
+	var title := Label.new()
+	title.text = title_text
+	title.add_theme_font_size_override("font_size", 17)
+	title.add_theme_color_override("font_color", Color("#e7edf6"))
+	body.add_child(title)
+	var subtitle := Label.new()
+	subtitle.text = subtitle_text
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	subtitle.add_theme_font_size_override("font_size", 12)
+	subtitle.add_theme_color_override("font_color", Color("#91a4ba"))
+	body.add_child(subtitle)
+	_configure_touch_scroll_passthrough(panel)
+	return body
+
 func _add_line_input(parent: VBoxContainer, label_text: String, placeholder_text: String) -> LineEdit:
 	var label := Label.new()
 	label.text = label_text
@@ -1144,6 +1179,8 @@ func _refresh() -> void:
 	var selected_page_name := _get_current_page_name()
 	date_label.text = world.date_label()
 	if world.career_started:
+		if world.apply_player_party_fund_grant_once():
+			_save_progress()
 		_refresh_overview_metrics()
 		if is_instance_valid(career_page_summary):
 			career_page_summary.text = world.career_summary()
@@ -1236,7 +1273,7 @@ func _refresh_india_map() -> void:
 		return
 	var layer := india_map_layer_picker.get_item_text(india_map_layer_picker.selected) if is_instance_valid(india_map_layer_picker) else "Political control"
 	if not world.career_started:
-		india_map_grid.set_map_state(india_map_level, india_map_selected_state, india_map_selected_district, layer, {}, {}, {}, {}, {}, world.party_map_colors())
+		india_map_grid.set_map_state(india_map_level, india_map_selected_state, india_map_selected_district, layer, {}, {}, {}, {}, {}, world.party_map_colors(), {})
 		india_map_details.text = "INDIA POLITICAL ATLAS\nStart a political career to initialize the AI-managed Union, state, and district administrations. The map shows the real supplied boundaries; political control appears after your career begins."
 		_refresh_india_map_legend(layer, {}, {}, world.party_map_colors())
 		return
@@ -1244,6 +1281,7 @@ func _refresh_india_map() -> void:
 	var supports: Dictionary = {}
 	var seats: Dictionary = {}
 	var phases: Dictionary = {}
+	var map_metrics: Dictionary = {}
 	var national_government: Dictionary = world.get_national_government()
 	var national_party_id := str(national_government.get("ruling_party_id", ""))
 	for state_variant in INDIA_MAP_STATES:
@@ -1257,13 +1295,22 @@ func _refresh_india_map() -> void:
 			winners[state_name] = winner_id
 		supports[state_name] = _india_map_support(state_name)
 		var election := _india_map_state_election(state_name)
+		map_metrics[state_name] = _india_map_government_metrics(government, state_name, election)
 		seats[state_name] = int(election.get("assembly_seats", 0))
 		phases[state_name] = str(election.get("phase", "No assembly election record"))
 	var local_winners: Dictionary = world.local_government_party_map(india_map_selected_state if india_map_level > 0 else "")
+	if india_map_level > 0:
+		for district_key_variant in local_winners.keys():
+			var district_key := str(district_key_variant)
+			var parts := district_key.split("|", false, 2)
+			if parts.size() != 2:
+				continue
+			var local_government: Dictionary = world.get_local_government(parts[0], parts[1])
+			map_metrics[district_key] = _india_map_government_metrics(local_government, parts[0], {})
 	var party_colors: Dictionary = world.party_map_colors()
 	india_map_grid.set_map_state(
 		india_map_level, india_map_selected_state, india_map_selected_district,
-		layer, winners, supports, seats, phases, local_winners, party_colors
+		layer, winners, supports, seats, phases, local_winners, party_colors, map_metrics
 	)
 	_refresh_india_map_legend(layer, winners, local_winners, party_colors)
 	var state_election := _india_map_state_election(india_map_selected_state)
@@ -1279,6 +1326,7 @@ func _refresh_india_map() -> void:
 			india_map_selected_district, india_map_selected_state,
 			world.local_government_briefing(india_map_selected_state, india_map_selected_district)
 		]
+	india_map_details.text += "\n\nMAP LAYER\n" + _india_map_layer_summary(layer)
 
 func _refresh_india_map_legend(layer: String, state_winners: Dictionary, local_winners: Dictionary, party_colors: Dictionary) -> void:
 	if not is_instance_valid(india_map_legend):
@@ -1301,22 +1349,15 @@ func _refresh_india_map_legend(layer: String, state_winners: Dictionary, local_w
 		_add_india_map_legend_item(Color("#263b54"), "No government record")
 		if india_map_level == 2:
 			_add_india_map_legend_item(Color("#f2d27b"), "Selected district")
-	elif layer == "Regional support":
-		for i in range(5):
-			var support_low := i * 20
-			var support_high := (i + 1) * 20
-			var support_sample := (float(support_low) + float(support_high)) * 0.5 / 100.0
-			_add_india_map_legend_item(Color("#102036").lerp(Color("#d6b15a"), support_sample), "%d–%d%%" % [support_low, support_high])
-	elif layer == "Assembly seats":
-		var seat_bands: Array[Vector2i] = [Vector2i(0, 80), Vector2i(81, 160), Vector2i(161, 240), Vector2i(241, 320), Vector2i(321, 403)]
-		for band in seat_bands:
-			var seats_sample := (float(band.x) + float(band.y)) * 0.5 / 403.0
-			_add_india_map_legend_item(Color("#102036").lerp(Color("#4c91c8"), seats_sample), "%d–%d seats" % [band.x, band.y])
 	else:
-		_add_india_map_legend_item(Color("#263b54"), "Scheduled / no poll")
-		_add_india_map_legend_item(Color("#d6b15a"), "Campaigning")
-		_add_india_map_legend_item(Color("#2f9f8c"), "Completed")
-		_add_india_map_legend_item(Color("#f2d27b"), "Selected region")
+		for i in range(5):
+			var low := i * 20
+			var high := (i + 1) * 20
+			var sample := (float(low) + float(high)) * 0.5 / 100.0
+			_add_india_map_legend_item(Color("#263b54").lerp(Color("#d6b15a"), sample), "%d–%d / 100" % [low, high])
+		_add_india_map_legend_item(Color("#263b54"), "No recorded data")
+		if india_map_level == 2:
+			_add_india_map_legend_item(Color("#f2d27b"), "Selected district")
 
 func _add_india_map_legend_item(swatch_color: Color, item_text: String) -> void:
 	var item := PanelContainer.new()
@@ -1347,18 +1388,6 @@ func _add_india_map_legend_item(swatch_color: Color, item_text: String) -> void:
 	row.add_child(text_label)
 	india_map_legend.add_child(item)
 
-func _india_map_tile_text(state_name: String, layer: String) -> String:
-	var election := _india_map_state_election(state_name)
-	if layer == "Assembly seats":
-		return "%s\n%d seats" % [state_name, int(election.get("assembly_seats", 0))]
-	if layer == "Election status":
-		return "%s\n%s" % [state_name, str(election.get("phase", "No record"))]
-	if layer == "Regional support":
-		return "%s\n%.1f%%" % [state_name, _india_map_support(state_name)]
-	var government: Dictionary = world.get_state_government(state_name)
-	var party_id := str(government.get("ruling_party_id", ""))
-	return "%s\n%s" % [state_name, _india_map_party_name(party_id) if not party_id.is_empty() else "No government"]
-
 func _india_map_state_election(state_name: String) -> Dictionary:
 	for election_variant in world.world_state.get("state_elections", []):
 		var election: Dictionary = election_variant
@@ -1375,19 +1404,82 @@ func _india_map_support(state_name: String) -> float:
 		best_support = maxf(best_support, float(by_state.get(state_name, 0.0)))
 	return best_support
 
+func _india_map_tile_text(state_name: String, layer: String) -> String:
+	var government: Dictionary = world.get_state_government(state_name)
+	var election := _india_map_state_election(state_name)
+	var metrics := _india_map_government_metrics(government, state_name, election)
+	if layer != "Political control":
+		var value := float(metrics.get(layer, -1.0))
+		return "%s\\n%s" % [state_name, "%.0f/100" % value if value >= 0.0 else "No data"]
+	var party_id := str(government.get("ruling_party_id", ""))
+	return "%s\\n%s" % [state_name, _india_map_party_name(party_id) if not party_id.is_empty() else "No government"]
+
+func _india_map_government_metrics(government: Dictionary, state_name: String, election: Dictionary) -> Dictionary:
+	var performance: Dictionary = government.get("performance", {})
+	var service := float(performance.get("service_delivery", -1.0))
+	var welfare := float(performance.get("welfare", -1.0))
+	var economy := float(performance.get("economy", -1.0))
+	var infrastructure := float(performance.get("infrastructure", -1.0))
+	var safety := float(performance.get("public_safety", -1.0))
+	var approval := float(performance.get("public_approval", -1.0))
+	var result: Dictionary = {
+		"Development index": _average_available([service, welfare, economy, infrastructure, safety]),
+		"Political influence": _india_map_support(state_name),
+		"Economy": economy,
+		"Public welfare": welfare,
+		"Infrastructure": infrastructure,
+		"Public approval": approval,
+		"Social indicators": service,
+		"Law & order": safety
+	}
+	var assembly_seats := int(election.get("assembly_seats", 0))
+	var coalition_seats := int(government.get("coalition_seats", 0))
+	result["Political power"] = float(coalition_seats) / float(assembly_seats) * 100.0 if assembly_seats > 0 and coalition_seats > 0 else -1.0
+	result["Election performance"] = float(election.get("player_party_vote_share", -1.0))
+	# Population is intentionally unavailable until the simulation stores population data.
+	result["Population"] = -1.0
+	return result
+
+func _average_available(values: Array) -> float:
+	var total := 0.0
+	var count := 0
+	for value_variant in values:
+		var value := float(value_variant)
+		if value >= 0.0:
+			total += value
+			count += 1
+	return total / float(count) if count > 0 else -1.0
+
 func _india_map_party_name(party_id: String) -> String:
 	if world.parties.has(party_id):
 		return str(world.parties[party_id].get("name", party_id))
 	return party_id
 
 func _india_map_layer_summary(layer: String) -> String:
-	if layer == "Regional support":
-		return "Colour intensity shows the strongest recorded regional party support: darker navy is lower support and gold is higher support."
-	if layer == "Assembly seats":
-		return "Colour intensity shows the modeled number of assembly seats: darker navy is fewer seats and blue is more seats."
-	if layer == "Election status":
-		return "Slate blue means scheduled or no poll, gold means campaigning, and teal means the modeled election is completed."
-	return "Each state is coloured by its AI-managed ruling party. On a state map, district colours show the AI-managed local ruling party. Use the legend to identify each party."
+	match layer:
+		"Development index":
+			return "Composite of recorded economy, welfare, infrastructure, service delivery, and public-safety scores. Regions without these records are marked No data."
+		"Political influence":
+			return "Shows the strongest recorded regional party support, not a measure of legal authority."
+		"Political power":
+			return "Shows the governing coalition's recorded share of assembly seats where seat data exists."
+		"Economy":
+			return "Shows the AI government's recorded economy performance score."
+		"Population":
+			return "Population is not yet stored in this simulation, so regions show No data rather than invented figures."
+		"Public welfare":
+			return "Shows the AI government's recorded welfare performance score."
+		"Infrastructure":
+			return "Shows the AI government's recorded infrastructure performance score."
+		"Election performance":
+			return "Shows recorded player-party vote share when that value exists; otherwise the region is marked No data."
+		"Public approval":
+			return "Shows the AI government's recorded public-approval score."
+		"Social indicators":
+			return "Uses recorded service-delivery performance as the available social-services indicator."
+		"Law & order":
+			return "Shows the AI government's recorded public-safety score."
+	return "Each region is coloured by its recorded ruling party. On state maps, district colours show the recorded local administration."
 
 func _india_map_state_summary(state_name: String, election: Dictionary, layer: String) -> String:
 	var result := "STATE BRIEFING\n%s\nGOVERNMENT & ADMINISTRATION\n%s" % [state_name, world.state_government_briefing(state_name)]
@@ -1408,7 +1500,7 @@ func _refresh_election_tabs() -> void:
 	if election_detail_labels.is_empty() or world.world_state.is_empty():
 		return
 	var home_local_government: Dictionary = world.get_local_government(world.home_state, world._home_district_name())
-	var local_text := "YOUR PERSONAL LOCAL CONSTITUENCY\nArea: %s\nYour personal candidacy: %s\nNext personal election: December %d\nPrevious personal result: %s\n\nDISTRICT-LEVEL LOCAL ADMINISTRATION MODEL\nRuling party: %s\nAI executive leader: %s\nNext modeled district-local poll: %s %d\nLatest district-local result: %s\n\nAI High Command also fields party members in the other modeled district-local contests. An AI candidate’s victory gives the party local control, not personal office to you." % [
+	var local_text := "AREA  %s\nCandidacy  %s\nNext poll  December %d\nLast result  %s\n\nLOCAL ADMINISTRATION\nRuling party  %s\nExecutive  %s\nNext modeled poll  %s %d\nLatest result  %s" % [
 		world.local_election_area(),
 		"You are contesting" if world.local_candidate_selected else ("Ticket requested" if world.ticket_requested else "No personal ticket selected"),
 		world.local_election_year,
@@ -1423,20 +1515,7 @@ func _refresh_election_tabs() -> void:
 		election_detail_labels["local"].text = local_text
 
 	var state_elections: Array = world.world_state.get("state_elections", [])
-	var other_text := "State | AI ruling party | AI executive leader | Next poll | Phase | Last result | Your party candidates\n"
-	for election_variant in state_elections:
-		var election: Dictionary = election_variant
-		var state_name := str(election.get("state", ""))
-		var state_government: Dictionary = world.get_state_government(state_name)
-		var line := "%s | %s | %s | %s %d | %s | %s | %d contested / %d elected\n" % [
-			state_name,
-			world._government_party_name(str(state_government.get("ruling_party_id", ""))),
-			str(state_government.get("leader_name", "AI leader pending")),
-			world._month_name(int(election.get("month", 1))), int(election.get("next_year", world.year)),
-			str(election.get("phase", "Scheduled")), str(election.get("last_result", "Not yet held")),
-			int(election.get("player_party_candidates_contested", 0)), int(election.get("player_party_candidates_elected", 0))
-		]
-		other_text += line
+	_refresh_state_election_cards(state_elections)
 	var high_command: Dictionary = world.world_state.get("high_command", {})
 	if is_instance_valid(high_command_status):
 		high_command_status.text = world.high_command_summary()
@@ -1454,28 +1533,10 @@ func _refresh_election_tabs() -> void:
 			if high_command_coalition.get_item_text(ci) == selected_coalition:
 				high_command_coalition.select(ci)
 				break
-	var home_state_election: Dictionary = {}
-	for election_variant in state_elections:
-		var home_election: Dictionary = election_variant
-		if str(home_election.get("state", "")) == world.home_state:
-			home_state_election = home_election
-			break
-	var candidate_contested := int(home_state_election.get("player_party_candidates_contested", 0))
-	var candidate_elected := int(home_state_election.get("player_party_candidates_elected", 0))
-	if election_detail_labels.has("high_command") and is_instance_valid(election_detail_labels["high_command"]):
-		election_detail_labels["high_command"].text = "AI High Command automatically prepares the party slate in every election.\nYour home state: %s\nNext modeled poll: %s %d\nPhase: %s\nLatest player-party constituency candidates elected: %d / %d\nCurrent campaign directive: %s" % [
-			world.home_state,
-			world._month_name(int(home_state_election.get("month", 1))), int(home_state_election.get("next_year", world.year)),
-			str(home_state_election.get("phase", "Scheduled")), candidate_elected, candidate_contested,
-			str(high_command.get("strategy", "Balanced outreach"))
-		]
-	if election_detail_labels.has("other_states") and is_instance_valid(election_detail_labels["other_states"]):
-		election_detail_labels["other_states"].text = other_text
-
 	var national: Dictionary = world.world_state.get("national_election", {})
 	if election_detail_labels.has("national") and is_instance_valid(election_detail_labels["national"]):
 		var union_government: Dictionary = world.get_national_government()
-		election_detail_labels["national"].text = "Next Lok Sabha poll: %s %d\nPhase: %s\nModeled constituencies: %d\nYour party's AI nominees contested: %d\nYour party candidates elected: %d\nLast eligible voters: %d\nLast ballots cast: %d\nLast result: %s\nCurrent ruling party: %s\nPrime Minister / executive leader (AI): %s\nGovernment type: %s\nAI-managed national administration; the player remains High Command and does not automatically become Prime Minister." % [
+		election_detail_labels["national"].text = "NEXT POLL  %s %d  ·  %s\nConstituencies  %d\nParty candidates  %d contested / %d elected\nLast eligible voters  %d  ·  Ballots cast  %d\nLast result  %s\n\nGOVERNMENT\nRuling party  %s\nExecutive leader  %s\nGovernment type  %s" % [
 			world._month_name(int(national.get("month", 5))), int(national.get("next_year", 2029)),
 			str(national.get("phase", "Scheduled")), int(national.get("seats", 543)),
 			int(national.get("player_party_candidates_contested", 0)),
@@ -1484,8 +1545,163 @@ func _refresh_election_tabs() -> void:
 			str(national.get("last_result", "Not yet held")),
 			world._government_party_name(str(union_government.get("ruling_party_id", ""))),
 			str(union_government.get("leader_name", "AI leader pending")),
-			str(union_government.get("formation_type", "AI-managed administration"))
+			str(union_government.get("formation_type", "Coalition administration"))
 		]
+
+func _refresh_state_election_cards(state_elections: Array) -> void:
+	if not is_instance_valid(state_election_cards):
+		return
+	for child in state_election_cards.get_children():
+		state_election_cards.remove_child(child)
+		child.queue_free()
+
+	var ordered: Array = state_elections.duplicate(true)
+	ordered.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var a_state := str(a.get("state", ""))
+		var b_state := str(b.get("state", ""))
+		if a_state == "Karnataka":
+			return true
+		if b_state == "Karnataka":
+			return false
+		return a_state.naturalcasecmp_to(b_state) < 0
+	)
+
+	for election_variant in ordered:
+		if not election_variant is Dictionary:
+			continue
+		var election: Dictionary = election_variant
+		var state_name := str(election.get("state", "Unknown state"))
+		var is_home := state_name == "Karnataka"
+		var state_government: Dictionary = world.get_state_government(state_name)
+		var state_seats := int(election.get("assembly_seats", 0))
+		var poll_month := int(election.get("month", 1))
+		var poll_year := int(election.get("next_year", world.year))
+		var phase := str(election.get("phase", "Scheduled"))
+		var contested := int(election.get("player_party_candidates_contested", 0))
+		var elected := int(election.get("player_party_candidates_elected", 0))
+		var regional_support: Dictionary = world.world_state.get("regional_support", {})
+		var support_by_party: Dictionary = regional_support.get(world.player_party_id, {})
+		var support := float(support_by_party.get(state_name, 0.0))
+		var spend_by_party: Dictionary = election.get("campaign_spend_by_party", {})
+		var current_spend := int(spend_by_party.get(world.player_party_id, 0))
+		var last_spend_by_party: Dictionary = election.get("last_campaign_spending", {})
+		var last_spend := int(last_spend_by_party.get(world.player_party_id, 0))
+		var seats_by_party: Dictionary = election.get("last_seats", {})
+		var party_seats := int(seats_by_party.get(world.player_party_id, 0))
+		var vote_shares: Dictionary = election.get("last_vote_shares", {})
+		var vote_share := float(vote_shares.get(world.player_party_id, 0.0))
+		var last_result := str(election.get("last_result", "No result recorded yet"))
+		var winner_name := world._government_party_name(str(election.get("last_winner", "")))
+		var leader := str(state_government.get("leader_name", "Not recorded"))
+		var ruling_party := world._government_party_name(str(state_government.get("ruling_party_id", "")))
+		var priority := str(election.get("high_command_priority", "Balanced outreach"))
+		var slate_status := "Slate approved" if bool(election.get("high_command_slate_approved", false)) else "Slate not approved"
+		var turnout := float(election.get("last_turnout_percent", 0.0))
+		var eligible := int(election.get("last_eligible_voters", 0))
+		var ballots := int(election.get("last_ballots_cast", 0))
+		var campaign_months := int(election.get("campaign_months_run", 0))
+		var phase_icon := "●" if phase == "Campaigning" else ("✓" if phase == "Completed" else "◷")
+
+		var card := PanelContainer.new()
+		card.name = "State_" + state_name.replace(" ", "_")
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var style := _card_style()
+		style.bg_color = Color("#17283b") if is_home else Color("#101d2e")
+		style.border_color = Color("#d6b15a") if is_home else Color("#2b4058")
+		style.border_width_left = 4 if is_home else 2
+		card.add_theme_stylebox_override("panel", style)
+		state_election_cards.add_child(card)
+		var body := VBoxContainer.new()
+		body.add_theme_constant_override("separation", 7)
+		card.add_child(body)
+
+		var heading := HBoxContainer.new()
+		heading.add_theme_constant_override("separation", 8)
+		body.add_child(heading)
+		var title := Label.new()
+		title.text = ("★  " if is_home else "◆  ") + state_name
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		title.add_theme_font_size_override("font_size", 17 if is_home else 15)
+		title.add_theme_color_override("font_color", Color("#f0d58c") if is_home else Color("#e7edf6"))
+		heading.add_child(title)
+		var phase_label := Label.new()
+		phase_label.text = phase_icon + "  " + phase
+		phase_label.add_theme_font_size_override("font_size", 12)
+		phase_label.add_theme_color_override("font_color", Color("#d6b15a") if phase == "Campaigning" else Color("#aebed1"))
+		heading.add_child(phase_label)
+
+		var schedule := Label.new()
+		schedule.text = "%d seats   ·   Next poll: %s %d   ·   %s" % [state_seats, world._month_name(poll_month), poll_year, slate_status]
+		schedule.add_theme_color_override("font_color", Color("#aebed1"))
+		schedule.add_theme_font_size_override("font_size", 12)
+		body.add_child(schedule)
+
+		var metrics := Label.new()
+		metrics.text = "PARTY FOOTPRINT   Support %.1f%%   ·   Candidates %d contested / %d elected   ·   Seats last won %d" % [support, contested, elected, party_seats]
+		metrics.add_theme_color_override("font_color", Color("#e7edf6"))
+		metrics.add_theme_font_size_override("font_size", 13)
+		metrics.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body.add_child(metrics)
+
+		var campaign_line := Label.new()
+		campaign_line.text = "CAMPAIGN FINANCE   %s   ·   Current spend ₹%s   ·   Previous campaign spend ₹%s   ·   Active months %d" % [priority, world._format_number(current_spend), world._format_number(last_spend), campaign_months]
+		campaign_line.add_theme_color_override("font_color", Color("#aebed1"))
+		campaign_line.add_theme_font_size_override("font_size", 12)
+		campaign_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body.add_child(campaign_line)
+
+		var result_line := Label.new()
+		result_line.text = "LAST RESULT   %s   ·   Winner: %s   ·   Party vote share %.1f%%   ·   Turnout %.1f%%" % [last_result, winner_name, vote_share, turnout]
+		result_line.add_theme_color_override("font_color", Color("#aebed1"))
+		result_line.add_theme_font_size_override("font_size", 12)
+		result_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body.add_child(result_line)
+
+		var governance := Label.new()
+		governance.text = "GOVERNMENT   Ruling party: %s   ·   Executive: %s   ·   Eligible voters: %s   ·   Ballots: %s" % [ruling_party, leader, world._format_number(eligible), world._format_number(ballots)]
+		governance.add_theme_color_override("font_color", Color("#8196ad"))
+		governance.add_theme_font_size_override("font_size", 11)
+		governance.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body.add_child(governance)
+
+		var detail_toggle := Button.new()
+		detail_toggle.text = "VIEW STATE DOSSIER  +"
+		detail_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		detail_toggle.add_theme_color_override("font_color", Color("#e0c16b"))
+		detail_toggle.add_theme_font_size_override("font_size", 12)
+		body.add_child(detail_toggle)
+
+		var dossier := PanelContainer.new()
+		dossier.visible = false
+		dossier.add_theme_stylebox_override("panel", _card_style())
+		body.add_child(dossier)
+		var dossier_body := VBoxContainer.new()
+		dossier_body.add_theme_constant_override("separation", 6)
+		dossier.add_child(dossier_body)
+		var dossier_title := Label.new()
+		dossier_title.text = "STATE DOSSIER  ·  " + state_name.to_upper()
+		dossier_title.add_theme_color_override("font_color", Color("#f0d58c"))
+		dossier_title.add_theme_font_size_override("font_size", 13)
+		dossier_body.add_child(dossier_title)
+		var dossier_text := Label.new()
+		dossier_text.text = "ELECTION\nNext poll: %s %d  ·  Phase: %s  ·  Assembly seats: %d\n\nPARTY ORGANIZATION\nSupport: %.1f%%  ·  Slate: %s\nCandidates contested: %d  ·  Elected: %d  ·  Seats last won: %d\n\nCAMPAIGN FINANCE\nCurrent campaign spend: ₹%s  ·  Previous campaign spend: ₹%s\nStrategy: %s  ·  Campaign months active: %d\n\nLAST RESULT\n%s\nWinner: %s  ·  Party vote share: %.1f%%  ·  Turnout: %.1f%%\n\nGOVERNMENT & PARTICIPATION\nRuling party: %s  ·  Executive: %s\nEligible voters: %s  ·  Ballots cast: %s" % [
+			world._month_name(poll_month), poll_year, phase, state_seats,
+			support, slate_status, contested, elected, party_seats,
+			world._format_number(current_spend), world._format_number(last_spend),
+			priority, campaign_months, last_result, winner_name, vote_share, turnout,
+			ruling_party, leader, world._format_number(eligible), world._format_number(ballots)
+		]
+		dossier_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		dossier_text.add_theme_color_override("font_color", Color("#c2cedc"))
+		dossier_body.add_child(dossier_text)
+		detail_toggle.pressed.connect(func() -> void:
+			dossier.visible = not dossier.visible
+			detail_toggle.text = "HIDE STATE DOSSIER  −" if dossier.visible else "VIEW STATE DOSSIER  +"
+		)
+
+		card.modulate.a = 0.0
+		var tween := create_tween()
+		tween.tween_property(card, "modulate:a", 1.0, 0.22)
 
 func _on_save_high_command_policy() -> void:
 	var strategy := high_command_priority.get_item_text(high_command_priority.selected) if is_instance_valid(high_command_priority) else "Balanced outreach"

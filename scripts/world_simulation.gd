@@ -3,10 +3,10 @@ class_name PoliticalWorldSimulation
 
 const LOCAL_ELECTION_MONTH := 12
 const LOCAL_ELECTION_CYCLE_YEARS := 5 # Simplified prototype cycle; real local-body terms vary by jurisdiction.
-const LOCAL_CAMPAIGN_MODEL_BUDGET := 500000 # In-game budget assumption, not a statutory limit.
-const CAMPAIGN_ACTION_COST := 5000
-const VOLUNTEER_ACTIVITY_COST := 1000
-const COMMUNITY_ACTIVITY_COST := 2500
+const LOCAL_CAMPAIGN_MODEL_BUDGET := 500000000 # ₹5 crore modeled local campaign ceiling; game assumption, not a statutory limit.
+const CAMPAIGN_ACTION_COST := 500000 # ₹5 lakh per modeled campaign action
+const VOLUNTEER_ACTIVITY_COST := 100000 # ₹1 lakh modeled personal activity cost
+const COMMUNITY_ACTIVITY_COST := 250000 # ₹2.5 lakh modeled personal activity cost
 const ACTIVE_WORKER_XP := 6
 const ACTIVE_WORKER_REPUTATION := 1.5
 const LOCAL_LEADER_XP := 16
@@ -97,8 +97,8 @@ const HIGH_COMMAND_STRATEGIES: Array[String] = [
 const HIGH_COMMAND_COALITION_POLICIES: Array[String] = [
 	"AI negotiate a working majority", "Prefer single-party government", "Avoid coalition agreements"
 ]
-const HIGH_COMMAND_DEFAULT_MONTHLY_BUDGET := 50000
-const HIGH_COMMAND_MAX_MONTHLY_BUDGET := 200000
+const HIGH_COMMAND_DEFAULT_MONTHLY_BUDGET := 500000000 # ₹5 crore monthly ceiling
+const HIGH_COMMAND_MAX_MONTHLY_BUDGET := 2000000000 # ₹20 crore monthly ceiling
 const GOVERNMENT_MAP_PALETTE: Array[String] = [
 	"#d6b15a", "#4c91c8", "#2f9f8c", "#b85b67", "#8b78c6", "#d58b48",
 	"#6b9b6d", "#c16e9e", "#7c98ac", "#b2a54c", "#5f83bd", "#bf806f"
@@ -3471,6 +3471,25 @@ func election_summary() -> String:
 	if has_elected_office:
 		lines.append("Current mandate: %s, through the next scheduled local election." % elected_office_name)
 	return "\n".join(lines)
+
+func apply_player_party_fund_grant_once() -> bool:
+	# One-time career grant. Stored on the party record so it survives save/load
+	# and cannot be applied again by repeated UI refreshes.
+	if player_party_id.is_empty() or not parties.has(player_party_id):
+		return false
+	var party: Dictionary = parties[player_party_id]
+	if bool(party.get("player_500_crore_grant_applied", false)):
+		return false
+	party["funds"] = int(party.get("funds", 0)) + 5000000000
+	party["player_500_crore_grant_applied"] = true
+	party["grant_history"] = party.get("grant_history", [])
+	var history: Array = party["grant_history"]
+	history.append({"type": "founder_support_grant", "amount": 5000000000, "year": year, "month": month})
+	party["grant_history"] = history
+	parties[player_party_id] = party
+	notifications.append("₹500 crore one-time grant credited to your party treasury.")
+	return true
+
 
 func _format_number(value: int) -> String:
 	var negative := value < 0
