@@ -26,6 +26,64 @@ const STATE_ASSEMBLY_SEATS: Dictionary = {
 	"Telangana": 119, "Tripura": 60, "Uttar Pradesh": 403,
 	"Uttarakhand": 70, "West Bengal": 294
 }
+const KARNATAKA_ASSEMBLY_CONSTITUENCIES: Array[String] = [
+	"Nippani", "Chikkodi-Sadalga", "Athani", "Kagwad",
+	"Kudachi (SC)", "Raibag (SC)", "Hukkeri", "Arabhavi",
+	"Gokak", "Yemkanmardi (ST)", "Belgaum Uttar", "Belgaum Dakshin",
+	"Belgaum Rural", "Khanapur", "Kittur", "Bailhongal",
+	"Saundatti Yellamma", "Ramdurg", "Mudhol (SC)", "Terdal",
+	"Jamkhandi", "Bilgi", "Badami", "Bagalkot",
+	"Hungund", "Muddebihal", "Devar Hippargi", "Basavana Bagevadi",
+	"Babaleshwar", "Bijapur City", "Nagathan (SC)", "Indi",
+	"Sindagi", "Afzalpur", "Jevargi", "Shorapur (ST)",
+	"Shahapur", "Yadgir", "Gurmitkal", "Chittapur (SC)",
+	"Sedam", "Chincholi (SC)", "Gulbarga Rural (SC)", "Gulbarga Dakshin",
+	"Gulbarga Uttar", "Aland", "Basavakalyan", "Humnabad",
+	"Bidar South", "Bidar", "Bhalki", "Aurad (SC)",
+	"Raichur Rural (ST)", "Raichur", "Manvi (ST)", "Devadurga (ST)",
+	"Lingsugur (SC)", "Sindhanur", "Maski (ST)", "Kushtagi",
+	"Kanakagiri (SC)", "Gangawati", "Yelburga", "Koppal",
+	"Shirahatti (SC)", "Gadag", "Ron", "Nargund",
+	"Navalgund", "Kundgol", "Dharwad", "Hubli-Dharwad East (SC)",
+	"Hubli-Dharwad Central", "Hubli-Dharwad West", "Kalghatgi", "Haliyal",
+	"Karwar", "Kumta", "Bhatkal", "Sirsi",
+	"Yellapur", "Hangal", "Shiggaon", "Haveri (SC)",
+	"Byadgi", "Hirekerur", "Ranebennur", "Hoovina Hadagali (SC)",
+	"Hagaribommanahalli (SC)", "Vijayanagara", "Kampli (ST)", "Siruguppa (ST)",
+	"Bellary Rural (ST)", "Bellary City", "Sandur (ST)", "Kudligi (ST)",
+	"Molakalmuru (ST)", "Challakere (ST)", "Chitradurga", "Hiriyur",
+	"Hosadurga", "Holalkere (SC)", "Jagalur (ST)", "Harapanahalli",
+	"Harihar", "Davanagere North", "Davanagere South", "Mayakonda (SC)",
+	"Channagiri", "Honnali", "Shimoga Rural (SC)", "Bhadravati",
+	"Shimoga", "Tirthahalli", "Shikaripura", "Soraba",
+	"Sagar", "Byndoor", "Kundapura", "Udupi",
+	"Kapu", "Karkala", "Sringeri", "Mudigere (SC)",
+	"Chikmagalur", "Tarikere", "Kadur", "Chiknayakanhalli",
+	"Tiptur", "Turuvekere", "Kunigal", "Tumkur City",
+	"Tumkur Rural", "Koratagere (SC)", "Gubbi", "Sira",
+	"Pavagada (SC)", "Madhugiri", "Gauribidanur", "Bagepalli",
+	"Chikkaballapur", "Sidlaghatta", "Chintamani", "Srinivaspur",
+	"Mulbagal (SC)", "Kolar Gold Field (SC)", "Bangarapet (SC)", "Kolar",
+	"Malur", "Yelahanka", "Krishnarajapuram", "Byatarayanapura",
+	"Yeshwantpur", "Rajarajeshwarinagar", "Dasarahalli", "Mahalakshmi Layout",
+	"Malleshwaram", "Hebbal", "Pulakeshinagar (SC)", "Sarvagnanagar",
+	"C. V. Raman Nagar (SC)", "Shivajinagar", "Shanti Nagar", "Gandhi Nagar",
+	"Rajaji Nagar", "Govindraj Nagar", "Vijay Nagar", "Chamrajpet",
+	"Chickpet", "Basavanagudi", "Padmanabhanagar", "B.T.M. Layout",
+	"Jayanagar", "Mahadevapura (SC)", "Bommanahalli", "Bangalore South",
+	"Anekal (SC)", "Hosakote", "Devanahalli (SC)", "Doddaballapur",
+	"Nelamangala (SC)", "Magadi", "Ramanagaram", "Kanakapura",
+	"Channapatna", "Malavalli (SC)", "Maddur", "Melukote",
+	"Mandya", "Shrirangapattana", "Nagamangala", "Krishnarajapet",
+	"Shravanabelagola", "Arsikere", "Belur", "Hassan",
+	"Holenarasipur", "Arkalgud", "Sakleshpur (SC)", "Belthangady",
+	"Moodabidri", "Mangalore City North", "Mangalore City South", "Mangalore",
+	"Bantval", "Puttur", "Sullia (SC)", "Madikeri",
+	"Virajpet", "Periyapatna", "Krishnarajanagara", "Hunsur",
+	"Heggadadevankote (ST)", "Nanjangud (SC)", "Chamundeshwari", "Krishnaraja",
+	"Chamaraja", "Narasimharaja", "Varuna", "T. Narasipur (SC)",
+	"Hanur", "Kollegal (SC)", "Chamarajanagar", "Gundlupet"
+]
 const MODELED_CAMPAIGN_MONTHS := 3
 const MODELED_CAMPAIGN_BASE_COST := 25000
 const MODELED_CAMPAIGN_MEMBER_COST := 2
@@ -139,6 +197,78 @@ var district_role_application_pending: bool = false
 var district_role_approved: bool = false
 var district_service_record: int = 0
 var world_state: Dictionary = {}
+var _lok_sabha_records: Array = []
+var _assembly_records: Array = []
+
+func _load_lok_sabha_records() -> void:
+	if not _lok_sabha_records.is_empty():
+		return
+	var file := FileAccess.open("res://Data/lok_sabha_constituencies.json", FileAccess.READ)
+	if file == null:
+		push_warning("Lok Sabha constituency database could not be opened.")
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		push_warning("Lok Sabha constituency database has an invalid root structure.")
+		return
+	var rows: Variant = parsed.get("constituencies", [])
+	if rows is Array:
+		_lok_sabha_records = rows
+		if _lok_sabha_records.size() != 543:
+			push_warning("Lok Sabha constituency database should contain 543 records; found %d." % _lok_sabha_records.size())
+
+func _lok_sabha_record_for_seat(seat_number: int) -> Dictionary:
+	_load_lok_sabha_records()
+	var index := seat_number - 1
+	if index < 0 or index >= _lok_sabha_records.size():
+		return {}
+	var row: Variant = _lok_sabha_records[index]
+	return row if row is Dictionary else {}
+
+func _load_assembly_records() -> void:
+	if not _assembly_records.is_empty():
+		return
+	var file := FileAccess.open("res://Data/assembly_constituencies.json", FileAccess.READ)
+	if file == null:
+		push_warning("Assembly constituency database could not be opened.")
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		push_warning("Assembly constituency database has an invalid root structure.")
+		return
+	var rows: Variant = parsed.get("constituencies", [])
+	if rows is Array:
+		_assembly_records = rows
+		var karnataka_count := 0
+		var placeholder_count := 0
+		for row in _assembly_records:
+			if row is Dictionary:
+				if str(row.get("state", "")) == "Karnataka":
+					karnataka_count += 1
+				if str(row.get("record_status", "")) == "fictional_placeholder":
+					placeholder_count += 1
+		if karnataka_count != 224:
+			push_warning("Karnataka Assembly database should contain 224 records; found %d." % karnataka_count)
+		if placeholder_count > 0:
+			push_warning("Assembly database contains %d explicitly fictional constituency placeholders; these are not official names." % placeholder_count)
+
+func _assembly_record_for_seat(state_name: String, seat_number: int) -> Dictionary:
+	_load_assembly_records()
+	for row in _assembly_records:
+		if row is Dictionary and str(row.get("state", "")) == state_name and int(row.get("number", -1)) == seat_number:
+			return row
+	return {}
+
+func _constituency_name_for_seat(state_name: String, seat_number: int) -> String:
+	if state_name.is_empty():
+		var parliamentary_record := _lok_sabha_record_for_seat(seat_number)
+		if not parliamentary_record.is_empty():
+			return str(parliamentary_record.get("name", "Parliamentary Constituency %03d" % seat_number))
+		return "Parliamentary Constituency %03d" % seat_number
+	var assembly_record := _assembly_record_for_seat(state_name, seat_number)
+	if not assembly_record.is_empty():
+		return str(assembly_record.get("name", "%s Assembly Constituency %03d" % [state_name, seat_number]))
+	return "%s Assembly Constituency %03d" % [state_name, seat_number]
 
 func initialize() -> void:
 	parties = {
@@ -592,7 +722,7 @@ func _resolve_modeled_election(
 	var player_elected := 0
 	for seat_index in range(seat_count):
 		var seat_number := seat_index + 1
-		var constituency := "Parliamentary Constituency %03d" % seat_number if state_name.is_empty() else "%s Assembly Constituency %03d" % [state_name, seat_number]
+		var constituency := _constituency_name_for_seat(state_name, seat_number)
 		var local_scores: Dictionary = {}
 		var score_total := 0.0
 		for party_id in party_ids:
@@ -648,9 +778,14 @@ func _resolve_modeled_election(
 			var row: Dictionary = candidate_rows[candidate_index]
 			row["status"] = "Elected" if str(row.get("party_id", "")) == winning_party_id else "Not elected"
 			candidate_rows[candidate_index] = row
+		var constituency_record := _lok_sabha_record_for_seat(seat_number) if state_name.is_empty() else _assembly_record_for_seat(state_name, seat_number)
 		constituency_results.append({
 			"seat_number": seat_number,
 			"constituency": constituency,
+			"constituency_number": int(constituency_record.get("number", seat_number)),
+			"state": str(constituency_record.get("state", state_name)),
+			"reservation_category": str(constituency_record.get("category", "General")),
+			"record_status": str(constituency_record.get("record_status", "not_in_database")),
 			"winner_party_id": winning_party_id,
 			"winner_candidate_name": winning_candidate_name,
 			"candidates": candidate_rows
@@ -952,7 +1087,7 @@ func _prepare_player_candidate_slate(election: Dictionary, jurisdiction: String,
 		if roster_index < 0 or roster_index >= records.size():
 			break
 		var member: Dictionary = records[roster_index]
-		var constituency := "Parliamentary Constituency %03d" % (seat_index + 1) if state_name.is_empty() else "%s Assembly Constituency %03d" % [state_name, seat_index + 1]
+		var constituency := _constituency_name_for_seat(state_name, seat_index + 1)
 		result.append({
 			"seat_number": seat_index + 1,
 			"constituency": constituency,
@@ -1753,17 +1888,20 @@ func local_government_briefing(state_name: String, district_name: String) -> Str
 	var government := get_local_government(state_name, district_name)
 	if government.is_empty():
 		return "Local administration: AI-managed fallback. No district boundary record is available."
-	return "Local ruling party: %s\nLocal executive leader (AI): %s\nAdministration: AI managed\nModeled next district-local poll: %s %d\nLatest local result: %s\nStatus: %s\nYour party: %s\nLatest AI action: %s" % [
-		_government_party_name(str(government.get("ruling_party_id", ""))),
-		str(government.get("leader_name", "AI administrator pending")),
-		_month_name(int(government.get("next_election_month", 12))), int(government.get("next_election_year", year + LOCAL_GOVERNMENT_ELECTION_CYCLE_YEARS)),
-		str(government.get("last_local_election_result", "No district-local result yet")),
-		str(government.get("formation_type", "AI-managed local administration")),
-		str(government.get("government_status", "Operating — AI managed")),
-		government_party_status(government),
-		str(government.get("last_ai_action", "Routine administration"))
-	]
 
+	var next_poll := _month_name(int(government.get("next_election_month", 12))) + " " + str(government.get("next_election_year", year + LOCAL_GOVERNMENT_ELECTION_CYCLE_YEARS))
+	var briefing_lines := PackedStringArray([
+		"Local ruling party: " + _government_party_name(str(government.get("ruling_party_id", ""))),
+		"Local executive leader (AI): " + str(government.get("leader_name", "AI administrator pending")),
+		"Administration: AI managed",
+		"Government type: " + str(government.get("formation_type", "AI-managed local administration")),
+		"Modeled next district-local poll: " + next_poll,
+		"Latest local result: " + str(government.get("last_local_election_result", "No district-local result yet")),
+		"Status: " + str(government.get("government_status", "Operating — AI managed")),
+		"Your party: " + government_party_status(government),
+		"Latest AI action: " + str(government.get("last_ai_action", "Routine administration"))
+	])
+	return "\\n".join(briefing_lines)
 
 # ---------------------------------------------------------------------------
 # Political authority foundation (Phase 1)
