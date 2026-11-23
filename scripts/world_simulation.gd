@@ -1054,10 +1054,20 @@ func hold_party_office_election(office: String, player_vote_id: String) -> Strin
 		var selected_id := player_vote_id if voter_id == "founder" else valid_ids[posmod(voter_id.hash(), valid_ids.size())]
 		totals[selected_id] = int(totals.get(selected_id, 0)) + 1
 		ballots.append({"voter_id":voter_id, "voter_name":str(voter.get("name", "Member")), "candidate_id":selected_id})
-	var winner_id := valid_ids[0]
+	# Determine whether the highest vote total is shared.
+	var highest_votes := -1
+	var tied_ids: Array[String] = []
 	for cid in valid_ids:
-		if int(totals.get(cid, 0)) > int(totals.get(winner_id, 0)):
-			winner_id = cid
+		var candidate_votes := int(totals.get(cid, 0))
+		if candidate_votes > highest_votes:
+			highest_votes = candidate_votes
+			tied_ids = [cid]
+		elif candidate_votes == highest_votes:
+			tied_ids.append(cid)
+
+	# A tied election must not appoint the first nominee by default.
+	# Keep nominations so the player can hold a runoff election.
+	var winner_id := tied_ids[0] if tied_ids.size() == 1 else ""
 	var winner_name := ""
 	var detailed_results: Array[Dictionary] = []
 	for n_variant in nominations:
@@ -1073,9 +1083,12 @@ func hold_party_office_election(office: String, player_vote_id: String) -> Strin
 		})
 		if candidate_id == winner_id:
 			winner_name = candidate_name
-	var bearers: Dictionary = party.get("office_bearers", {})
-	bearers[office] = {"member_id":winner_id, "name":winner_name}
-	party["office_bearers"] = bearers
+	if winner_id.is_empty():
+		winner_name = "TIE — runoff required"
+	else:
+		var bearers: Dictionary = party.get("office_bearers", {})
+		bearers[office] = {"member_id":winner_id, "name":winner_name}
+		party["office_bearers"] = bearers
 	var history: Array = election.get("history", [])
 	var player_vote_name := _candidate_name_from_list(nominations, player_vote_id)
 	history.append({
@@ -1092,7 +1105,11 @@ func hold_party_office_election(office: String, player_vote_id: String) -> Strin
 		"player_ballot_candidate_name": player_vote_name
 	})
 	election["history"] = history
-	election["nominations"] = []
+	# Preserve nominees after a tie so the same candidates can contest the runoff.
+	if not winner_id.is_empty():
+		election["nominations"] = []
+	else:
+		election["nominations"] = nominations
 	elections[office] = election
 	party["office_elections"] = elections
 	parties[player_party_id] = party
@@ -1128,7 +1145,12 @@ func party_office_election_summary(office: String) -> String:
 
 	var latest: Dictionary = history[history.size() - 1]
 	lines.append("FINAL RESULT  |  %s %d" % [_month_name(int(latest.get("month", 1))), int(latest.get("year", year))])
-	lines.append("Elected: %s" % str(latest.get("winner", "Not recorded")))
+	var recorded_winner := str(latest.get("winner", "Not recorded"))
+	if recorded_winner == "TIE — runoff required":
+		lines.append("Outcome: TIE — no office-bearer appointed")
+		lines.append("Runoff required: hold the election again with the same nominees.")
+	else:
+		lines.append("Elected: %s" % recorded_winner)
 	lines.append("")
 	lines.append("PARTICIPATION")
 	lines.append("Ballots cast: %d / %d eligible" % [int(latest.get("votes_cast", latest.get("ballots", []).size())), int(latest.get("eligible_voters", 0))])
