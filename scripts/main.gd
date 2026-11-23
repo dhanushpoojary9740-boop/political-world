@@ -21,6 +21,8 @@ var party_page_summary: Label
 var election_page_summary: Label
 var report_label: Label
 var world_politics_label: Label
+var authority_summary_label: Label
+var government_summary_label: Label
 var name_input: LineEdit
 var age_input: SpinBox
 var city_input: LineEdit
@@ -53,9 +55,19 @@ var office_ballot_picker: OptionButton
 var office_ballot_search: LineEdit
 var office_election_status: Label
 var election_detail_labels: Dictionary = {}
-var karnataka_command_status: Label
-var karnataka_budget: SpinBox
-var karnataka_priority: OptionButton
+var high_command_status: Label
+var high_command_budget: SpinBox
+var high_command_priority: OptionButton
+var high_command_coalition: OptionButton
+var india_map_page: VBoxContainer
+var india_map_grid
+var india_map_details: Label
+var india_map_breadcrumb: Label
+var india_map_legend: GridContainer
+var india_map_layer_picker: OptionButton
+var india_map_selected_state: String = "Karnataka"
+var india_map_selected_district: String = ""
+var india_map_level: int = 0
 
 func _ready() -> void:
 	world = WorldSimulationScript.new()
@@ -73,23 +85,23 @@ func _ready() -> void:
 func _apply_premium_theme() -> void:
 	var premium := Theme.new()
 	premium.default_font_size = 16
-	premium.set_color("font_color", "Label", Color("#e8edf2"))
-	premium.set_color("font_color", "Button", Color("#f4ead6"))
+	premium.set_color("font_color", "Label", Color("#e7edf6"))
+	premium.set_color("font_color", "Button", Color("#e7edf6"))
 	premium.set_color("font_hover_color", "Button", Color("#ffffff"))
-	premium.set_color("font_pressed_color", "Button", Color("#10202a"))
-	premium.set_color("font_color", "LineEdit", Color("#f4ead6"))
-	premium.set_color("font_color", "SpinBox", Color("#f4ead6"))
-	premium.set_color("font_placeholder_color", "LineEdit", Color("#8193a5"))
-	premium.set_color("caret_color", "LineEdit", Color("#e7bd62"))
-	premium.set_color("selection_color", "LineEdit", Color("#6d572e"))
-	premium.set_color("font_color", "TabBar", Color("#b9c6d2"))
-	premium.set_color("font_selected_color", "TabBar", Color("#f0d18a"))
+	premium.set_color("font_pressed_color", "Button", Color("#0b1728"))
+	premium.set_color("font_color", "LineEdit", Color("#e7edf6"))
+	premium.set_color("font_color", "SpinBox", Color("#e7edf6"))
+	premium.set_color("font_placeholder_color", "LineEdit", Color("#91a4ba"))
+	premium.set_color("caret_color", "LineEdit", Color("#d6b15a"))
+	premium.set_color("selection_color", "LineEdit", Color("#d6b15a"))
+	premium.set_color("font_color", "TabBar", Color("#aebed1"))
+	premium.set_color("font_selected_color", "TabBar", Color("#d6b15a"))
 	premium.set_font_size("font_size", "Button", 15)
 	premium.set_font_size("font_size", "Label", 15)
 
 	var input_style := StyleBoxFlat.new()
-	input_style.bg_color = Color("#111f2c")
-	input_style.border_color = Color("#344b5e")
+	input_style.bg_color = Color("#102036")
+	input_style.border_color = Color("#334a66")
 	input_style.set_border_width_all(1)
 	input_style.set_corner_radius_all(10)
 	input_style.set_content_margin_all(12)
@@ -98,17 +110,17 @@ func _apply_premium_theme() -> void:
 	premium.set_stylebox("normal", "SpinBox", input_style)
 	premium.set_stylebox("focus", "SpinBox", input_style)
 
-	var button_normal := _button_style("#203345")
-	button_normal.border_color = Color("#3a5265")
+	var button_normal := _button_style("#d6b15a")
+	button_normal.border_color = Color("#334a66")
 	button_normal.set_border_width_all(1)
 	premium.set_stylebox("normal", "Button", button_normal)
-	premium.set_stylebox("hover", "Button", _button_style("#2b465b"))
-	premium.set_stylebox("pressed", "Button", _button_style("#b98b42"))
-	premium.set_stylebox("disabled", "Button", _button_style("#172633"))
+	premium.set_stylebox("hover", "Button", _button_style("#243b57"))
+	premium.set_stylebox("pressed", "Button", _button_style("#b88b3b"))
+	premium.set_stylebox("disabled", "Button", _button_style("#203650"))
 
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color("#101d2a")
-	panel_style.border_color = Color("#263b4d")
+	panel_style.bg_color = Color("#102036")
+	panel_style.border_color = Color("#334a66")
 	panel_style.set_border_width_all(1)
 	panel_style.set_corner_radius_all(14)
 	panel_style.set_content_margin_all(12)
@@ -119,7 +131,7 @@ func _apply_premium_theme() -> void:
 func _build_ui() -> void:
 	_apply_premium_theme()
 	var background := ColorRect.new()
-	background.color = Color("#08151d")
+	background.color = Color("#081421")
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 
@@ -127,11 +139,11 @@ func _build_ui() -> void:
 	var root := VBoxContainer.new()
 	root.name = "AppLayout"
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 18
-	root.offset_top = 16
-	root.offset_right = -18
-	root.offset_bottom = -16
-	root.add_theme_constant_override("separation", 12)
+	root.offset_left = 14
+	root.offset_top = 12
+	root.offset_right = -14
+	root.offset_bottom = -12
+	root.add_theme_constant_override("separation", 10)
 	add_child(root)
 
 	var header := VBoxContainer.new()
@@ -150,11 +162,11 @@ func _build_ui() -> void:
 	brand_mark.add_theme_stylebox_override("panel", _brand_mark_style())
 	brand_row.add_child(brand_mark)
 	var mark_label := Label.new()
-	mark_label.text = "P"
+	mark_label.text = "PW"
 	mark_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mark_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	mark_label.add_theme_font_size_override("font_size", 25)
-	mark_label.add_theme_color_override("font_color", Color("#e8c879"))
+	mark_label.add_theme_font_size_override("font_size", 19)
+	mark_label.add_theme_color_override("font_color", Color("#d6b15a"))
 	brand_mark.add_child(mark_label)
 
 	var brand_copy := VBoxContainer.new()
@@ -163,14 +175,14 @@ func _build_ui() -> void:
 	brand_row.add_child(brand_copy)
 	var title := Label.new()
 	title.text = "POLITICAL WORLD"
-	title.add_theme_font_size_override("font_size", 22)
-	title.add_theme_color_override("font_color", Color("#f2e6c9"))
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", Color("#e7edf6"))
 	brand_copy.add_child(title)
 
 	var subtitle := Label.new()
 	subtitle.text = "YOUR POLITICAL JOURNEY  /  INDIA"
 	subtitle.add_theme_font_size_override("font_size", 10)
-	subtitle.add_theme_color_override("font_color", Color("#91a4b7"))
+	subtitle.add_theme_color_override("font_color", Color("#91a4ba"))
 	brand_copy.add_child(subtitle)
 
 	var date_capsule := PanelContainer.new()
@@ -179,11 +191,11 @@ func _build_ui() -> void:
 	date_label = Label.new()
 	date_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	date_label.add_theme_font_size_override("font_size", 12)
-	date_label.add_theme_color_override("font_color", Color("#e6d6ad"))
+	date_label.add_theme_color_override("font_color", Color("#d6b15a"))
 	date_capsule.add_child(date_label)
 
 	var header_rule := ColorRect.new()
-	header_rule.color = Color("#b89a5a")
+	header_rule.color = Color("#d6b15a")
 	header_rule.custom_minimum_size = Vector2(0, 1)
 	header_rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(header_rule)
@@ -194,7 +206,8 @@ func _build_ui() -> void:
 	content_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	content_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	content_scroll.add_theme_stylebox_override("panel", _button_style("#0b1420"))
+	content_scroll.add_theme_stylebox_override("panel", _button_style("#14253a"))
+	content_scroll.add_theme_constant_override("separation", 0)
 	root.add_child(content_scroll)
 
 	setup_box = VBoxContainer.new()
@@ -235,11 +248,11 @@ func _configure_touch_scroll_passthrough(node: Node) -> void:
 func _build_bottom_navigation(parent: VBoxContainer) -> void:
 	main_tab_bar = ScrollContainer.new()
 	main_tab_bar.name = "BottomNavigation"
-	main_tab_bar.custom_minimum_size = Vector2(0, 76)
+	main_tab_bar.custom_minimum_size = Vector2(0, 68)
 	main_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main_tab_bar.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	main_tab_bar.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	main_tab_bar.add_theme_stylebox_override("panel", _button_style("#10232b"))
+	main_tab_bar.add_theme_stylebox_override("panel", _button_style("#182b43"))
 	main_tab_bar.size_flags_vertical = Control.SIZE_SHRINK_END
 	main_tab_bar.visible = false
 	parent.add_child(main_tab_bar)
@@ -249,42 +262,105 @@ func _build_bottom_navigation(parent: VBoxContainer) -> void:
 	nav_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main_tab_bar.add_child(nav_row)
 
-	var tab_names: Array[String] = ["Overview", "Career", "Party", "Elections", "District", "Office"]
+	var tab_names: Array[String] = ["⌂  OVERVIEW", "◉  CAREER", "♟  PARTY", "▤  ELECTIONS", "▦  DISTRICT", "▣  OFFICE", "▥  REPORTS", "◎  INDIA MAP"]
 	for index in range(tab_names.size()):
 		var tab_button := Button.new()
 		tab_button.text = tab_names[index]
-		tab_button.custom_minimum_size = Vector2(104, 56)
-		tab_button.add_theme_font_size_override("font_size", 13)
-		tab_button.add_theme_stylebox_override("normal", _button_style("#19333d"))
-		tab_button.add_theme_stylebox_override("hover", _button_style("#294b53"))
-		tab_button.add_theme_stylebox_override("pressed", _button_style("#d0ad62"))
-		tab_button.add_theme_color_override("font_color", Color("#f2e8d5"))
-		tab_button.add_theme_stylebox_override("normal", _button_style("#172a39"))
-		tab_button.add_theme_stylebox_override("hover", _button_style("#29465a"))
-		tab_button.add_theme_stylebox_override("pressed", _button_style("#b98b42"))
+		tab_button.custom_minimum_size = Vector2(116, 50)
+		tab_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		tab_button.add_theme_font_size_override("font_size", 11)
+		tab_button.add_theme_stylebox_override("normal", _nav_button_style(false))
+		tab_button.add_theme_stylebox_override("hover", _nav_button_style(true))
+		tab_button.add_theme_stylebox_override("pressed", _nav_button_style(true))
+		tab_button.add_theme_color_override("font_color", Color("#e8edf5"))
+		tab_button.add_theme_color_override("font_hover_color", Color("#fff7df"))
 		tab_button.pressed.connect(_select_main_tab.bind(index))
 		nav_row.add_child(tab_button)
 		main_tab_buttons.append(tab_button)
 	_update_bottom_navigation()
 
+func _navigation_page_names() -> Array[String]:
+	return ["Overview", "Career", "Party", "Elections", "District", "Office", "Reports", "India Map"]
+
+
+func _get_visible_tab_index(page_name: String) -> int:
+	if not is_instance_valid(dashboard_box):
+		return -1
+	for tab_index in range(dashboard_box.get_tab_count()):
+		var page := dashboard_box.get_tab_control(tab_index)
+		if is_instance_valid(page) and page.name == page_name:
+			return tab_index
+	return -1
+
+
+func _get_current_page_name() -> String:
+	if not is_instance_valid(dashboard_box):
+		return ""
+	var tab_index := dashboard_box.current_tab
+	if tab_index < 0 or tab_index >= dashboard_box.get_tab_count():
+		return ""
+	var page := dashboard_box.get_tab_control(tab_index)
+	return page.name if is_instance_valid(page) else ""
+
+
+func _restore_selected_page(page_name: String) -> void:
+	if page_name.is_empty():
+		return
+	var target_index := _get_visible_tab_index(page_name)
+	if target_index >= 0:
+		dashboard_box.current_tab = target_index
+	elif dashboard_box.get_tab_count() > 0:
+		dashboard_box.current_tab = 0
+	_update_bottom_navigation()
+
+
 func _select_main_tab(index: int) -> void:
 	if not is_instance_valid(dashboard_box):
 		return
-	if index < 0 or index >= dashboard_box.get_tab_count():
+	var page_names := _navigation_page_names()
+	if index < 0 or index >= page_names.size():
 		return
-	if index == 5 and not world.has_elected_office:
+	var target_index := _get_visible_tab_index(page_names[index])
+	if target_index < 0:
 		return
-	dashboard_box.current_tab = index
+	if dashboard_box.current_tab == target_index:
+		return
+	var transition := create_tween()
+	transition.set_trans(Tween.TRANS_SINE)
+	transition.set_ease(Tween.EASE_OUT)
+	transition.tween_property(dashboard_box, "modulate:a", 0.72, 0.07)
+	transition.tween_callback(func():
+		var latest_index := _get_visible_tab_index(page_names[index])
+		if latest_index >= 0:
+			dashboard_box.current_tab = latest_index
+	)
+	transition.tween_property(dashboard_box, "modulate:a", 1.0, 0.14)
 	_update_bottom_navigation()
 
 func _update_bottom_navigation() -> void:
 	for i in range(main_tab_buttons.size()):
 		var button := main_tab_buttons[i]
-		button.add_theme_stylebox_override(
-			"normal",
-			_button_style("#b98b42" if i == dashboard_box.current_tab else "#1b2a38")
-		)
-		button.add_theme_color_override("font_color", Color("#101820") if i == dashboard_box.current_tab else Color("#f2e8d5"))
+		var page_names := _navigation_page_names()
+		var selected: bool = i < page_names.size() and page_names[i] == _get_current_page_name()
+		button.add_theme_stylebox_override("normal", _nav_button_style(selected))
+		button.add_theme_stylebox_override("hover", _nav_button_style(true))
+		button.add_theme_color_override("font_color", Color("#101c2b") if selected else Color("#e8edf5"))
+		button.add_theme_color_override("font_hover_color", Color("#101c2b") if selected else Color("#fff7df"))
+
+func _nav_button_style(selected: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#d6b15a") if selected else Color("#14253a")
+	style.border_color = Color("#f0d18a") if selected else Color("#344b65")
+	style.set_border_width_all(1 if selected else 1)
+	style.set_corner_radius_all(13)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 9
+	style.content_margin_bottom = 9
+	style.shadow_color = Color(0, 0, 0, 0.28)
+	style.shadow_size = 4 if selected else 2
+	style.shadow_offset = Vector2(0, 2)
+	return style
 
 func _build_setup() -> void:
 	_clear_children(setup_box)
@@ -446,37 +522,44 @@ func _build_dashboard() -> void:
 	elections_page.add_child(election_tabs)
 
 	var local_elections := _new_tab(election_tabs, "Local bodies")
-	_add_section_title(local_elections, "LOCAL-BODY ELECTION")
+	_add_section_title(local_elections, "AI-MANAGED PARTY LOCAL CONTESTS")
+	_add_body(local_elections, "AI High Command automatically selects a different party nominee for every modeled district-local contest, runs the campaign, and handles routine organization. A winning party controls that modeled local administration through an AI office-holder; it does not appoint you personally.")
+	_add_body(local_elections, "MODEL LIMIT: these are district-level local-administration elections, not separate schedules for every real municipality, Gram Panchayat, ward, or corporation.")
+	_add_section_title(local_elections, "OPTIONAL PERSONAL CANDIDACY")
+	_add_body(local_elections, "These controls apply only if you personally choose to contest your separate home-area election. Your party's AI nominees continue to contest the nationwide modeled contests automatically either way.")
 	election_detail_labels["local"] = _add_body(local_elections, "")
-	_add_button(local_elections, "Apply for local election ticket", func(): _run_activity("request_ticket"))
-	_add_button(local_elections, "Campaign as approved candidate", func(): _run_activity("campaign"))
-	_add_body(local_elections, "If you do not register or receive a ticket, your party’s AI organization can still field a candidate and campaign. You do not gain office unless you personally contest and win.")
+	_add_button(local_elections, "Apply for personal local election ticket", func(): _run_activity("request_ticket"))
+	_add_button(local_elections, "Campaign as personal candidate", func(): _run_activity("campaign"))
 
-	var karnataka_elections := _new_tab(election_tabs, "Karnataka")
-	_add_section_title(karnataka_elections, "KARNATAKA ASSEMBLY")
-	election_detail_labels["karnataka"] = _add_body(karnataka_elections, "")
-	_add_body(karnataka_elections, "Karnataka High Command: review the AI-prepared slate, set a campaign focus and monthly budget, and assign a party member to election duty. This prototype manages a state-level slate, not individual constituency candidates.")
-	karnataka_command_status = _add_body(karnataka_elections, "")
-	_add_button(karnataka_elections, "APPROVE AI-PREPARED KARNATAKA SLATE", _on_approve_karnataka_slate)
-	_add_body(karnataka_elections, "CAMPAIGN PRIORITY")
-	karnataka_priority = OptionButton.new()
-	karnataka_priority.custom_minimum_size = Vector2(0, 44)
-	for priority in ["Balanced outreach", "Public services", "Jobs & economy", "Rural development", "Youth engagement"]:
-		karnataka_priority.add_item(priority)
-	karnataka_elections.add_child(karnataka_priority)
+	var high_command_page := _new_tab(election_tabs, "High Command")
+	_add_section_title(high_command_page, "NATIONAL PARTY HIGH COMMAND")
+	election_detail_labels["high_command"] = _add_body(high_command_page, "Your party’s nationwide high-command status will appear here.")
+	_add_body(high_command_page, "You act as party High Command. The AI automatically nominates party members for every modeled Lok Sabha and state-assembly constituency, selects local nominees, runs campaigns, manages party resources, and handles routine organization. You make broad strategic and coalition-policy decisions only; you do not directly run a government unless separately elected to a specific office.")
+	_add_body(high_command_page, "CAMPAIGN STRATEGY")
+	high_command_priority = OptionButton.new()
+	high_command_priority.custom_minimum_size = Vector2(0, 44)
+	for priority in ["Balanced outreach", "Jobs & economy", "Public services", "Rural development", "Welfare & inclusion", "Infrastructure", "Public safety", "Youth engagement"]:
+		high_command_priority.add_item(priority)
+	high_command_page.add_child(high_command_priority)
+	_add_body(high_command_page, "TOTAL MONTHLY CAMPAIGN BUDGET CEILING (₹)")
+	high_command_budget = SpinBox.new()
+	high_command_budget.min_value = 0
+	high_command_budget.max_value = 200000
+	high_command_budget.step = 5000
+	high_command_budget.value = 50000
+	high_command_budget.custom_minimum_size = Vector2(0, 44)
+	high_command_page.add_child(high_command_budget)
+	_add_body(high_command_page, "COALITION DIRECTIVE")
+	high_command_coalition = OptionButton.new()
+	high_command_coalition.custom_minimum_size = Vector2(0, 44)
+	for policy in ["AI negotiate a working majority", "Prefer single-party government", "Avoid coalition agreements"]:
+		high_command_coalition.add_item(policy)
+	high_command_page.add_child(high_command_coalition)
+	high_command_status = _add_body(high_command_page, "AI candidate selection and campaign operations are automatic.")
+	_add_button(high_command_page, "SAVE HIGH COMMAND DIRECTIVE", _on_save_high_command_policy)
 
-	_add_body(karnataka_elections, "MONTHLY CAMPAIGN BUDGET (₹)")
-	karnataka_budget = SpinBox.new()
-	karnataka_budget.min_value = 0
-	karnataka_budget.max_value = 200000
-	karnataka_budget.step = 5000
-	karnataka_budget.value = 50000
-	karnataka_budget.custom_minimum_size = Vector2(0, 44)
-	karnataka_elections.add_child(karnataka_budget)
-	_add_button(karnataka_elections, "SAVE CAMPAIGN PLAN", _on_save_karnataka_plan)
-
-	var other_states_elections := _new_tab(election_tabs, "Other states")
-	_add_section_title(other_states_elections, "OTHER STATE ASSEMBLIES")
+	var other_states_elections := _new_tab(election_tabs, "State Assemblies")
+	_add_section_title(other_states_elections, "ALL STATE ASSEMBLIES")
 	election_detail_labels["other_states"] = _add_body(other_states_elections, "")
 
 	var national_elections := _new_tab(election_tabs, "Lok Sabha")
@@ -508,7 +591,7 @@ func _build_dashboard() -> void:
 	_add_office_action_card(office_tab, "Raise a public-service issue", "Refer a local service concern to the responsible department for follow-up.", "RAISE ISSUE", _on_raise_constituency_issue)
 	office_action_feedback = _add_body(office_tab, "Action results will appear here after you submit a proposal or raise an issue.")
 	office_action_feedback.name = "OfficeActionFeedback"
-	office_action_feedback.add_theme_color_override("font_color", Color("#e7bd62"))
+	office_action_feedback.add_theme_color_override("font_color", Color("#d6b15a"))
 	_add_section_title(office_tab, "MONTHLY RESPONSIBILITIES")
 	office_mission_list = VBoxContainer.new()
 	office_mission_list.add_theme_constant_override("separation", 8)
@@ -526,9 +609,52 @@ func _build_dashboard() -> void:
 	office_log_list.add_theme_constant_override("separation", 8)
 	office_tab.add_child(office_log_list)
 
+	india_map_page = _new_tab(dashboard_box, "India Map")
+	_add_section_title(india_map_page, "INDIA POLITICAL ATLAS")
+	_add_body(india_map_page, "Explore the political simulation by state, then drill into available district records. Political control and election information come from the saved in-game simulation.")
+	india_map_breadcrumb = _add_body(india_map_page, "INDIA  /  STATES")
+	var map_controls := HBoxContainer.new()
+	map_controls.add_theme_constant_override("separation", 8)
+	india_map_page.add_child(map_controls)
+	var map_back_button := Button.new()
+	map_back_button.text = "← BACK"
+	map_back_button.custom_minimum_size = Vector2(92, 42)
+	map_back_button.pressed.connect(_on_map_back)
+	map_controls.add_child(map_back_button)
+	india_map_layer_picker = OptionButton.new()
+	india_map_layer_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	india_map_layer_picker.custom_minimum_size = Vector2(0, 42)
+	for layer_name in ["Political control", "Regional support", "Assembly seats", "Election status"]:
+		india_map_layer_picker.add_item(layer_name)
+	india_map_layer_picker.item_selected.connect(func(_index: int): _refresh_india_map())
+	map_controls.add_child(india_map_layer_picker)
+	_add_section_title(india_map_page, "MAP COLOUR KEY")
+	india_map_legend = GridContainer.new()
+	india_map_legend.name = "MapLegendGrid"
+	india_map_legend.columns = 2
+	india_map_legend.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	india_map_legend.add_theme_constant_override("h_separation", 10)
+	india_map_legend.add_theme_constant_override("v_separation", 8)
+	india_map_page.add_child(india_map_legend)
+	_add_body(india_map_page, "MAP KEY: Each swatch identifies the party or value range shown on the map. At India level, political control shows the state / Union Territory government; inside a state, it shows the district-level AI administration. Navy means no recorded party; gold marks the selected district. Other layers use the ranges listed above.")
+	india_map_grid = preload("res://scripts/india_map_view.gd").new()
+	india_map_grid.name = "InteractiveIndiaMap"
+	india_map_grid.custom_minimum_size = Vector2(0, 620)
+	india_map_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	india_map_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	india_map_grid.region_selected.connect(_on_map_geometry_selected)
+	india_map_page.add_child(india_map_grid)
+	_add_section_title(india_map_page, "REGION BRIEFING")
+	india_map_details = _add_body(india_map_page, "Select a state to view its political record.")
+	_refresh_india_map()
+
 	var reports_page := _new_tab(dashboard_box, "Reports")
 	_add_section_title(reports_page, "WORLD POLITICS")
 	world_politics_label = _add_body(reports_page, "India-wide political simulation will initialize with your career.")
+	_add_section_title(reports_page, "YOUR LEGAL AUTHORITY")
+	authority_summary_label = _add_body(reports_page, "Your current political office and permitted actions will appear here.")
+	_add_section_title(reports_page, "AI GOVERNMENTS & ADMINISTRATION")
+	government_summary_label = _add_body(reports_page, "Union, state, and local governments are administered by AI unless the player holds a specific executive office.")
 	_add_section_title(reports_page, "WORLD & ACTIVITY REPORT")
 	report_label = _add_body(reports_page, "Your political journey is ready to begin.")
 
@@ -550,21 +676,21 @@ func _add_dashboard_hero(parent: VBoxContainer) -> void:
 	var eyebrow := Label.new()
 	eyebrow.text = "POLITICAL WORLD INDIA"
 	eyebrow.add_theme_font_size_override("font_size", 11)
-	eyebrow.add_theme_color_override("font_color", Color("#d0ad62"))
+	eyebrow.add_theme_color_override("font_color", Color("#d6b15a"))
 	content.add_child(eyebrow)
 
 	var headline := Label.new()
 	headline.text = "Your journey into public life"
 	headline.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	headline.add_theme_font_size_override("font_size", 23)
-	headline.add_theme_color_override("font_color", Color("#f3e8d2"))
+	headline.add_theme_color_override("font_color", Color("#e7edf6"))
 	content.add_child(headline)
 
 	var supporting_text := Label.new()
 	supporting_text.text = "Build trust, earn responsibility, and win authority through elections. The simulation advances month by month."
 	supporting_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	supporting_text.add_theme_font_size_override("font_size", 13)
-	supporting_text.add_theme_color_override("font_color", Color("#b8c6d3"))
+	supporting_text.add_theme_color_override("font_color", Color("#aebed1"))
 	content.add_child(supporting_text)
 
 	_configure_touch_scroll_passthrough(panel)
@@ -598,14 +724,14 @@ func _add_overview_metrics(parent: VBoxContainer) -> void:
 		var label := Label.new()
 		label.text = str(spec["label"])
 		label.add_theme_font_size_override("font_size", 10)
-		label.add_theme_color_override("font_color", Color("#a8b8c8"))
+		label.add_theme_color_override("font_color", Color("#aebed1"))
 		body.add_child(label)
 
 		var value := Label.new()
 		value.text = str(spec["value"])
 		value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		value.add_theme_font_size_override("font_size", 18)
-		value.add_theme_color_override("font_color", Color("#f1e6cf"))
+		value.add_theme_color_override("font_color", Color("#e7edf6"))
 		body.add_child(value)
 		overview_metric_values.append(value)
 
@@ -613,27 +739,27 @@ func _add_overview_metrics(parent: VBoxContainer) -> void:
 		hint.text = str(spec["hint"])
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		hint.add_theme_font_size_override("font_size", 10)
-		hint.add_theme_color_override("font_color", Color("#8298ad"))
+		hint.add_theme_color_override("font_color", Color("#91a4ba"))
 		body.add_child(hint)
 		_configure_touch_scroll_passthrough(card)
 
 func _hero_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#142538")
-	style.border_color = Color("#52617a")
+	style.bg_color = Color("#182b43")
+	style.border_color = Color("#334a66")
 	style.set_border_width_all(1)
 	style.border_width_left = 3
-	style.border_color = Color("#c6a45d")
-	style.set_corner_radius_all(16)
-	style.set_content_margin_all(17)
+	style.border_color = Color("#d6b15a")
+	style.set_corner_radius_all(18)
+	style.set_content_margin_all(18)
 	return style
 
 func _metric_card_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#132235")
-	style.border_color = Color("#2c4056")
+	style.bg_color = Color("#102036")
+	style.border_color = Color("#334a66")
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(13)
+	style.set_corner_radius_all(16)
 	style.set_content_margin_all(13)
 	return style
 
@@ -650,14 +776,14 @@ func _add_page_summary(parent: VBoxContainer, eyebrow: String, title_text: Strin
 	var eyebrow_label := Label.new()
 	eyebrow_label.text = eyebrow.to_upper()
 	eyebrow_label.add_theme_font_size_override("font_size", 11)
-	eyebrow_label.add_theme_color_override("font_color", Color("#c6b06f"))
+	eyebrow_label.add_theme_color_override("font_color", Color("#d6b15a"))
 	body.add_child(eyebrow_label)
 
 	var title_label := Label.new()
 	title_label.text = title_text
 	title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title_label.add_theme_font_size_override("font_size", 21)
-	title_label.add_theme_color_override("font_color", Color("#f0e7d4"))
+	title_label.add_theme_color_override("font_color", Color("#e7edf6"))
 	body.add_child(title_label)
 
 	var detail_label := _add_body(body, initial_text)
@@ -676,14 +802,14 @@ func _add_info_card(parent: VBoxContainer, title_text: String, detail_text: Stri
 	var title := Label.new()
 	title.text = title_text
 	title.add_theme_font_size_override("font_size", 16)
-	title.add_theme_color_override("font_color", Color("#f0d18a"))
+	title.add_theme_color_override("font_color", Color("#dce5f0"))
 	body.add_child(title)
 	var detail := _add_body(body, detail_text)
 	detail.add_theme_font_size_override("font_size", 14)
 	var status := Label.new()
 	status.text = status_text
 	status.add_theme_font_size_override("font_size", 11)
-	status.add_theme_color_override("font_color", Color("#9db5c8"))
+	status.add_theme_color_override("font_color", Color("#aebed1"))
 	body.add_child(status)
 	# These cards are created after the initial UI pass. Keep their controls
 	# from swallowing touch-drag gestures intended for PageContent.
@@ -700,7 +826,7 @@ func _add_office_action_card(parent: VBoxContainer, title_text: String, detail_t
 	var title := Label.new()
 	title.text = title_text
 	title.add_theme_font_size_override("font_size", 16)
-	title.add_theme_color_override("font_color", Color("#f0d18a"))
+	title.add_theme_color_override("font_color", Color("#dce5f0"))
 	body.add_child(title)
 	var detail := _add_body(body, detail_text)
 	detail.add_theme_font_size_override("font_size", 14)
@@ -709,23 +835,23 @@ func _add_office_action_card(parent: VBoxContainer, title_text: String, detail_t
 
 func _card_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#111e2d")
-	style.border_color = Color("#2c3c52")
+	style.bg_color = Color("#102036")
+	style.border_color = Color("#334a66")
 	style.set_border_width_all(1)
 	style.border_width_left = 2
-	style.border_color = Color("#34485c")
+	style.border_color = Color("#334a66")
 	style.border_width_left = 3
-	style.set_corner_radius_all(15)
+	style.set_corner_radius_all(16)
 	style.set_content_margin_all(17)
-	style.shadow_color = Color(0, 0, 0, 0.22)
-	style.shadow_size = 5
+	style.shadow_color = Color(0.12, 0.19, 0.14, 0.08)
+	style.shadow_size = 3
 	style.shadow_offset = Vector2(0, 2)
 	return style
 
 func _brand_mark_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#101d2b")
-	style.border_color = Color("#b89a5a")
+	style.bg_color = Color("#102036")
+	style.border_color = Color("#d6b15a")
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(12)
 	style.set_content_margin_all(2)
@@ -733,8 +859,8 @@ func _brand_mark_style() -> StyleBoxFlat:
 
 func _date_capsule_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#142336")
-	style.border_color = Color("#46566b")
+	style.bg_color = Color("#14253a")
+	style.border_color = Color("#334a66")
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(10)
 	style.content_margin_left = 11
@@ -769,26 +895,26 @@ func _refresh_office_missions() -> void:
 		title.text = title_text
 		title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		title.add_theme_font_size_override("font_size", 16)
-		title.add_theme_color_override("font_color", Color("#f0d18a"))
+		title.add_theme_color_override("font_color", Color("#d6b15a"))
 		body.add_child(title)
 		var department_label := Label.new()
 		department_label.text = department.to_upper()
 		department_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		department_label.add_theme_font_size_override("font_size", 11)
-		department_label.add_theme_color_override("font_color", Color("#9db5c8"))
+		department_label.add_theme_color_override("font_color", Color("#aebed1"))
 		body.add_child(department_label)
 		var place_label := Label.new()
 		place_label.text = "AREA  •  %s     |     DUE  •  %s" % [location, str(mission.get("deadline", world.date_label()))]
 		place_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		place_label.add_theme_font_size_override("font_size", 12)
-		place_label.add_theme_color_override("font_color", Color("#d4dce3"))
+		place_label.add_theme_color_override("font_color", Color("#aebed1"))
 		body.add_child(place_label)
 		var detail_label := _add_body(body, detail)
 		detail_label.add_theme_font_size_override("font_size", 14)
 		var status_label := Label.new()
 		status_label.text = "STATUS  •  %s" % status.to_upper()
 		status_label.add_theme_font_size_override("font_size", 11)
-		status_label.add_theme_color_override("font_color", Color("#e7bd62"))
+		status_label.add_theme_color_override("font_color", Color("#d6b15a"))
 		body.add_child(status_label)
 		if status == "Available":
 			_add_button(body, "TAKE ACTION", _on_complete_office_mission.bind(mission_id))
@@ -808,9 +934,9 @@ func _add_case_filter_button(parent: HBoxContainer, button_text: String, filter_
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.custom_minimum_size = Vector2(0, 44)
 	button.add_theme_font_size_override("font_size", 11)
-	button.add_theme_color_override("font_color", Color("#f4ead6"))
-	button.add_theme_stylebox_override("normal", _button_style("#203345"))
-	button.add_theme_stylebox_override("hover", _button_style("#2b465b"))
+	button.add_theme_color_override("font_color", Color("#e7edf6"))
+	button.add_theme_stylebox_override("normal", _button_style("#d6b15a"))
+	button.add_theme_stylebox_override("hover", _button_style("#243b57"))
 	button.pressed.connect(_set_office_case_filter.bind(filter_value))
 	parent.add_child(button)
 
@@ -902,7 +1028,7 @@ func _new_tab(parent: TabContainer, tab_title: String) -> VBoxContainer:
 func _add_line_input(parent: VBoxContainer, label_text: String, placeholder_text: String) -> LineEdit:
 	var label := Label.new()
 	label.text = label_text
-	label.add_theme_color_override("font_color", Color("#d4dce3"))
+	label.add_theme_color_override("font_color", Color("#aebed1"))
 	parent.add_child(label)
 	var field := LineEdit.new()
 	field.placeholder_text = placeholder_text
@@ -917,7 +1043,7 @@ func _add_section_title(parent: VBoxContainer, text_value: String) -> void:
 	title_row.custom_minimum_size = Vector2(0, 28)
 
 	var accent := ColorRect.new()
-	accent.color = Color("#d0ad62")
+	accent.color = Color("#d6b15a")
 	accent.custom_minimum_size = Vector2(3, 18)
 	accent.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	title_row.add_child(accent)
@@ -925,8 +1051,8 @@ func _add_section_title(parent: VBoxContainer, text_value: String) -> void:
 	var label := Label.new()
 	label.text = text_value.to_upper()
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.add_theme_font_size_override("font_size", 13)
-	label.add_theme_color_override("font_color", Color("#c6d0dc"))
+	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_color_override("font_color", Color("#dce5f0"))
 	title_row.add_child(label)
 
 	parent.add_child(title_row)
@@ -937,7 +1063,7 @@ func _add_body(parent: VBoxContainer, text_value: String) -> Label:
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.add_theme_font_size_override("font_size", 15)
-	label.add_theme_color_override("font_color", Color("#c7d1dd"))
+	label.add_theme_color_override("font_color", Color("#aebed1"))
 	parent.add_child(label)
 	return label
 
@@ -945,20 +1071,20 @@ func _add_button(parent: VBoxContainer, text_value: String, callback: Callable) 
 	var button := Button.new()
 	button.text = text_value
 	button.custom_minimum_size = Vector2(0, 50)
-	button.add_theme_color_override("font_color", Color("#14232a"))
-	button.add_theme_stylebox_override("normal", _button_style("#d5b36b"))
-	button.add_theme_stylebox_override("hover", _button_style("#e8c879"))
-	button.add_theme_stylebox_override("pressed", _button_style("#b18b45"))
-	button.add_theme_color_override("font_hover_color", Color("#101820"))
+	button.add_theme_color_override("font_color", Color("#081421"))
+	button.add_theme_stylebox_override("normal", _button_style("#d6b15a"))
+	button.add_theme_stylebox_override("hover", _button_style("#e6c978"))
+	button.add_theme_stylebox_override("pressed", _button_style("#b88b3b"))
+	button.add_theme_color_override("font_hover_color", Color("#081421"))
 	button.pressed.connect(callback)
 	parent.add_child(button)
 
 func _button_style(color_value: String) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(color_value)
-	style.border_color = Color("#4a6267")
+	style.border_color = Color("#334a66")
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(13)
+	style.set_corner_radius_all(16)
 	style.content_margin_left = 16
 	style.content_margin_right = 16
 	style.content_margin_top = 10
@@ -1013,6 +1139,9 @@ func _save_progress() -> void:
 		world.save_game()
 
 func _refresh() -> void:
+	# Keep the selected page by name while Office is shown/hidden. TabContainer
+	# indexes shift when a page is hidden, so preserving a raw index can land on Office.
+	var selected_page_name := _get_current_page_name()
 	date_label.text = world.date_label()
 	if world.career_started:
 		_refresh_overview_metrics()
@@ -1027,10 +1156,15 @@ func _refresh() -> void:
 		_refresh_election_tabs()
 		if is_instance_valid(world_politics_label):
 			world_politics_label.text = world.world_politics_summary()
+		if is_instance_valid(authority_summary_label):
+			authority_summary_label.text = world.player_authority_summary()
+		if is_instance_valid(government_summary_label):
+			government_summary_label.text = world.government_system_summary()
 		if is_instance_valid(office_tab):
 			office_tab.visible = world.has_elected_office
 		if main_tab_buttons.size() > 5 and is_instance_valid(main_tab_buttons[5]):
 			main_tab_buttons[5].visible = world.has_elected_office
+		_restore_selected_page(selected_page_name)
 		if is_instance_valid(district_label):
 			district_label.text = world.district_progression_summary()
 		var district_details := dashboard_box.find_child("DistrictProgressDetails", true, false)
@@ -1046,77 +1180,321 @@ func _refresh() -> void:
 				office_label.text = world.office_summary()
 			_refresh_office_missions()
 			_refresh_office_log()
+		_refresh_india_map()
 
+
+const INDIA_MAP_STATES: Array[String] = [
+	"Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
+	"Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
+	"Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland",
+	"Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
+	"Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands",
+	"Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi",
+	"Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+]
+const KARNATAKA_MAP_DISTRICTS: Array[String] = [
+	"Bagalkot", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban",
+	"Bidar", "Chamarajanagar", "Chikkaballapura", "Chikkamagaluru", "Chitradurga",
+	"Dakshina Kannada", "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri",
+	"Kalaburagi", "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur",
+	"Ramanagara", "Shivamogga", "Tumakuru", "Udupi", "Uttara Kannada",
+	"Vijayapura", "Yadgir", "Vijayanagara"
+]
+
+func _on_map_back() -> void:
+	if india_map_level == 2:
+		india_map_level = 1
+		india_map_selected_district = ""
+	elif india_map_level == 1:
+		india_map_level = 0
+		india_map_selected_state = ""
+		india_map_selected_district = ""
+	_refresh_india_map()
+
+func _on_map_state_selected(state_name: String) -> void:
+	india_map_selected_state = state_name
+	india_map_selected_district = ""
+	india_map_level = 1
+	_refresh_india_map()
+
+func _on_map_district_selected(district_name: String) -> void:
+	india_map_selected_district = district_name
+	india_map_level = 2
+	_refresh_india_map()
+
+func _on_map_geometry_selected(region_name: String, state_name: String) -> void:
+	if india_map_level == 0:
+		_on_map_state_selected(region_name)
+	elif india_map_level == 1:
+		_on_map_district_selected(region_name)
+	else:
+		india_map_selected_district = region_name
+		_refresh_india_map()
+
+func _refresh_india_map() -> void:
+	if not is_instance_valid(india_map_grid) or not is_instance_valid(india_map_details):
+		return
+	var layer := india_map_layer_picker.get_item_text(india_map_layer_picker.selected) if is_instance_valid(india_map_layer_picker) else "Political control"
+	if not world.career_started:
+		india_map_grid.set_map_state(india_map_level, india_map_selected_state, india_map_selected_district, layer, {}, {}, {}, {}, {}, world.party_map_colors())
+		india_map_details.text = "INDIA POLITICAL ATLAS\nStart a political career to initialize the AI-managed Union, state, and district administrations. The map shows the real supplied boundaries; political control appears after your career begins."
+		_refresh_india_map_legend(layer, {}, {}, world.party_map_colors())
+		return
+	var winners: Dictionary = {}
+	var supports: Dictionary = {}
+	var seats: Dictionary = {}
+	var phases: Dictionary = {}
+	var national_government: Dictionary = world.get_national_government()
+	var national_party_id := str(national_government.get("ruling_party_id", ""))
+	for state_variant in INDIA_MAP_STATES:
+		var state_name := str(state_variant)
+		var government: Dictionary = world.get_state_government(state_name)
+		var winner_id := str(government.get("ruling_party_id", ""))
+		# Union Territories use the Union administration as the simplified map fallback.
+		if winner_id.is_empty():
+			winner_id = national_party_id
+		if not winner_id.is_empty():
+			winners[state_name] = winner_id
+		supports[state_name] = _india_map_support(state_name)
+		var election := _india_map_state_election(state_name)
+		seats[state_name] = int(election.get("assembly_seats", 0))
+		phases[state_name] = str(election.get("phase", "No assembly election record"))
+	var local_winners: Dictionary = world.local_government_party_map(india_map_selected_state if india_map_level > 0 else "")
+	var party_colors: Dictionary = world.party_map_colors()
+	india_map_grid.set_map_state(
+		india_map_level, india_map_selected_state, india_map_selected_district,
+		layer, winners, supports, seats, phases, local_winners, party_colors
+	)
+	_refresh_india_map_legend(layer, winners, local_winners, party_colors)
+	var state_election := _india_map_state_election(india_map_selected_state)
+	if india_map_level == 0:
+		india_map_breadcrumb.text = "INDIA  /  STATES & UNION TERRITORIES"
+		india_map_details.text = "INDIA-WIDE BRIEFING\n%s\nTap a state boundary on the map to open its state government and district map." % world.national_government_briefing()
+	elif india_map_level == 1:
+		india_map_breadcrumb.text = "INDIA  /  %s  /  DISTRICTS" % india_map_selected_state.to_upper()
+		india_map_details.text = _india_map_state_summary(india_map_selected_state, state_election, layer) + "\n\nTap a district boundary to view its AI-managed local administration."
+	else:
+		india_map_breadcrumb.text = "INDIA  /  %s  /  %s" % [india_map_selected_state.to_upper(), india_map_selected_district.to_upper()]
+		india_map_details.text = "DISTRICT / LOCAL GOVERNMENT BRIEFING\n%s, %s\n\n%s\n\nBoundary source: supplied district GeoJSON. Local political control is an AI-managed simulation baseline unless a future local-body election record replaces it." % [
+			india_map_selected_district, india_map_selected_state,
+			world.local_government_briefing(india_map_selected_state, india_map_selected_district)
+		]
+
+func _refresh_india_map_legend(layer: String, state_winners: Dictionary, local_winners: Dictionary, party_colors: Dictionary) -> void:
+	if not is_instance_valid(india_map_legend):
+		return
+	_clear_children(india_map_legend)
+	if layer == "Political control":
+		var visible_party_ids: Dictionary = {}
+		var source_map: Dictionary = state_winners if india_map_level == 0 else local_winners
+		for party_id_variant in source_map.values():
+			var candidate_party_id := str(party_id_variant)
+			if not candidate_party_id.is_empty():
+				visible_party_ids[candidate_party_id] = true
+		var party_ids: Array = visible_party_ids.keys()
+		party_ids.sort()
+		for party_id_variant in party_ids:
+			var legend_party_id := str(party_id_variant)
+			var party: Dictionary = world.parties.get(legend_party_id, {})
+			var color_hex := str(party_colors.get(legend_party_id, "#263b54"))
+			_add_india_map_legend_item(Color(color_hex), str(party.get("name", legend_party_id)))
+		_add_india_map_legend_item(Color("#263b54"), "No government record")
+		if india_map_level == 2:
+			_add_india_map_legend_item(Color("#f2d27b"), "Selected district")
+	elif layer == "Regional support":
+		for i in range(5):
+			var support_low := i * 20
+			var support_high := (i + 1) * 20
+			var support_sample := (float(support_low) + float(support_high)) * 0.5 / 100.0
+			_add_india_map_legend_item(Color("#102036").lerp(Color("#d6b15a"), support_sample), "%d–%d%%" % [support_low, support_high])
+	elif layer == "Assembly seats":
+		var seat_bands: Array[Vector2i] = [Vector2i(0, 80), Vector2i(81, 160), Vector2i(161, 240), Vector2i(241, 320), Vector2i(321, 403)]
+		for band in seat_bands:
+			var seats_sample := (float(band.x) + float(band.y)) * 0.5 / 403.0
+			_add_india_map_legend_item(Color("#102036").lerp(Color("#4c91c8"), seats_sample), "%d–%d seats" % [band.x, band.y])
+	else:
+		_add_india_map_legend_item(Color("#263b54"), "Scheduled / no poll")
+		_add_india_map_legend_item(Color("#d6b15a"), "Campaigning")
+		_add_india_map_legend_item(Color("#2f9f8c"), "Completed")
+		_add_india_map_legend_item(Color("#f2d27b"), "Selected region")
+
+func _add_india_map_legend_item(swatch_color: Color, item_text: String) -> void:
+	var item := PanelContainer.new()
+	item.custom_minimum_size = Vector2(0, 38)
+	item.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var chip_style := StyleBoxFlat.new()
+	chip_style.bg_color = Color("#14263d")
+	chip_style.border_color = Color("#2b405b")
+	chip_style.set_border_width_all(1)
+	chip_style.set_corner_radius_all(8)
+	chip_style.set_content_margin_all(7)
+	item.add_theme_stylebox_override("panel", chip_style)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	item.add_child(row)
+	var swatch := ColorRect.new()
+	swatch.color = swatch_color
+	swatch.custom_minimum_size = Vector2(18, 18)
+	swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(swatch)
+	var text_label := Label.new()
+	text_label.text = item_text
+	text_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_label.add_theme_font_size_override("font_size", 12)
+	text_label.add_theme_color_override("font_color", Color("#e1e9f3"))
+	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	row.add_child(text_label)
+	india_map_legend.add_child(item)
+
+func _india_map_tile_text(state_name: String, layer: String) -> String:
+	var election := _india_map_state_election(state_name)
+	if layer == "Assembly seats":
+		return "%s\n%d seats" % [state_name, int(election.get("assembly_seats", 0))]
+	if layer == "Election status":
+		return "%s\n%s" % [state_name, str(election.get("phase", "No record"))]
+	if layer == "Regional support":
+		return "%s\n%.1f%%" % [state_name, _india_map_support(state_name)]
+	var government: Dictionary = world.get_state_government(state_name)
+	var party_id := str(government.get("ruling_party_id", ""))
+	return "%s\n%s" % [state_name, _india_map_party_name(party_id) if not party_id.is_empty() else "No government"]
+
+func _india_map_state_election(state_name: String) -> Dictionary:
+	for election_variant in world.world_state.get("state_elections", []):
+		var election: Dictionary = election_variant
+		if str(election.get("state", "")) == state_name:
+			return election
+	return {}
+
+func _india_map_support(state_name: String) -> float:
+	var support_by_party: Dictionary = world.world_state.get("regional_support", {})
+	var best_support := 0.0
+	for party_id_variant in support_by_party.keys():
+		var party_id := str(party_id_variant)
+		var by_state: Dictionary = support_by_party.get(party_id, {})
+		best_support = maxf(best_support, float(by_state.get(state_name, 0.0)))
+	return best_support
+
+func _india_map_party_name(party_id: String) -> String:
+	if world.parties.has(party_id):
+		return str(world.parties[party_id].get("name", party_id))
+	return party_id
+
+func _india_map_layer_summary(layer: String) -> String:
+	if layer == "Regional support":
+		return "Colour intensity shows the strongest recorded regional party support: darker navy is lower support and gold is higher support."
+	if layer == "Assembly seats":
+		return "Colour intensity shows the modeled number of assembly seats: darker navy is fewer seats and blue is more seats."
+	if layer == "Election status":
+		return "Slate blue means scheduled or no poll, gold means campaigning, and teal means the modeled election is completed."
+	return "Each state is coloured by its AI-managed ruling party. On a state map, district colours show the AI-managed local ruling party. Use the legend to identify each party."
+
+func _india_map_state_summary(state_name: String, election: Dictionary, layer: String) -> String:
+	var result := "STATE BRIEFING\n%s\nGOVERNMENT & ADMINISTRATION\n%s" % [state_name, world.state_government_briefing(state_name)]
+	if election.is_empty():
+		result += "\n\nAssembly election: this region has no modeled state-assembly election record (it may be a Union Territory)."
+	else:
+		result += "\n\nASSEMBLY ELECTION\nPhase: %s\nAssembly seats modeled: %d\nNext modeled election: %s %d\nLast result: %s" % [
+			str(election.get("phase", "Scheduled")),
+			int(election.get("assembly_seats", 0)),
+			world._month_name(int(election.get("month", 1))),
+			int(election.get("next_year", world.year)),
+			str(election.get("last_result", "Not yet held"))
+		]
+	result += "\n\nStrongest recorded regional support: %.1f%%\nMap layer: %s" % [_india_map_support(state_name), layer]
+	return result
 
 func _refresh_election_tabs() -> void:
 	if election_detail_labels.is_empty() or world.world_state.is_empty():
 		return
-	var local_text := "Area: %s\nNext local election: December %d\nCurrent status: %s\nPrevious result: %s\nYour party’s AI campaign is the fallback if you do not register or receive approval. The AI result does not grant you an elected office." % [
-		world.local_election_area(), world.local_election_year,
-		"Completed" if world.local_election_completed else "Scheduled",
-		world.last_local_election_result if world.last_local_election_year > 0 else "No result recorded"
+	var home_local_government: Dictionary = world.get_local_government(world.home_state, world._home_district_name())
+	var local_text := "YOUR PERSONAL LOCAL CONSTITUENCY\nArea: %s\nYour personal candidacy: %s\nNext personal election: December %d\nPrevious personal result: %s\n\nDISTRICT-LEVEL LOCAL ADMINISTRATION MODEL\nRuling party: %s\nAI executive leader: %s\nNext modeled district-local poll: %s %d\nLatest district-local result: %s\n\nAI High Command also fields party members in the other modeled district-local contests. An AI candidate’s victory gives the party local control, not personal office to you." % [
+		world.local_election_area(),
+		"You are contesting" if world.local_candidate_selected else ("Ticket requested" if world.ticket_requested else "No personal ticket selected"),
+		world.local_election_year,
+		world.last_local_election_result if world.last_local_election_year > 0 else "No personal result recorded",
+		world._government_party_name(str(home_local_government.get("ruling_party_id", ""))),
+		str(home_local_government.get("leader_name", "AI administrator pending")),
+		world._month_name(int(home_local_government.get("next_election_month", 12))),
+		int(home_local_government.get("next_election_year", world.year + 5)),
+		str(home_local_government.get("last_local_election_result", "No district-local result recorded yet"))
 	]
 	if election_detail_labels.has("local") and is_instance_valid(election_detail_labels["local"]):
 		election_detail_labels["local"].text = local_text
 
 	var state_elections: Array = world.world_state.get("state_elections", [])
-	var karnataka_text := "Karnataka Assembly election schedule and AI campaign status.\n"
-	var other_text := "State | Next poll | Phase | Last result\n"
+	var other_text := "State | AI ruling party | AI executive leader | Next poll | Phase | Last result | Your party candidates\n"
 	for election_variant in state_elections:
 		var election: Dictionary = election_variant
 		var state_name := str(election.get("state", ""))
-		var line := "%s | %s %d | %s | %s\n" % [
-			state_name, world._month_name(int(election.get("month", 1))), int(election.get("next_year", world.year)),
-			str(election.get("phase", "Scheduled")), str(election.get("last_result", "Not yet held"))
+		var state_government: Dictionary = world.get_state_government(state_name)
+		var line := "%s | %s | %s | %s %d | %s | %s | %d contested / %d elected\n" % [
+			state_name,
+			world._government_party_name(str(state_government.get("ruling_party_id", ""))),
+			str(state_government.get("leader_name", "AI leader pending")),
+			world._month_name(int(election.get("month", 1))), int(election.get("next_year", world.year)),
+			str(election.get("phase", "Scheduled")), str(election.get("last_result", "Not yet held")),
+			int(election.get("player_party_candidates_contested", 0)), int(election.get("player_party_candidates_elected", 0))
 		]
-		if state_name == "Karnataka":
-			karnataka_text += line
-		else:
-			other_text += line
-	var karnataka_election: Dictionary = {}
+		other_text += line
+	var high_command: Dictionary = world.world_state.get("high_command", {})
+	if is_instance_valid(high_command_status):
+		high_command_status.text = world.high_command_summary()
+	if is_instance_valid(high_command_budget):
+		high_command_budget.value = int(high_command.get("monthly_campaign_budget", 50000))
+	if is_instance_valid(high_command_priority):
+		var selected_priority := str(high_command.get("strategy", "Balanced outreach"))
+		for pi in range(high_command_priority.item_count):
+			if high_command_priority.get_item_text(pi) == selected_priority:
+				high_command_priority.select(pi)
+				break
+	if is_instance_valid(high_command_coalition):
+		var selected_coalition := str(high_command.get("coalition_policy", "AI negotiate a working majority"))
+		for ci in range(high_command_coalition.item_count):
+			if high_command_coalition.get_item_text(ci) == selected_coalition:
+				high_command_coalition.select(ci)
+				break
+	var home_state_election: Dictionary = {}
 	for election_variant in state_elections:
-		var item: Dictionary = election_variant
-		if str(item.get("state", "")) == "Karnataka":
-			karnataka_election = item
+		var home_election: Dictionary = election_variant
+		if str(home_election.get("state", "")) == world.home_state:
+			home_state_election = home_election
 			break
-	if is_instance_valid(karnataka_command_status):
-		karnataka_command_status.text = "Slate: %s\nPriority: %s\nMonthly plan: ₹%s\nPhase: %s" % [
-			"Approved" if bool(karnataka_election.get("high_command_slate_approved", false)) else "Awaiting your review",
-			str(karnataka_election.get("high_command_priority", "Balanced outreach")),
-			world._format_number(int(karnataka_election.get("high_command_monthly_budget", 50000))),
-			str(karnataka_election.get("phase", "Scheduled"))
+	var candidate_contested := int(home_state_election.get("player_party_candidates_contested", 0))
+	var candidate_elected := int(home_state_election.get("player_party_candidates_elected", 0))
+	if election_detail_labels.has("high_command") and is_instance_valid(election_detail_labels["high_command"]):
+		election_detail_labels["high_command"].text = "AI High Command automatically prepares the party slate in every election.\nYour home state: %s\nNext modeled poll: %s %d\nPhase: %s\nLatest player-party constituency candidates elected: %d / %d\nCurrent campaign directive: %s" % [
+			world.home_state,
+			world._month_name(int(home_state_election.get("month", 1))), int(home_state_election.get("next_year", world.year)),
+			str(home_state_election.get("phase", "Scheduled")), candidate_elected, candidate_contested,
+			str(high_command.get("strategy", "Balanced outreach"))
 		]
-		if is_instance_valid(karnataka_budget):
-			karnataka_budget.value = int(karnataka_election.get("high_command_monthly_budget", 50000))
-		if is_instance_valid(karnataka_priority):
-			var selected_priority := str(karnataka_election.get("high_command_priority", "Balanced outreach"))
-			for pi in range(karnataka_priority.item_count):
-				if karnataka_priority.get_item_text(pi) == selected_priority:
-					karnataka_priority.select(pi)
-					break
-	if election_detail_labels.has("karnataka") and is_instance_valid(election_detail_labels["karnataka"]):
-		election_detail_labels["karnataka"].text = karnataka_text
 	if election_detail_labels.has("other_states") and is_instance_valid(election_detail_labels["other_states"]):
 		election_detail_labels["other_states"].text = other_text
 
 	var national: Dictionary = world.world_state.get("national_election", {})
 	if election_detail_labels.has("national") and is_instance_valid(election_detail_labels["national"]):
-		election_detail_labels["national"].text = "Next Lok Sabha poll: %s %d\nPhase: %s\nSeats modeled: %d\nLast result: %s\nAI-managed national campaigning and participation." % [
+		var union_government: Dictionary = world.get_national_government()
+		election_detail_labels["national"].text = "Next Lok Sabha poll: %s %d\nPhase: %s\nModeled constituencies: %d\nYour party's AI nominees contested: %d\nYour party candidates elected: %d\nLast eligible voters: %d\nLast ballots cast: %d\nLast result: %s\nCurrent ruling party: %s\nPrime Minister / executive leader (AI): %s\nGovernment type: %s\nAI-managed national administration; the player remains High Command and does not automatically become Prime Minister." % [
 			world._month_name(int(national.get("month", 5))), int(national.get("next_year", 2029)),
 			str(national.get("phase", "Scheduled")), int(national.get("seats", 543)),
-			str(national.get("last_result", "Not yet held"))
+			int(national.get("player_party_candidates_contested", 0)),
+			int(national.get("player_party_candidates_elected", 0)),
+			int(national.get("last_eligible_voters", 0)), int(national.get("last_ballots_cast", 0)),
+			str(national.get("last_result", "Not yet held")),
+			world._government_party_name(str(union_government.get("ruling_party_id", ""))),
+			str(union_government.get("leader_name", "AI leader pending")),
+			str(union_government.get("formation_type", "AI-managed administration"))
 		]
 
-func _on_approve_karnataka_slate() -> void:
-	var result: String = world.set_karnataka_slate_approved(true)
-	karnataka_command_status.text = result
-	_refresh()
-	_save_progress()
-
-func _on_save_karnataka_plan() -> void:
-	var priority := karnataka_priority.get_item_text(karnataka_priority.selected)
-	var result: String = world.set_karnataka_campaign_plan(priority, int(karnataka_budget.value))
-	karnataka_command_status.text = result
+func _on_save_high_command_policy() -> void:
+	var strategy := high_command_priority.get_item_text(high_command_priority.selected) if is_instance_valid(high_command_priority) else "Balanced outreach"
+	var coalition_policy := high_command_coalition.get_item_text(high_command_coalition.selected) if is_instance_valid(high_command_coalition) else "AI negotiate a working majority"
+	var budget := int(high_command_budget.value) if is_instance_valid(high_command_budget) else 50000
+	var result: String = world.set_high_command_policy(strategy, budget, coalition_policy)
+	if is_instance_valid(high_command_status):
+		high_command_status.text = result + "\n\n" + world.high_command_summary()
+	report_label.text = result
 	_refresh()
 	_save_progress()
 
@@ -1302,7 +1680,7 @@ func _refresh_party_members() -> void:
 			row_box.add_theme_constant_override("separation", 3)
 			var name_label := Label.new()
 			name_label.text = member_name
-			name_label.add_theme_color_override("font_color", Color("#f0d18a"))
+			name_label.add_theme_color_override("font_color", Color("#d6b15a"))
 			row_box.add_child(name_label)
 			var detail := Label.new()
 			detail.text = "%s  •  %s" % [str(member.get("duty", "Volunteer")), str(member.get("region", "Karnataka"))]
