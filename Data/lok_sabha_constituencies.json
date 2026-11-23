@@ -1,0 +1,3272 @@
+{
+  "schema_version": 1,
+  "dataset": "Lok Sabha constituencies",
+  "source_document": "All Lok Sabha Constituencies of India.pdf",
+  "source_scope": "As listed in the supplied directory; includes Assam 2023 and Jammu and Kashmir 2022 delimitation boundaries.",
+  "validation": {
+    "total_constituencies": 543,
+    "general": 412,
+    "sc": 84,
+    "st": 47
+  },
+  "constituencies": [
+    {
+      "state": "Andhra Pradesh",
+      "number": 1,
+      "name": "Araku",
+      "category": "ST"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 2,
+      "name": "Srikakulam",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 3,
+      "name": "Vizianagaram",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 4,
+      "name": "Visakhapatnam",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 5,
+      "name": "Anakapalli",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 6,
+      "name": "Kakinada",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 7,
+      "name": "Amalapuram",
+      "category": "SC"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 8,
+      "name": "Rajahmundry",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 9,
+      "name": "Narasapuram",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 10,
+      "name": "Eluru",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 11,
+      "name": "Machilipatnam",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 12,
+      "name": "Vijayawada",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 13,
+      "name": "Guntur",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 14,
+      "name": "Narasaraopet",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 15,
+      "name": "Bapatla",
+      "category": "SC"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 16,
+      "name": "Ongole",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 17,
+      "name": "Nandyal",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 18,
+      "name": "Kurnool",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 19,
+      "name": "Anantapur",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 20,
+      "name": "Hindupur",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 21,
+      "name": "Kadapa",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 22,
+      "name": "Nellore",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 23,
+      "name": "Tirupati",
+      "category": "SC"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 24,
+      "name": "Rajampet",
+      "category": "General"
+    },
+    {
+      "state": "Andhra Pradesh",
+      "number": 25,
+      "name": "Chittoor",
+      "category": "SC"
+    },
+    {
+      "state": "Arunachal Pradesh",
+      "number": 1,
+      "name": "Arunachal West",
+      "category": "General"
+    },
+    {
+      "state": "Arunachal Pradesh",
+      "number": 2,
+      "name": "Arunachal East",
+      "category": "General"
+    },
+    {
+      "state": "Assam",
+      "number": 1,
+      "name": "Kokrajhar",
+      "category": "ST"
+    },
+    {
+      "state": "Assam",
+      "number": 2,
+      "name": "Dhubri",
+      "category": "General"
+    },
+    {
+      "state": "Assam",
+      "number": 3,
+      "name": "Barpeta",
+      "category": "General"
+    },
+    {
+      "state": "Assam",
+      "number": 4,
+      "name": "Darrang–Udalguri",
+      "category": "General"
+    },
+    {
+      "state": "Assam",
+      "number": 5,
+      "name": "Guwahati",
+      "category": "General"
+    },
+    {
+      "state": "Assam",
+      "number": 6,
+      "name": "Diphu",
+      "category": "ST"
+    },
+    {
+      "state": "Assam",
+      "number": 7,
+      "name": "Karimganj",
+      "category": "General"
+    },
+    {
+      "state": "Assam",
+      "number": 8,
+      "name": "Silchar",
+      "category": "SC"
+    },
+    {
+      "state": "Assam",
+      "number": 9,
+      "name": "Nagaon",
+      "category": "General"
+    },
+    {
+      "state": "Assam",
+      "number": 10,
+      "name": "Kaziranga",
+      "category": "General"
+    },
+    {
+      "state": "Assam",
+      "number": 11,
+      "name": "Sonitpur",
+      "category": "General"
+    },
+    {
+      "state": "Assam",
+      "number": 12,
+      "name": "Lakhimpur",
+      "category": "General"
+    },
+    {
+      "state": "Assam",
+      "number": 13,
+      "name": "Dibrugarh",
+      "category": "General"
+    },
+    {
+      "state": "Assam",
+      "number": 14,
+      "name": "Jorhat",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 1,
+      "name": "Valmiki Nagar",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 2,
+      "name": "Paschim Champaran",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 3,
+      "name": "Purvi Champaran",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 4,
+      "name": "Sheohar",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 5,
+      "name": "Sitamarhi",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 6,
+      "name": "Madhubani",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 7,
+      "name": "Jhanjharpur",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 8,
+      "name": "Supaul",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 9,
+      "name": "Araria",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 10,
+      "name": "Kishanganj",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 11,
+      "name": "Katihar",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 12,
+      "name": "Purnia",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 13,
+      "name": "Madhepura",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 14,
+      "name": "Darbhanga",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 15,
+      "name": "Muzaffarpur",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 16,
+      "name": "Vaishali",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 17,
+      "name": "Gopalganj",
+      "category": "SC"
+    },
+    {
+      "state": "Bihar",
+      "number": 18,
+      "name": "Siwan",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 19,
+      "name": "Maharajganj",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 20,
+      "name": "Saran",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 21,
+      "name": "Hajipur",
+      "category": "SC"
+    },
+    {
+      "state": "Bihar",
+      "number": 22,
+      "name": "Ujiarpur",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 23,
+      "name": "Samastipur",
+      "category": "SC"
+    },
+    {
+      "state": "Bihar",
+      "number": 24,
+      "name": "Begusarai",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 25,
+      "name": "Khagaria",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 26,
+      "name": "Bhagalpur",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 27,
+      "name": "Banka",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 28,
+      "name": "Munger",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 29,
+      "name": "Nalanda",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 30,
+      "name": "Patna Sahib",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 31,
+      "name": "Pataliputra",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 32,
+      "name": "Arrah",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 33,
+      "name": "Buxar",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 34,
+      "name": "Sasaram",
+      "category": "SC"
+    },
+    {
+      "state": "Bihar",
+      "number": 35,
+      "name": "Karakat",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 36,
+      "name": "Jahanabad",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 37,
+      "name": "Aurangabad",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 38,
+      "name": "Gaya",
+      "category": "SC"
+    },
+    {
+      "state": "Bihar",
+      "number": 39,
+      "name": "Nawada",
+      "category": "General"
+    },
+    {
+      "state": "Bihar",
+      "number": 40,
+      "name": "Jamui",
+      "category": "SC"
+    },
+    {
+      "state": "Chhattisgarh",
+      "number": 1,
+      "name": "Sarguja",
+      "category": "ST"
+    },
+    {
+      "state": "Chhattisgarh",
+      "number": 2,
+      "name": "Raigarh",
+      "category": "ST"
+    },
+    {
+      "state": "Chhattisgarh",
+      "number": 3,
+      "name": "Janjgir–Champa",
+      "category": "SC"
+    },
+    {
+      "state": "Chhattisgarh",
+      "number": 4,
+      "name": "Korba",
+      "category": "General"
+    },
+    {
+      "state": "Chhattisgarh",
+      "number": 5,
+      "name": "Bilaspur",
+      "category": "General"
+    },
+    {
+      "state": "Chhattisgarh",
+      "number": 6,
+      "name": "Rajnandgaon",
+      "category": "General"
+    },
+    {
+      "state": "Chhattisgarh",
+      "number": 7,
+      "name": "Durg",
+      "category": "General"
+    },
+    {
+      "state": "Chhattisgarh",
+      "number": 8,
+      "name": "Raipur",
+      "category": "General"
+    },
+    {
+      "state": "Chhattisgarh",
+      "number": 9,
+      "name": "Mahasamund",
+      "category": "General"
+    },
+    {
+      "state": "Chhattisgarh",
+      "number": 10,
+      "name": "Bastar",
+      "category": "ST"
+    },
+    {
+      "state": "Chhattisgarh",
+      "number": 11,
+      "name": "Kanker",
+      "category": "ST"
+    },
+    {
+      "state": "Goa",
+      "number": 1,
+      "name": "North Goa",
+      "category": "General"
+    },
+    {
+      "state": "Goa",
+      "number": 2,
+      "name": "South Goa",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 1,
+      "name": "Kachchh",
+      "category": "SC"
+    },
+    {
+      "state": "Gujarat",
+      "number": 2,
+      "name": "Banaskantha",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 3,
+      "name": "Patan",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 4,
+      "name": "Mahesana",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 5,
+      "name": "Sabarkantha",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 6,
+      "name": "Gandhinagar",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 7,
+      "name": "Ahmedabad East",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 8,
+      "name": "Ahmedabad West",
+      "category": "SC"
+    },
+    {
+      "state": "Gujarat",
+      "number": 9,
+      "name": "Surendranagar",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 10,
+      "name": "Rajkot",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 11,
+      "name": "Porbandar",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 12,
+      "name": "Jamnagar",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 13,
+      "name": "Junagadh",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 14,
+      "name": "Amreli",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 15,
+      "name": "Bhavnagar",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 16,
+      "name": "Anand",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 17,
+      "name": "Kheda",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 18,
+      "name": "Panchmahal",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 19,
+      "name": "Dahod",
+      "category": "ST"
+    },
+    {
+      "state": "Gujarat",
+      "number": 20,
+      "name": "Vadodara",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 21,
+      "name": "Chhota Udaipur",
+      "category": "ST"
+    },
+    {
+      "state": "Gujarat",
+      "number": 22,
+      "name": "Bharuch",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 23,
+      "name": "Bardoli",
+      "category": "ST"
+    },
+    {
+      "state": "Gujarat",
+      "number": 24,
+      "name": "Surat",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 25,
+      "name": "Navsari",
+      "category": "General"
+    },
+    {
+      "state": "Gujarat",
+      "number": 26,
+      "name": "Valsad",
+      "category": "ST"
+    },
+    {
+      "state": "Haryana",
+      "number": 1,
+      "name": "Ambala",
+      "category": "SC"
+    },
+    {
+      "state": "Haryana",
+      "number": 2,
+      "name": "Kurukshetra",
+      "category": "General"
+    },
+    {
+      "state": "Haryana",
+      "number": 3,
+      "name": "Sirsa",
+      "category": "SC"
+    },
+    {
+      "state": "Haryana",
+      "number": 4,
+      "name": "Hisar",
+      "category": "General"
+    },
+    {
+      "state": "Haryana",
+      "number": 5,
+      "name": "Karnal",
+      "category": "General"
+    },
+    {
+      "state": "Haryana",
+      "number": 6,
+      "name": "Sonipat",
+      "category": "General"
+    },
+    {
+      "state": "Haryana",
+      "number": 7,
+      "name": "Rohtak",
+      "category": "General"
+    },
+    {
+      "state": "Haryana",
+      "number": 8,
+      "name": "Bhiwani–Mahendragarh",
+      "category": "General"
+    },
+    {
+      "state": "Haryana",
+      "number": 9,
+      "name": "Gurgaon",
+      "category": "General"
+    },
+    {
+      "state": "Haryana",
+      "number": 10,
+      "name": "Faridabad",
+      "category": "General"
+    },
+    {
+      "state": "Himachal Pradesh",
+      "number": 1,
+      "name": "Kangra",
+      "category": "General"
+    },
+    {
+      "state": "Himachal Pradesh",
+      "number": 2,
+      "name": "Mandi",
+      "category": "General"
+    },
+    {
+      "state": "Himachal Pradesh",
+      "number": 3,
+      "name": "Hamirpur",
+      "category": "General"
+    },
+    {
+      "state": "Himachal Pradesh",
+      "number": 4,
+      "name": "Shimla",
+      "category": "SC"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 1,
+      "name": "Rajmahal",
+      "category": "ST"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 2,
+      "name": "Dumka",
+      "category": "ST"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 3,
+      "name": "Godda",
+      "category": "General"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 4,
+      "name": "Chatra",
+      "category": "General"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 5,
+      "name": "Koderma",
+      "category": "General"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 6,
+      "name": "Giridih",
+      "category": "General"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 7,
+      "name": "Dhanbad",
+      "category": "General"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 8,
+      "name": "Ranchi",
+      "category": "General"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 9,
+      "name": "Jamshedpur",
+      "category": "General"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 10,
+      "name": "Singhbhum",
+      "category": "ST"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 11,
+      "name": "Khunti",
+      "category": "ST"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 12,
+      "name": "Lohardaga",
+      "category": "ST"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 13,
+      "name": "Palamu",
+      "category": "SC"
+    },
+    {
+      "state": "Jharkhand",
+      "number": 14,
+      "name": "Hazaribagh",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 1,
+      "name": "Chikkodi",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 2,
+      "name": "Belgaum",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 3,
+      "name": "Bagalkot",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 4,
+      "name": "Bijapur",
+      "category": "SC"
+    },
+    {
+      "state": "Karnataka",
+      "number": 5,
+      "name": "Gulbarga",
+      "category": "SC"
+    },
+    {
+      "state": "Karnataka",
+      "number": 6,
+      "name": "Raichur",
+      "category": "ST"
+    },
+    {
+      "state": "Karnataka",
+      "number": 7,
+      "name": "Bidar",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 8,
+      "name": "Koppal",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 9,
+      "name": "Bellary",
+      "category": "ST"
+    },
+    {
+      "state": "Karnataka",
+      "number": 10,
+      "name": "Haveri",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 11,
+      "name": "Dharwad",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 12,
+      "name": "Uttara Kannada",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 13,
+      "name": "Davanagere",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 14,
+      "name": "Shimoga",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 15,
+      "name": "Udupi Chikmagalur",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 16,
+      "name": "Hassan",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 17,
+      "name": "Dakshina Kannada",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 18,
+      "name": "Chitradurga",
+      "category": "SC"
+    },
+    {
+      "state": "Karnataka",
+      "number": 19,
+      "name": "Tumkur",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 20,
+      "name": "Mandya",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 21,
+      "name": "Mysore",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 22,
+      "name": "Chamarajanagar",
+      "category": "SC"
+    },
+    {
+      "state": "Karnataka",
+      "number": 23,
+      "name": "Bangalore Rural",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 24,
+      "name": "Bangalore North",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 25,
+      "name": "Bangalore Central",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 26,
+      "name": "Bangalore South",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 27,
+      "name": "Chikballapur",
+      "category": "General"
+    },
+    {
+      "state": "Karnataka",
+      "number": 28,
+      "name": "Kolar",
+      "category": "SC"
+    },
+    {
+      "state": "Kerala",
+      "number": 1,
+      "name": "Kasaragod",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 2,
+      "name": "Kannur",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 3,
+      "name": "Vatakara",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 4,
+      "name": "Wayanad",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 5,
+      "name": "Kozhikode",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 6,
+      "name": "Malappuram",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 7,
+      "name": "Ponnani",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 8,
+      "name": "Palakkad",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 9,
+      "name": "Alathur",
+      "category": "SC"
+    },
+    {
+      "state": "Kerala",
+      "number": 10,
+      "name": "Thrissur",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 11,
+      "name": "Chalakudy",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 12,
+      "name": "Ernakulam",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 13,
+      "name": "Idukki",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 14,
+      "name": "Kottayam",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 15,
+      "name": "Alappuzha",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 16,
+      "name": "Mavelikara",
+      "category": "SC"
+    },
+    {
+      "state": "Kerala",
+      "number": 17,
+      "name": "Pathanamthitta",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 18,
+      "name": "Kollam",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 19,
+      "name": "Attingal",
+      "category": "General"
+    },
+    {
+      "state": "Kerala",
+      "number": 20,
+      "name": "Thiruvananthapuram",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 1,
+      "name": "Morena",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 2,
+      "name": "Bhind",
+      "category": "SC"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 3,
+      "name": "Gwalior",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 4,
+      "name": "Guna",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 5,
+      "name": "Sagar",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 6,
+      "name": "Tikamgarh",
+      "category": "SC"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 7,
+      "name": "Damoh",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 8,
+      "name": "Khajuraho",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 9,
+      "name": "Satna",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 10,
+      "name": "Rewa",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 11,
+      "name": "Sidhi",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 12,
+      "name": "Shahdol",
+      "category": "ST"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 13,
+      "name": "Jabalpur",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 14,
+      "name": "Mandla",
+      "category": "ST"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 15,
+      "name": "Balaghat",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 16,
+      "name": "Chhindwara",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 17,
+      "name": "Hoshangabad",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 18,
+      "name": "Vidisha",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 19,
+      "name": "Bhopal",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 20,
+      "name": "Rajgarh",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 21,
+      "name": "Dewas",
+      "category": "SC"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 22,
+      "name": "Ujjain",
+      "category": "SC"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 23,
+      "name": "Mandsaur",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 24,
+      "name": "Ratlam",
+      "category": "ST"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 25,
+      "name": "Dhar",
+      "category": "ST"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 26,
+      "name": "Indore",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 27,
+      "name": "Khargone",
+      "category": "ST"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 28,
+      "name": "Khandwa",
+      "category": "General"
+    },
+    {
+      "state": "Madhya Pradesh",
+      "number": 29,
+      "name": "Betul",
+      "category": "ST"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 1,
+      "name": "Nandurbar",
+      "category": "ST"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 2,
+      "name": "Dhule",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 3,
+      "name": "Jalgaon",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 4,
+      "name": "Raver",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 5,
+      "name": "Buldhana",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 6,
+      "name": "Akola",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 7,
+      "name": "Amravati",
+      "category": "SC"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 8,
+      "name": "Wardha",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 9,
+      "name": "Ramtek",
+      "category": "SC"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 10,
+      "name": "Nagpur",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 11,
+      "name": "Bhandara–Gondiya",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 12,
+      "name": "Gadchiroli–Chimur",
+      "category": "ST"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 13,
+      "name": "Chandrapur",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 14,
+      "name": "Yavatmal–Washim",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 15,
+      "name": "Hingoli",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 16,
+      "name": "Nanded",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 17,
+      "name": "Parbhani",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 18,
+      "name": "Jalna",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 19,
+      "name": "Aurangabad",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 20,
+      "name": "Dindori",
+      "category": "ST"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 21,
+      "name": "Nashik",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 22,
+      "name": "Palghar",
+      "category": "ST"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 23,
+      "name": "Bhiwandi",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 24,
+      "name": "Kalyan",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 25,
+      "name": "Thane",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 26,
+      "name": "Mumbai North",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 27,
+      "name": "Mumbai North West",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 28,
+      "name": "Mumbai North East",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 29,
+      "name": "Mumbai North Central",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 30,
+      "name": "Mumbai South Central",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 31,
+      "name": "Mumbai South",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 32,
+      "name": "Raigad",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 33,
+      "name": "Maval",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 34,
+      "name": "Pune",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 35,
+      "name": "Baramati",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 36,
+      "name": "Shirur",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 37,
+      "name": "Ahmednagar",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 38,
+      "name": "Shirdi",
+      "category": "SC"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 39,
+      "name": "Beed",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 40,
+      "name": "Osmanabad",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 41,
+      "name": "Latur",
+      "category": "SC"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 42,
+      "name": "Solapur",
+      "category": "SC"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 43,
+      "name": "Madha",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 44,
+      "name": "Sangli",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 45,
+      "name": "Satara",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 46,
+      "name": "Ratnagiri– Sindhudurg",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 47,
+      "name": "Kolhapur",
+      "category": "General"
+    },
+    {
+      "state": "Maharashtra",
+      "number": 48,
+      "name": "Hatkanangle",
+      "category": "General"
+    },
+    {
+      "state": "Manipur",
+      "number": 1,
+      "name": "Inner Manipur",
+      "category": "General"
+    },
+    {
+      "state": "Manipur",
+      "number": 2,
+      "name": "Outer Manipur",
+      "category": "ST"
+    },
+    {
+      "state": "Meghalaya",
+      "number": 1,
+      "name": "Shillong",
+      "category": "ST"
+    },
+    {
+      "state": "Meghalaya",
+      "number": 2,
+      "name": "Tura",
+      "category": "ST"
+    },
+    {
+      "state": "Mizoram",
+      "number": 1,
+      "name": "Mizoram",
+      "category": "ST"
+    },
+    {
+      "state": "Nagaland",
+      "number": 1,
+      "name": "Nagaland",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 1,
+      "name": "Bargarh",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 2,
+      "name": "Sundargarh",
+      "category": "ST"
+    },
+    {
+      "state": "Odisha",
+      "number": 3,
+      "name": "Sambalpur",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 4,
+      "name": "Keonjhar",
+      "category": "ST"
+    },
+    {
+      "state": "Odisha",
+      "number": 5,
+      "name": "Mayurbhanj",
+      "category": "ST"
+    },
+    {
+      "state": "Odisha",
+      "number": 6,
+      "name": "Balasore",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 7,
+      "name": "Bhadrak",
+      "category": "SC"
+    },
+    {
+      "state": "Odisha",
+      "number": 8,
+      "name": "Jajpur",
+      "category": "SC"
+    },
+    {
+      "state": "Odisha",
+      "number": 9,
+      "name": "Dhenkanal",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 10,
+      "name": "Bolangir",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 11,
+      "name": "Kalahandi",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 12,
+      "name": "Nabarangpur",
+      "category": "ST"
+    },
+    {
+      "state": "Odisha",
+      "number": 13,
+      "name": "Kandhamal",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 14,
+      "name": "Cuttack",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 15,
+      "name": "Kendrapara",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 16,
+      "name": "Jagatsinghpur",
+      "category": "SC"
+    },
+    {
+      "state": "Odisha",
+      "number": 17,
+      "name": "Puri",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 18,
+      "name": "Bhubaneswar",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 19,
+      "name": "Aska",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 20,
+      "name": "Berhampur",
+      "category": "General"
+    },
+    {
+      "state": "Odisha",
+      "number": 21,
+      "name": "Koraput",
+      "category": "ST"
+    },
+    {
+      "state": "Punjab",
+      "number": 1,
+      "name": "Gurdaspur",
+      "category": "General"
+    },
+    {
+      "state": "Punjab",
+      "number": 2,
+      "name": "Amritsar",
+      "category": "General"
+    },
+    {
+      "state": "Punjab",
+      "number": 3,
+      "name": "Khadoor Sahib",
+      "category": "General"
+    },
+    {
+      "state": "Punjab",
+      "number": 4,
+      "name": "Jalandhar",
+      "category": "SC"
+    },
+    {
+      "state": "Punjab",
+      "number": 5,
+      "name": "Hoshiarpur",
+      "category": "SC"
+    },
+    {
+      "state": "Punjab",
+      "number": 6,
+      "name": "Anandpur Sahib",
+      "category": "General"
+    },
+    {
+      "state": "Punjab",
+      "number": 7,
+      "name": "Ludhiana",
+      "category": "General"
+    },
+    {
+      "state": "Punjab",
+      "number": 8,
+      "name": "Fatehgarh Sahib",
+      "category": "SC"
+    },
+    {
+      "state": "Punjab",
+      "number": 9,
+      "name": "Faridkot",
+      "category": "SC"
+    },
+    {
+      "state": "Punjab",
+      "number": 10,
+      "name": "Firozpur",
+      "category": "General"
+    },
+    {
+      "state": "Punjab",
+      "number": 11,
+      "name": "Bathinda",
+      "category": "General"
+    },
+    {
+      "state": "Punjab",
+      "number": 12,
+      "name": "Sangrur",
+      "category": "General"
+    },
+    {
+      "state": "Punjab",
+      "number": 13,
+      "name": "Patiala",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 1,
+      "name": "Ganganagar",
+      "category": "SC"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 2,
+      "name": "Bikaner",
+      "category": "SC"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 3,
+      "name": "Churu",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 4,
+      "name": "Jhunjhunu",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 5,
+      "name": "Sikar",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 6,
+      "name": "Jaipur Rural",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 7,
+      "name": "Jaipur",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 8,
+      "name": "Alwar",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 9,
+      "name": "Bharatpur",
+      "category": "SC"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 10,
+      "name": "Karauli–Dholpur",
+      "category": "SC"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 11,
+      "name": "Dausa",
+      "category": "ST"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 12,
+      "name": "Tonk–Sawai Madhopur",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 13,
+      "name": "Ajmer",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 14,
+      "name": "Nagaur",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 15,
+      "name": "Pali",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 16,
+      "name": "Jodhpur",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 17,
+      "name": "Barmer",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 18,
+      "name": "Jalore",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 19,
+      "name": "Udaipur",
+      "category": "ST"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 20,
+      "name": "Banswara",
+      "category": "ST"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 21,
+      "name": "Chittorgarh",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 22,
+      "name": "Rajsamand",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 23,
+      "name": "Bhilwara",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 24,
+      "name": "Kota",
+      "category": "General"
+    },
+    {
+      "state": "Rajasthan",
+      "number": 25,
+      "name": "Jhalawar–Baran",
+      "category": "General"
+    },
+    {
+      "state": "Sikkim",
+      "number": 1,
+      "name": "Sikkim",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 1,
+      "name": "Tiruvallur",
+      "category": "SC"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 2,
+      "name": "Chennai North",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 3,
+      "name": "Chennai South",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 4,
+      "name": "Chennai Central",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 5,
+      "name": "Sriperumbudur",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 6,
+      "name": "Kancheepuram",
+      "category": "SC"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 7,
+      "name": "Arakkonam",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 8,
+      "name": "Vellore",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 9,
+      "name": "Krishnagiri",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 10,
+      "name": "Dharmapuri",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 11,
+      "name": "Tiruvannamalai",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 12,
+      "name": "Arani",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 13,
+      "name": "Viluppuram",
+      "category": "SC"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 14,
+      "name": "Kallakurichi",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 15,
+      "name": "Salem",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 16,
+      "name": "Namakkal",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 17,
+      "name": "Erode",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 18,
+      "name": "Tiruppur",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 19,
+      "name": "Nilgiris",
+      "category": "SC"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 20,
+      "name": "Coimbatore",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 21,
+      "name": "Pollachi",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 22,
+      "name": "Dindigul",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 23,
+      "name": "Karur",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 24,
+      "name": "Tiruchirappalli",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 25,
+      "name": "Perambalur",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 26,
+      "name": "Cuddalore",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 27,
+      "name": "Chidambaram",
+      "category": "SC"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 28,
+      "name": "Mayiladuthurai",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 29,
+      "name": "Nagapattinam",
+      "category": "SC"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 30,
+      "name": "Thanjavur",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 31,
+      "name": "Sivaganga",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 32,
+      "name": "Madurai",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 33,
+      "name": "Theni",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 34,
+      "name": "Virudhunagar",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 35,
+      "name": "Ramanathapuram",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 36,
+      "name": "Thoothukkudi",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 37,
+      "name": "Tenkasi",
+      "category": "SC"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 38,
+      "name": "Tirunelveli",
+      "category": "General"
+    },
+    {
+      "state": "Tamil Nadu",
+      "number": 39,
+      "name": "Kanniyakumari",
+      "category": "General"
+    },
+    {
+      "state": "Telangana",
+      "number": 1,
+      "name": "Adilabad",
+      "category": "ST"
+    },
+    {
+      "state": "Telangana",
+      "number": 2,
+      "name": "Peddapalli",
+      "category": "SC"
+    },
+    {
+      "state": "Telangana",
+      "number": 3,
+      "name": "Karimnagar",
+      "category": "General"
+    },
+    {
+      "state": "Telangana",
+      "number": 4,
+      "name": "Nizamabad",
+      "category": "General"
+    },
+    {
+      "state": "Telangana",
+      "number": 5,
+      "name": "Zahirabad",
+      "category": "General"
+    },
+    {
+      "state": "Telangana",
+      "number": 6,
+      "name": "Medak",
+      "category": "General"
+    },
+    {
+      "state": "Telangana",
+      "number": 7,
+      "name": "Malkajgiri",
+      "category": "General"
+    },
+    {
+      "state": "Telangana",
+      "number": 8,
+      "name": "Secunderabad",
+      "category": "General"
+    },
+    {
+      "state": "Telangana",
+      "number": 9,
+      "name": "Hyderabad",
+      "category": "General"
+    },
+    {
+      "state": "Telangana",
+      "number": 10,
+      "name": "Chevella",
+      "category": "General"
+    },
+    {
+      "state": "Telangana",
+      "number": 11,
+      "name": "Mahabubnagar",
+      "category": "General"
+    },
+    {
+      "state": "Telangana",
+      "number": 12,
+      "name": "Nagarkurnool",
+      "category": "SC"
+    },
+    {
+      "state": "Telangana",
+      "number": 13,
+      "name": "Nalgonda",
+      "category": "General"
+    },
+    {
+      "state": "Telangana",
+      "number": 14,
+      "name": "Bhongir",
+      "category": "General"
+    },
+    {
+      "state": "Telangana",
+      "number": 15,
+      "name": "Warangal",
+      "category": "SC"
+    },
+    {
+      "state": "Telangana",
+      "number": 16,
+      "name": "Mahabubabad",
+      "category": "ST"
+    },
+    {
+      "state": "Telangana",
+      "number": 17,
+      "name": "Khammam",
+      "category": "General"
+    },
+    {
+      "state": "Tripura",
+      "number": 1,
+      "name": "Tripura West",
+      "category": "General"
+    },
+    {
+      "state": "Tripura",
+      "number": 2,
+      "name": "Tripura East",
+      "category": "ST"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 1,
+      "name": "Saharanpur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 2,
+      "name": "Kairana",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 3,
+      "name": "Muzaffarnagar",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 4,
+      "name": "Bijnor",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 5,
+      "name": "Nagina",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 6,
+      "name": "Moradabad",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 7,
+      "name": "Rampur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 8,
+      "name": "Sambhal",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 9,
+      "name": "Amroha",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 10,
+      "name": "Meerut",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 11,
+      "name": "Baghpat",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 12,
+      "name": "Ghaziabad",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 13,
+      "name": "Gautam Buddha Nagar",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 14,
+      "name": "Bulandshahr",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 15,
+      "name": "Aligarh",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 16,
+      "name": "Hathras",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 17,
+      "name": "Mathura",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 18,
+      "name": "Agra",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 19,
+      "name": "Fatehpur Sikri",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 20,
+      "name": "Firozabad",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 21,
+      "name": "Mainpuri",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 22,
+      "name": "Etah",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 23,
+      "name": "Badaun",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 24,
+      "name": "Aonla",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 25,
+      "name": "Bareilly",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 26,
+      "name": "Pilibhit",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 27,
+      "name": "Shahjahanpur",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 28,
+      "name": "Kheri",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 29,
+      "name": "Dhaurahra",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 30,
+      "name": "Sitapur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 31,
+      "name": "Hardoi",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 32,
+      "name": "Misrikh",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 33,
+      "name": "Unnao",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 34,
+      "name": "Mohanlalganj",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 35,
+      "name": "Lucknow",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 36,
+      "name": "Rae Bareli",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 37,
+      "name": "Amethi",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 38,
+      "name": "Sultanpur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 39,
+      "name": "Pratapgarh",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 40,
+      "name": "Farrukhabad",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 41,
+      "name": "Etawah",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 42,
+      "name": "Kannauj",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 43,
+      "name": "Kanpur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 44,
+      "name": "Akbarpur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 45,
+      "name": "Jalaun",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 46,
+      "name": "Jhansi",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 47,
+      "name": "Hamirpur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 48,
+      "name": "Banda",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 49,
+      "name": "Fatehpur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 50,
+      "name": "Kaushambi",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 51,
+      "name": "Phulpur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 52,
+      "name": "Allahabad",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 53,
+      "name": "Barabanki",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 54,
+      "name": "Faizabad",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 55,
+      "name": "Ambedkar Nagar",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 56,
+      "name": "Bahraich",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 57,
+      "name": "Kaiserganj",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 58,
+      "name": "Shrawasti",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 59,
+      "name": "Gonda",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 60,
+      "name": "Domariyaganj",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 61,
+      "name": "Basti",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 62,
+      "name": "Sant Kabir Nagar",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 63,
+      "name": "Maharajganj",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 64,
+      "name": "Gorakhpur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 65,
+      "name": "Kushi Nagar",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 66,
+      "name": "Deoria",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 67,
+      "name": "Bansgaon",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 68,
+      "name": "Lalganj",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 69,
+      "name": "Azamgarh",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 70,
+      "name": "Ghosi",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 71,
+      "name": "Salempur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 72,
+      "name": "Ballia",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 73,
+      "name": "Jaunpur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 74,
+      "name": "Machhlishahr",
+      "category": "SC"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 75,
+      "name": "Ghazipur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 76,
+      "name": "Chandauli",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 77,
+      "name": "Varanasi",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 78,
+      "name": "Bhadohi",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 79,
+      "name": "Mirzapur",
+      "category": "General"
+    },
+    {
+      "state": "Uttar Pradesh",
+      "number": 80,
+      "name": "Robertsganj",
+      "category": "SC"
+    },
+    {
+      "state": "Uttarakhand",
+      "number": 1,
+      "name": "Tehri Garhwal",
+      "category": "General"
+    },
+    {
+      "state": "Uttarakhand",
+      "number": 2,
+      "name": "Garhwal",
+      "category": "General"
+    },
+    {
+      "state": "Uttarakhand",
+      "number": 3,
+      "name": "Almora",
+      "category": "SC"
+    },
+    {
+      "state": "Uttarakhand",
+      "number": 4,
+      "name": "Nainital–Udhamsingh Nagar",
+      "category": "General"
+    },
+    {
+      "state": "Uttarakhand",
+      "number": 5,
+      "name": "Haridwar",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 1,
+      "name": "Cooch Behar",
+      "category": "SC"
+    },
+    {
+      "state": "West Bengal",
+      "number": 2,
+      "name": "Alipurduars",
+      "category": "ST"
+    },
+    {
+      "state": "West Bengal",
+      "number": 3,
+      "name": "Jalpaiguri",
+      "category": "SC"
+    },
+    {
+      "state": "West Bengal",
+      "number": 4,
+      "name": "Darjeeling",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 5,
+      "name": "Raiganj",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 6,
+      "name": "Balurghat",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 7,
+      "name": "Maldaha Uttar",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 8,
+      "name": "Maldaha Dakshin",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 9,
+      "name": "Jangipur",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 10,
+      "name": "Baharampur",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 11,
+      "name": "Murshidabad",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 12,
+      "name": "Krishnanagar",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 13,
+      "name": "Ranaghat",
+      "category": "SC"
+    },
+    {
+      "state": "West Bengal",
+      "number": 14,
+      "name": "Bangaon",
+      "category": "SC"
+    },
+    {
+      "state": "West Bengal",
+      "number": 15,
+      "name": "Barrackpore",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 16,
+      "name": "Dum Dum",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 17,
+      "name": "Barasat",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 18,
+      "name": "Basirhat",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 19,
+      "name": "Jaynagar",
+      "category": "SC"
+    },
+    {
+      "state": "West Bengal",
+      "number": 20,
+      "name": "Mathurapur",
+      "category": "SC"
+    },
+    {
+      "state": "West Bengal",
+      "number": 21,
+      "name": "Diamond Harbour",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 22,
+      "name": "Jadavpur",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 23,
+      "name": "Kolkata Dakshin",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 24,
+      "name": "Kolkata Uttar",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 25,
+      "name": "Howrah",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 26,
+      "name": "Uluberia",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 27,
+      "name": "Sreerampur",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 28,
+      "name": "Hooghly",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 29,
+      "name": "Arambagh",
+      "category": "SC"
+    },
+    {
+      "state": "West Bengal",
+      "number": 30,
+      "name": "Tamluk",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 31,
+      "name": "Kanthi",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 32,
+      "name": "Ghatal",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 33,
+      "name": "Jhargram",
+      "category": "ST"
+    },
+    {
+      "state": "West Bengal",
+      "number": 34,
+      "name": "Medinipur",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 35,
+      "name": "Purulia",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 36,
+      "name": "Bankura",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 37,
+      "name": "Bishnupur",
+      "category": "SC"
+    },
+    {
+      "state": "West Bengal",
+      "number": 38,
+      "name": "Bardhaman Purba",
+      "category": "SC"
+    },
+    {
+      "state": "West Bengal",
+      "number": 39,
+      "name": "Bardhaman– Durgapur",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 40,
+      "name": "Asansol",
+      "category": "General"
+    },
+    {
+      "state": "West Bengal",
+      "number": 41,
+      "name": "Bolpur",
+      "category": "SC"
+    },
+    {
+      "state": "West Bengal",
+      "number": 42,
+      "name": "Birbhum",
+      "category": "General"
+    },
+    {
+      "state": "Andaman and Nicobar Islands",
+      "number": 1,
+      "name": "Andaman and Nicobar Islands",
+      "category": "General"
+    },
+    {
+      "state": "Chandigarh",
+      "number": 1,
+      "name": "Chandigarh",
+      "category": "General"
+    },
+    {
+      "state": "Dadra and Nagar Haveli and Daman and Diu",
+      "number": 1,
+      "name": "Daman and Diu",
+      "category": "General"
+    },
+    {
+      "state": "Dadra and Nagar Haveli and Daman and Diu",
+      "number": 2,
+      "name": "Dadra and Nagar Haveli",
+      "category": "ST"
+    },
+    {
+      "state": "Jammu and Kashmir",
+      "number": 1,
+      "name": "Baramulla",
+      "category": "General"
+    },
+    {
+      "state": "Jammu and Kashmir",
+      "number": 2,
+      "name": "Srinagar",
+      "category": "General"
+    },
+    {
+      "state": "Jammu and Kashmir",
+      "number": 3,
+      "name": "Anantnag–Rajouri",
+      "category": "General"
+    },
+    {
+      "state": "Jammu and Kashmir",
+      "number": 4,
+      "name": "Udhampur",
+      "category": "General"
+    },
+    {
+      "state": "Jammu and Kashmir",
+      "number": 5,
+      "name": "Jammu",
+      "category": "General"
+    },
+    {
+      "state": "Ladakh",
+      "number": 1,
+      "name": "Ladakh",
+      "category": "General"
+    },
+    {
+      "state": "Lakshadweep",
+      "number": 1,
+      "name": "Lakshadweep",
+      "category": "ST"
+    },
+    {
+      "state": "NCT of Delhi",
+      "number": 1,
+      "name": "Chandni Chowk",
+      "category": "General"
+    },
+    {
+      "state": "NCT of Delhi",
+      "number": 2,
+      "name": "North East Delhi",
+      "category": "General"
+    },
+    {
+      "state": "NCT of Delhi",
+      "number": 3,
+      "name": "East Delhi",
+      "category": "General"
+    },
+    {
+      "state": "NCT of Delhi",
+      "number": 4,
+      "name": "New Delhi",
+      "category": "General"
+    },
+    {
+      "state": "NCT of Delhi",
+      "number": 5,
+      "name": "North West Delhi",
+      "category": "SC"
+    },
+    {
+      "state": "NCT of Delhi",
+      "number": 6,
+      "name": "West Delhi",
+      "category": "General"
+    },
+    {
+      "state": "NCT of Delhi",
+      "number": 7,
+      "name": "South Delhi",
+      "category": "General"
+    },
+    {
+      "state": "Puducherry",
+      "number": 1,
+      "name": "Puducherry",
+      "category": "General"
+    }
+  ]
+}
