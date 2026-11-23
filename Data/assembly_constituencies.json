@@ -1,0 +1,1805 @@
+{
+  "schema_version": 1,
+  "dataset": "State Assembly constituencies",
+  "source_scope": "Karnataka records transcribed from the existing project constituency list, aligned to the supplied 2008 delimitation order; future jurisdictions may include clearly marked fictional placeholders as requested.",
+  "validation": {
+    "total_constituencies": 224,
+    "general": 173,
+    "sc": 36,
+    "st": 15
+  },
+  "constituencies": [
+    {
+      "state": "Karnataka",
+      "number": 1,
+      "name": "Nippani",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 2,
+      "name": "Chikkodi-Sadalga",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 3,
+      "name": "Athani",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 4,
+      "name": "Kagwad",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 5,
+      "name": "Kudachi (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 6,
+      "name": "Raibag (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 7,
+      "name": "Hukkeri",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 8,
+      "name": "Arabhavi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 9,
+      "name": "Gokak",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 10,
+      "name": "Yemkanmardi (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 11,
+      "name": "Belgaum Uttar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 12,
+      "name": "Belgaum Dakshin",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 13,
+      "name": "Belgaum Rural",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 14,
+      "name": "Khanapur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 15,
+      "name": "Kittur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 16,
+      "name": "Bailhongal",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 17,
+      "name": "Saundatti Yellamma",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 18,
+      "name": "Ramdurg",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 19,
+      "name": "Mudhol (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 20,
+      "name": "Terdal",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 21,
+      "name": "Jamkhandi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 22,
+      "name": "Bilgi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 23,
+      "name": "Badami",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 24,
+      "name": "Bagalkot",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 25,
+      "name": "Hungund",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 26,
+      "name": "Muddebihal",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 27,
+      "name": "Devar Hippargi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 28,
+      "name": "Basavana Bagevadi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 29,
+      "name": "Babaleshwar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 30,
+      "name": "Bijapur City",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 31,
+      "name": "Nagathan (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 32,
+      "name": "Indi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 33,
+      "name": "Sindagi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 34,
+      "name": "Afzalpur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 35,
+      "name": "Jevargi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 36,
+      "name": "Shorapur (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 37,
+      "name": "Shahapur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 38,
+      "name": "Yadgir",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 39,
+      "name": "Gurmitkal",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 40,
+      "name": "Chittapur (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 41,
+      "name": "Sedam",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 42,
+      "name": "Chincholi (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 43,
+      "name": "Gulbarga Rural (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 44,
+      "name": "Gulbarga Dakshin",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 45,
+      "name": "Gulbarga Uttar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 46,
+      "name": "Aland",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 47,
+      "name": "Basavakalyan",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 48,
+      "name": "Humnabad",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 49,
+      "name": "Bidar South",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 50,
+      "name": "Bidar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 51,
+      "name": "Bhalki",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 52,
+      "name": "Aurad (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 53,
+      "name": "Raichur Rural (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 54,
+      "name": "Raichur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 55,
+      "name": "Manvi (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 56,
+      "name": "Devadurga (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 57,
+      "name": "Lingsugur (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 58,
+      "name": "Sindhanur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 59,
+      "name": "Maski (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 60,
+      "name": "Kushtagi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 61,
+      "name": "Kanakagiri (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 62,
+      "name": "Gangawati",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 63,
+      "name": "Yelburga",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 64,
+      "name": "Koppal",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 65,
+      "name": "Shirahatti (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 66,
+      "name": "Gadag",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 67,
+      "name": "Ron",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 68,
+      "name": "Nargund",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 69,
+      "name": "Navalgund",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 70,
+      "name": "Kundgol",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 71,
+      "name": "Dharwad",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 72,
+      "name": "Hubli-Dharwad East (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 73,
+      "name": "Hubli-Dharwad Central",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 74,
+      "name": "Hubli-Dharwad West",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 75,
+      "name": "Kalghatgi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 76,
+      "name": "Haliyal",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 77,
+      "name": "Karwar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 78,
+      "name": "Kumta",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 79,
+      "name": "Bhatkal",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 80,
+      "name": "Sirsi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 81,
+      "name": "Yellapur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 82,
+      "name": "Hangal",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 83,
+      "name": "Shiggaon",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 84,
+      "name": "Haveri (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 85,
+      "name": "Byadgi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 86,
+      "name": "Hirekerur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 87,
+      "name": "Ranebennur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 88,
+      "name": "Hoovina Hadagali (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 89,
+      "name": "Hagaribommanahalli (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 90,
+      "name": "Vijayanagara",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 91,
+      "name": "Kampli (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 92,
+      "name": "Siruguppa (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 93,
+      "name": "Bellary Rural (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 94,
+      "name": "Bellary City",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 95,
+      "name": "Sandur (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 96,
+      "name": "Kudligi (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 97,
+      "name": "Molakalmuru (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 98,
+      "name": "Challakere (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 99,
+      "name": "Chitradurga",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 100,
+      "name": "Hiriyur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 101,
+      "name": "Hosadurga",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 102,
+      "name": "Holalkere (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 103,
+      "name": "Jagalur (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 104,
+      "name": "Harapanahalli",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 105,
+      "name": "Harihar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 106,
+      "name": "Davanagere North",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 107,
+      "name": "Davanagere South",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 108,
+      "name": "Mayakonda (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 109,
+      "name": "Channagiri",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 110,
+      "name": "Honnali",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 111,
+      "name": "Shimoga Rural (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 112,
+      "name": "Bhadravati",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 113,
+      "name": "Shimoga",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 114,
+      "name": "Tirthahalli",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 115,
+      "name": "Shikaripura",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 116,
+      "name": "Soraba",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 117,
+      "name": "Sagar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 118,
+      "name": "Byndoor",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 119,
+      "name": "Kundapura",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 120,
+      "name": "Udupi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 121,
+      "name": "Kapu",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 122,
+      "name": "Karkala",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 123,
+      "name": "Sringeri",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 124,
+      "name": "Mudigere (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 125,
+      "name": "Chikmagalur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 126,
+      "name": "Tarikere",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 127,
+      "name": "Kadur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 128,
+      "name": "Chiknayakanhalli",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 129,
+      "name": "Tiptur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 130,
+      "name": "Turuvekere",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 131,
+      "name": "Kunigal",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 132,
+      "name": "Tumkur City",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 133,
+      "name": "Tumkur Rural",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 134,
+      "name": "Koratagere (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 135,
+      "name": "Gubbi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 136,
+      "name": "Sira",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 137,
+      "name": "Pavagada (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 138,
+      "name": "Madhugiri",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 139,
+      "name": "Gauribidanur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 140,
+      "name": "Bagepalli",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 141,
+      "name": "Chikkaballapur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 142,
+      "name": "Sidlaghatta",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 143,
+      "name": "Chintamani",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 144,
+      "name": "Srinivaspur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 145,
+      "name": "Mulbagal (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 146,
+      "name": "Kolar Gold Field (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 147,
+      "name": "Bangarapet (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 148,
+      "name": "Kolar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 149,
+      "name": "Malur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 150,
+      "name": "Yelahanka",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 151,
+      "name": "Krishnarajapuram",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 152,
+      "name": "Byatarayanapura",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 153,
+      "name": "Yeshwantpur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 154,
+      "name": "Rajarajeshwarinagar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 155,
+      "name": "Dasarahalli",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 156,
+      "name": "Mahalakshmi Layout",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 157,
+      "name": "Malleshwaram",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 158,
+      "name": "Hebbal",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 159,
+      "name": "Pulakeshinagar (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 160,
+      "name": "Sarvagnanagar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 161,
+      "name": "C. V. Raman Nagar (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 162,
+      "name": "Shivajinagar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 163,
+      "name": "Shanti Nagar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 164,
+      "name": "Gandhi Nagar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 165,
+      "name": "Rajaji Nagar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 166,
+      "name": "Govindraj Nagar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 167,
+      "name": "Vijay Nagar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 168,
+      "name": "Chamrajpet",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 169,
+      "name": "Chickpet",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 170,
+      "name": "Basavanagudi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 171,
+      "name": "Padmanabhanagar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 172,
+      "name": "B.T.M. Layout",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 173,
+      "name": "Jayanagar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 174,
+      "name": "Mahadevapura (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 175,
+      "name": "Bommanahalli",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 176,
+      "name": "Bangalore South",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 177,
+      "name": "Anekal (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 178,
+      "name": "Hosakote",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 179,
+      "name": "Devanahalli (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 180,
+      "name": "Doddaballapur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 181,
+      "name": "Nelamangala (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 182,
+      "name": "Magadi",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 183,
+      "name": "Ramanagaram",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 184,
+      "name": "Kanakapura",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 185,
+      "name": "Channapatna",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 186,
+      "name": "Malavalli (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 187,
+      "name": "Maddur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 188,
+      "name": "Melukote",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 189,
+      "name": "Mandya",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 190,
+      "name": "Shrirangapattana",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 191,
+      "name": "Nagamangala",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 192,
+      "name": "Krishnarajapet",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 193,
+      "name": "Shravanabelagola",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 194,
+      "name": "Arsikere",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 195,
+      "name": "Belur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 196,
+      "name": "Hassan",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 197,
+      "name": "Holenarasipur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 198,
+      "name": "Arkalgud",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 199,
+      "name": "Sakleshpur (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 200,
+      "name": "Belthangady",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 201,
+      "name": "Moodabidri",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 202,
+      "name": "Mangalore City North",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 203,
+      "name": "Mangalore City South",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 204,
+      "name": "Mangalore",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 205,
+      "name": "Bantval",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 206,
+      "name": "Puttur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 207,
+      "name": "Sullia (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 208,
+      "name": "Madikeri",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 209,
+      "name": "Virajpet",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 210,
+      "name": "Periyapatna",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 211,
+      "name": "Krishnarajanagara",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 212,
+      "name": "Hunsur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 213,
+      "name": "Heggadadevankote (ST)",
+      "category": "ST",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 214,
+      "name": "Nanjangud (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 215,
+      "name": "Chamundeshwari",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 216,
+      "name": "Krishnaraja",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 217,
+      "name": "Chamaraja",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 218,
+      "name": "Narasimharaja",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 219,
+      "name": "Varuna",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 220,
+      "name": "T. Narasipur (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 221,
+      "name": "Hanur",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 222,
+      "name": "Kollegal (SC)",
+      "category": "SC",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 223,
+      "name": "Chamarajanagar",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    },
+    {
+      "state": "Karnataka",
+      "number": 224,
+      "name": "Gundlupet",
+      "category": "General",
+      "record_status": "real_2008_delimitation",
+      "source_document": "Delimitation of Parliamentary and Assembly Constituencies Order, 2008"
+    }
+  ]
+}
