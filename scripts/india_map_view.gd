@@ -8,8 +8,10 @@ const STATE_PALETTE: Array[Color] = [
 const NEUTRAL := Color("#263b54")
 const SELECTED := Color("#f2d27b")
 const STROKE := Color("#9eb4ce")
-const STATE_BORDER := Color("#d0dceb")
-const DISTRICT_BORDER := Color("#8199b5")
+const MAP_BACKDROP := Color("#101b2b")
+const MAP_INNER_EDGE := Color("#2a3b51")
+const STATE_BORDER := Color("#c6a65a")
+const DISTRICT_BORDER := Color("#7f91a8")
 
 var features: Array = []
 var layer_name := "Political control"
@@ -21,6 +23,9 @@ var state_support: Dictionary = {}
 var state_seats: Dictionary = {}
 var state_phases: Dictionary = {}
 var district_winners: Dictionary = {}
+var _district_winner_index: Dictionary = {}
+var _district_name_index: Dictionary = {}
+var _metric_key_index: Dictionary = {}
 var party_colors: Dictionary = {}
 var map_metrics: Dictionary = {}
 var _screen_polygons: Array = []
@@ -53,8 +58,10 @@ func set_map_state(level: int, state_name: String, district_name: String, layer:
 	state_seats = seats
 	state_phases = phases
 	district_winners = local_winners
+	_build_district_winner_index()
 	party_colors = colors_by_party
 	map_metrics = metrics_by_region
+	_build_metric_key_index()
 	queue_redraw()
 
 func _load_geojson() -> void:
@@ -71,6 +78,8 @@ func _load_geojson() -> void:
 
 func _draw() -> void:
 	_screen_polygons.clear()
+	draw_rect(Rect2(Vector2.ZERO, size), MAP_BACKDROP, true)
+	draw_rect(Rect2(Vector2(1.0, 1.0), size - Vector2(2.0, 2.0)), MAP_INNER_EDGE, false, 1.0)
 	if not _data_loaded or size.x < 2.0 or size.y < 2.0:
 		draw_string(ThemeDB.fallback_font, Vector2(16, 28), "India boundary data unavailable", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#e7edf6"))
 		return
@@ -115,7 +124,8 @@ func _draw() -> void:
 				max_point.x = maxf(max_point.x, point.x)
 				max_point.y = maxf(max_point.y, point.y)
 
-			draw_colored_polygon(points, _feature_color(state, district))
+			var fill_color := _feature_color(state, district)
+			draw_colored_polygon(points, fill_color)
 			boundary_records.append({"points": points, "state": state, "district": district})
 			_screen_polygons.append({"points": points, "state": state, "district": district})
 
@@ -153,8 +163,8 @@ func _draw() -> void:
 			for key in edge_counts:
 				if int(edge_counts[key]) == 1:
 					var edge: Array = edge_points[key]
-					draw_line(edge[0], edge[1], Color("#07111f"), 5.0, true)
-					draw_line(edge[0], edge[1], STATE_BORDER, 2.8, true)
+					draw_line(edge[0], edge[1], Color("#0a1320"), 4.2, true)
+					draw_line(edge[0], edge[1], STATE_BORDER, 1.8, true)
 		for state in state_label_candidates:
 			var candidate: Dictionary = state_label_candidates[state]
 			var font_size := _fit_label_font(str(state), candidate["rect"], float(candidate["clearance"]), 11, 6)
@@ -167,10 +177,10 @@ func _draw() -> void:
 			for i in range(points.size()):
 				var a := points[i]
 				var b := points[(i + 1) % points.size()]
-				draw_line(a, b, Color("#07111f"), 4.2, true)
-				draw_line(a, b, DISTRICT_BORDER, 2.0, true)
+				draw_line(a, b, Color("#0a1320"), 3.2, true)
+				draw_line(a, b, DISTRICT_BORDER, 1.25, true)
 			if view_level == 2 and str(record["district"]) == selected_district:
-				draw_polyline(points, SELECTED, 4.0, true)
+				draw_polyline(points, SELECTED, 3.0, true)
 		if view_level == 1:
 			for district in district_label_candidates:
 				var candidate: Dictionary = district_label_candidates[district]
@@ -181,9 +191,9 @@ func _draw() -> void:
 			_draw_map_label(selected_district, Vector2(size.x * 0.5, size.y - 26.0), 12, size.x - 24.0)
 
 	if view_level == 0:
-		draw_string(ThemeDB.fallback_font, Vector2(12, size.y - 10), "Tap a state boundary", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#9fb2c9"))
+		draw_string(ThemeDB.fallback_font, Vector2(12, size.y - 10), "Tap a state boundary", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#aebbd0"))
 	elif view_level == 1:
-		draw_string(ThemeDB.fallback_font, Vector2(12, size.y - 10), "Tap a district boundary", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#9fb2c9"))
+		draw_string(ThemeDB.fallback_font, Vector2(12, size.y - 10), "Tap a district boundary", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#aebbd0"))
 
 func _interior_label_candidate(points: PackedVector2Array) -> Dictionary:
 	var min_point := Vector2(INF, INF)
@@ -262,7 +272,9 @@ func _edge_key(a: Vector2, b: Vector2) -> String:
 	var by := int(round(b.y * 100.0))
 	var first := "%d,%d" % [ax, ay]
 	var second := "%d,%d" % [bx, by]
-	return first + "|" + second if first < second else second + "|" + first
+	if first < second:
+		return first + "|" + second
+	return second + "|" + first
 
 func _draw_map_label(label: String, center: Vector2, font_size: int, max_width: float) -> void:
 	if label.strip_edges().is_empty() or max_width <= 0.0:
@@ -272,8 +284,8 @@ func _draw_map_label(label: String, center: Vector2, font_size: int, max_width: 
 	var width := minf(max_width, measured + 4.0)
 	var baseline := center + Vector2(0.0, font_size * 0.35)
 	for offset in [Vector2(-1, 0), Vector2(1, 0), Vector2(0, -1), Vector2(0, 1)]:
-		draw_string(font, baseline + offset, label, HORIZONTAL_ALIGNMENT_CENTER, width, font_size, Color("#07111f"))
-	draw_string(font, baseline, label, HORIZONTAL_ALIGNMENT_CENTER, width, font_size, Color("#f0f4fa"))
+		draw_string(font, baseline + offset, label, HORIZONTAL_ALIGNMENT_CENTER, width, font_size, Color("#0a1320"))
+	draw_string(font, baseline, label, HORIZONTAL_ALIGNMENT_CENTER, width, font_size, Color("#e9edf4"))
 
 func _calculate_bounds() -> Rect2:
 	if _bounds_cache_valid and _cached_bounds_level == view_level and _cached_bounds_state == selected_state:
@@ -320,15 +332,30 @@ func _extract_polygons(geometry: Dictionary) -> Array:
 func _feature_color(state: String, district: String) -> Color:
 	if view_level == 2 and district == selected_district:
 		return SELECTED
-	if layer_name != "Political control":
+	if layer_name not in ["Political control", "Political influence", "Political power"]:
 		var metric_key := state
 		if view_level > 0:
 			metric_key = "%s|%s" % [state, district]
-		var region_metrics: Dictionary = map_metrics.get(metric_key, {})
+		var region_metrics: Dictionary = _lookup_map_metrics(metric_key)
 		var metric_value := float(region_metrics.get(layer_name, -1.0))
+		# Some district records use legacy spellings or are absent from older saves.
+		# In that case use the matching state's value instead of painting every
+		# district as "No recorded data". This is explicitly a state-level fallback,
+		# not a fabricated district-specific score.
+		if view_level > 0 and metric_value < 0.0:
+			var state_metrics: Dictionary = _lookup_map_metrics(state)
+			metric_value = float(state_metrics.get(layer_name, -1.0))
 		if metric_value < 0.0:
 			return NEUTRAL
 		return Color("#263b54").lerp(Color("#d6b15a"), clampf(metric_value / 100.0, 0.0, 1.0))
+	if layer_name in ["Political control", "Political influence", "Political power"]:
+		var winner_id := str(state_winners.get(state, ""))
+		if view_level > 0:
+			winner_id = _district_winner_id(state, district)
+		if winner_id.is_empty():
+			return NEUTRAL
+		var party_color := str(party_colors.get(winner_id, ""))
+		return Color(party_color) if not party_color.is_empty() else NEUTRAL
 	if layer_name == "Regional support":
 		var value := float(state_support.get(state, 0.0))
 		return Color("#102036").lerp(Color("#d6b15a"), clampf(value / 100.0, 0.0, 1.0))
@@ -342,16 +369,63 @@ func _feature_color(state: String, district: String) -> Color:
 		if phase.to_lower().contains("campaign") or phase.to_lower().contains("open"):
 			return Color("#d6b15a")
 		return NEUTRAL
-	var winner_id := str(state_winners.get(state, ""))
-	if view_level > 0:
-		var district_key := "%s|%s" % [state, district]
-		winner_id = str(district_winners.get(district_key, ""))
-	if winner_id.is_empty():
-		return NEUTRAL
-	var color_value := str(party_colors.get(winner_id, ""))
-	if color_value.is_empty():
-		return NEUTRAL
-	return Color(color_value)
+	return NEUTRAL
+
+
+func _lookup_map_metrics(key: String) -> Dictionary:
+	var exact: Variant = map_metrics.get(key, null)
+	if exact is Dictionary:
+		return exact
+	var normalized_key := _map_name_key(key)
+	var indexed_key := str(_metric_key_index.get(normalized_key, ""))
+	var indexed_metrics: Variant = map_metrics.get(indexed_key, {})
+	return indexed_metrics if indexed_metrics is Dictionary else {}
+
+func _build_metric_key_index() -> void:
+	_metric_key_index.clear()
+	for key_variant in map_metrics.keys():
+		var key := str(key_variant)
+		_metric_key_index[_map_name_key(key)] = key
+
+func _build_district_winner_index() -> void:
+	_district_winner_index.clear()
+	_district_name_index.clear()
+	for key_variant in district_winners.keys():
+		var key := str(key_variant)
+		var parts := key.split("|", false, 2)
+		if parts.size() != 2:
+			continue
+		var state_key := _map_name_key(parts[0])
+		var district_key := _map_name_key(parts[1])
+		var party_id := str(district_winners.get(key_variant, ""))
+		if party_id.is_empty():
+			continue
+		_district_winner_index[state_key + "|" + district_key] = party_id
+		var candidates: Dictionary = _district_name_index.get(district_key, {})
+		candidates[party_id] = true
+		_district_name_index[district_key] = candidates
+
+func _district_winner_id(state_name: String, district_name: String) -> String:
+	var state_key := _map_name_key(state_name)
+	var district_key := _map_name_key(district_name)
+	var exact_key := state_key + "|" + district_key
+	if _district_winner_index.has(exact_key):
+		return str(_district_winner_index[exact_key])
+	# A district-only fallback is safe only when one distinct party is recorded
+	# for that district name across the saved data.
+	var candidates: Dictionary = _district_name_index.get(district_key, {})
+	return str(candidates.keys()[0]) if candidates.size() == 1 else ""
+
+func _map_name_key(value: String) -> String:
+	# Strip punctuation and whitespace so labels like "Bengaluru Urban" and
+	# "Bengaluru-Urban" resolve to the same district record.
+	var normalized := value.strip_edges().to_lower()
+	var result := ""
+	for index in range(normalized.length()):
+		var code := normalized.unicode_at(index)
+		if (code >= 97 and code <= 122) or (code >= 48 and code <= 57):
+			result += String.chr(code)
+	return result
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:

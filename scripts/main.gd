@@ -16,10 +16,24 @@ var office_case_filter: String = "ALL"
 var office_mission_list: VBoxContainer
 var office_action_feedback: Label
 var district_label: Label
+var district_office_picker: OptionButton
+var district_office_report: Label
+var district_office_feedback: Label
+var district_office_selected: String = "Udupi"
+var assembly_office_state_picker: OptionButton
+var assembly_office_constituency_picker: OptionButton
+var assembly_office_report: Label
+var assembly_office_feedback: Label
+var assembly_office_selected_state: String = "Andhra Pradesh"
+var assembly_office_selected_seat: int = 1
 var career_page_summary: Label
+var career_activity_feedback: Label
 var party_page_summary: Label
 var election_page_summary: Label
 var report_label: Label
+var automatic_records_label: Label
+var inbox_list: VBoxContainer
+var inbox_summary: Label
 var world_politics_label: Label
 var authority_summary_label: Label
 var government_summary_label: Label
@@ -31,9 +45,11 @@ var party_founder_contribution_input: SpinBox
 var setup_box: VBoxContainer
 var dashboard_box: TabContainer
 var main_tab_bar: ScrollContainer
+var page_content_scroll: ScrollContainer
 var main_tab_buttons: Array[Button] = []
 var overview_metric_values: Array[Label] = []
 var party_member_name_input: LineEdit
+var party_member_state_picker: OptionButton
 var party_member_area: VBoxContainer
 var party_member_search: LineEdit
 var party_member_count_label: Label
@@ -41,6 +57,11 @@ var duty_member_search: LineEdit
 var duty_member_picker: OptionButton
 var duty_role_picker: OptionButton
 var party_member_status: Label
+var organization_summary_label: Label
+var organization_state_picker: OptionButton
+var organization_profile_label: Label
+var organization_member_picker: OptionButton
+var organization_duty_picker: OptionButton
 var constitution_model_picker: OptionButton
 var constitution_term_picker: OptionButton
 var constitution_status: Label
@@ -56,10 +77,44 @@ var office_ballot_search: LineEdit
 var office_election_status: Label
 var election_detail_labels: Dictionary = {}
 var state_election_cards: VBoxContainer
+var election_live_results_label: Label
+var election_archive_tabs: TabContainer
+var _election_results_render_key: String = ""
+var _state_election_cards_render_key: String = ""
+var _nav_style_cache: Dictionary = {}
 var high_command_status: Label
+var high_command_analytics_label: Label
+var high_command_readiness_label: Label
 var high_command_budget: SpinBox
 var high_command_priority: OptionButton
+var high_command_focus: OptionButton
 var high_command_coalition: OptionButton
+var karnataka_candidate_picker: OptionButton
+var karnataka_candidate_status: Label
+var karnataka_candidate_summary: Label
+var karnataka_candidate_search: LineEdit
+var karnataka_candidate_filter: OptionButton
+var karnataka_member_search: LineEdit
+var karnataka_member_picker: OptionButton
+var karnataka_candidate_contest_status: Label
+var constituency_plan_picker: OptionButton
+var constituency_plan_search: LineEdit
+var constituency_plan_priority: OptionButton
+var constituency_plan_budget: SpinBox
+var constituency_plan_detail: Label
+var constituency_plan_summary: Label
+var constituency_campaign_dashboard: Label
+var statewide_campaign_status: Label
+var campaign_activity_group: OptionButton
+var campaign_activity_type: OptionButton
+var campaign_activity_count: SpinBox
+var campaign_activity_budget: SpinBox
+var campaign_activity_summary: Label
+var campaign_activity_plan_picker: OptionButton
+var campaign_activity_status: OptionButton
+var campaign_activity_actual_spend: SpinBox
+var campaign_activity_management_summary: Label
+
 var india_map_page: VBoxContainer
 var india_map_grid
 var india_map_details: Label
@@ -69,6 +124,10 @@ var india_map_layer_picker: OptionButton
 var india_map_selected_state: String = "Karnataka"
 var india_map_selected_district: String = ""
 var india_map_level: int = 0
+var _page_touch_index: int = -1
+var _page_touch_last_y: float = 0.0
+var _page_touch_dragging: bool = false
+var _page_touch_start_y: float = 0.0
 
 func _ready() -> void:
 	world = WorldSimulationScript.new()
@@ -84,50 +143,51 @@ func _ready() -> void:
 	_refresh()
 
 func _apply_premium_theme() -> void:
+	# A restrained executive palette: midnight navy, slate panels, and antique gold.
 	var premium := Theme.new()
 	premium.default_font_size = 16
-	premium.set_color("font_color", "Label", Color("#e7edf6"))
-	premium.set_color("font_color", "Button", Color("#e7edf6"))
-	premium.set_color("font_hover_color", "Button", Color("#ffffff"))
-	premium.set_color("font_pressed_color", "Button", Color("#0b1728"))
-	premium.set_color("font_color", "LineEdit", Color("#e7edf6"))
-	premium.set_color("font_color", "SpinBox", Color("#e7edf6"))
-	premium.set_color("font_placeholder_color", "LineEdit", Color("#91a4ba"))
-	premium.set_color("caret_color", "LineEdit", Color("#d6b15a"))
-	premium.set_color("selection_color", "LineEdit", Color("#d6b15a"))
-	premium.set_color("font_color", "TabBar", Color("#aebed1"))
-	premium.set_color("font_selected_color", "TabBar", Color("#d6b15a"))
-	premium.set_font_size("font_size", "Button", 15)
+	premium.set_color("font_color", "Label", Color("#e8edf5"))
+	premium.set_color("font_color", "Button", Color("#e8edf5"))
+	premium.set_color("font_hover_color", "Button", Color("#fffaf0"))
+	premium.set_color("font_pressed_color", "Button", Color("#101b2b"))
+	premium.set_color("font_color", "LineEdit", Color("#e8edf5"))
+	premium.set_color("font_color", "SpinBox", Color("#e8edf5"))
+	premium.set_color("font_placeholder_color", "LineEdit", Color("#8fa4bc"))
+	premium.set_color("caret_color", "LineEdit", Color("#d9b45f"))
+	premium.set_color("selection_color", "LineEdit", Color("#d9b45f"))
+	premium.set_color("font_color", "TabBar", Color("#b5c2d2"))
+	premium.set_color("font_selected_color", "TabBar", Color("#e0bd68"))
+	premium.set_font_size("font_size", "Button", 14)
 	premium.set_font_size("font_size", "Label", 15)
 
 	var input_style := StyleBoxFlat.new()
-	input_style.bg_color = Color("#102036")
-	input_style.border_color = Color("#334a66")
+	input_style.bg_color = Color("#111f32")
+	input_style.border_color = Color("#354b66")
 	input_style.set_border_width_all(1)
-	input_style.set_corner_radius_all(10)
+	input_style.set_corner_radius_all(12)
 	input_style.set_content_margin_all(12)
 	premium.set_stylebox("normal", "LineEdit", input_style)
 	premium.set_stylebox("focus", "LineEdit", input_style)
 	premium.set_stylebox("normal", "SpinBox", input_style)
 	premium.set_stylebox("focus", "SpinBox", input_style)
 
-	var button_normal := _button_style("#d6b15a")
-	button_normal.border_color = Color("#334a66")
+	var button_normal := _button_style("#d9b45f")
+	button_normal.border_color = Color("#8f733b")
 	button_normal.set_border_width_all(1)
 	premium.set_stylebox("normal", "Button", button_normal)
-	premium.set_stylebox("hover", "Button", _button_style("#243b57"))
-	premium.set_stylebox("pressed", "Button", _button_style("#b88b3b"))
-	premium.set_stylebox("disabled", "Button", _button_style("#203650"))
+	premium.set_stylebox("hover", "Button", _button_style("#30435a"))
+	premium.set_stylebox("pressed", "Button", _button_style("#b18b43"))
+	premium.set_stylebox("disabled", "Button", _button_style("#24354a"))
 
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color("#0f1b2b")
-	panel_style.border_color = Color("#30445d")
+	panel_style.bg_color = Color("#101e30")
+	panel_style.border_color = Color("#2d425b")
 	panel_style.set_border_width_all(1)
-	panel_style.set_corner_radius_all(17)
+	panel_style.set_corner_radius_all(18)
 	panel_style.set_content_margin_all(15)
-	panel_style.shadow_color = Color(0.02, 0.06, 0.12, 0.24)
-	panel_style.shadow_size = 4
-	panel_style.shadow_offset = Vector2(0, 2)
+	panel_style.shadow_color = Color(0.01, 0.025, 0.06, 0.32)
+	panel_style.shadow_size = 6
+	panel_style.shadow_offset = Vector2(0, 3)
 	premium.set_stylebox("panel", "PanelContainer", panel_style)
 	premium.set_stylebox("panel", "TabContainer", panel_style)
 	theme = premium
@@ -143,11 +203,11 @@ func _build_ui() -> void:
 	var root := VBoxContainer.new()
 	root.name = "AppLayout"
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 14
-	root.offset_top = 12
-	root.offset_right = -14
-	root.offset_bottom = -12
-	root.add_theme_constant_override("separation", 10)
+	root.offset_left = 10
+	root.offset_top = 9
+	root.offset_right = -10
+	root.offset_bottom = -9
+	root.add_theme_constant_override("separation", 8)
 	add_child(root)
 
 	var header := VBoxContainer.new()
@@ -203,8 +263,10 @@ func _build_ui() -> void:
 	header_rule.custom_minimum_size = Vector2(0, 1)
 	header_rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(header_rule)
+	# Keep the header static; avoid a perpetual tween on low-power mobile rendering paths.
 
-	var content_scroll := ScrollContainer.new()
+	page_content_scroll = ScrollContainer.new()
+	var content_scroll := page_content_scroll
 	content_scroll.name = "PageContent"
 	content_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -231,8 +293,57 @@ func _build_ui() -> void:
 	dashboard_box.visible = false
 	content_scroll.add_child(dashboard_box)
 	_build_dashboard()
+	dashboard_box.tab_changed.connect(_on_dashboard_tab_changed)
+	# Clamp every page descendant to the available viewport width. Without this,
+	# intrinsic minimum widths from nested cards/labels can widen the disabled-
+	# horizontal-scroll content and push the right edge off Android screens.
+	_constrain_page_width(page_content_scroll)
 
 	_build_bottom_navigation(root)
+
+func _constrain_page_width(node: Node) -> void:
+	# Keep nested election tabs, cards, and their controls within the page viewport.
+	if node is Control:
+		var control := node as Control
+		control.custom_minimum_size = Vector2(0.0, control.custom_minimum_size.y)
+		control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if control is Label:
+			(control as Label).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		if control is ScrollContainer or control is TabContainer:
+			control.clip_contents = true
+	for child in node.get_children():
+		_constrain_page_width(child)
+
+func _input(event: InputEvent) -> void:
+	# Capture Android touch drags at viewport level so nested cards and tab
+	# controls cannot swallow scrolling. Taps are not consumed.
+	if not is_instance_valid(page_content_scroll) or not page_content_scroll.visible:
+		return
+	var page_rect := page_content_scroll.get_global_rect()
+	if event is InputEventScreenTouch:
+		var touch := event as InputEventScreenTouch
+		if touch.pressed:
+			if page_rect.has_point(touch.position):
+				_page_touch_index = touch.index
+				_page_touch_last_y = touch.position.y
+				_page_touch_start_y = touch.position.y
+				_page_touch_dragging = false
+		elif touch.index == _page_touch_index:
+			_page_touch_index = -1
+			_page_touch_dragging = false
+	elif event is InputEventScreenDrag:
+		var drag := event as InputEventScreenDrag
+		if drag.index != _page_touch_index:
+			return
+		if not _page_touch_dragging and absf(drag.position.y - _page_touch_start_y) < 8.0:
+			return
+		_page_touch_dragging = true
+		var delta_y := drag.position.y - _page_touch_last_y
+		_page_touch_last_y = drag.position.y
+		var bar := page_content_scroll.get_v_scroll_bar()
+		var max_scroll := maxi(0, int(round(bar.max_value - bar.page)))
+		page_content_scroll.scroll_vertical = clampi(page_content_scroll.scroll_vertical - int(round(delta_y)), 0, max_scroll)
+		get_viewport().set_input_as_handled()
 
 func _configure_touch_scroll_passthrough(node: Node) -> void:
 	# Let drag gestures travel through cards, labels, and tab pages to the
@@ -252,39 +363,43 @@ func _configure_touch_scroll_passthrough(node: Node) -> void:
 func _build_bottom_navigation(parent: VBoxContainer) -> void:
 	main_tab_bar = ScrollContainer.new()
 	main_tab_bar.name = "BottomNavigation"
-	main_tab_bar.custom_minimum_size = Vector2(0, 68)
+	main_tab_bar.custom_minimum_size = Vector2(0, 72)
 	main_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main_tab_bar.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	main_tab_bar.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	main_tab_bar.add_theme_stylebox_override("panel", _button_style("#182b43"))
+	main_tab_bar.add_theme_stylebox_override("panel", _button_style("#0d1a2b"))
 	main_tab_bar.size_flags_vertical = Control.SIZE_SHRINK_END
 	main_tab_bar.visible = false
 	parent.add_child(main_tab_bar)
 
 	var nav_row := HBoxContainer.new()
-	nav_row.add_theme_constant_override("separation", 6)
-	nav_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nav_row.add_theme_constant_override("separation", 7)
+	nav_row.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	main_tab_bar.add_child(nav_row)
 
-	var tab_names: Array[String] = ["⌂  OVERVIEW", "◉  CAREER", "♟  PARTY", "▤  ELECTIONS", "▦  DISTRICT", "▣  OFFICE", "▥  REPORTS", "◎  INDIA MAP"]
+	# Compact icon-led navigation; labels remain visible for clarity on phones.
+	var tab_names: Array[String] = [
+		"⌂\nHOME", "◷\nCAREER", "♟\nPARTY", "▤\nELECTIONS",
+		"▣\nRESULTS", "▦\nPARTY ORG.", "▣\nOFFICE", "▥\nREPORTS", "◎\nINDIA MAP", "▤\nINBOX"
+	]
 	for index in range(tab_names.size()):
 		var tab_button := Button.new()
 		tab_button.text = tab_names[index]
-		tab_button.custom_minimum_size = Vector2(116, 50)
+		tab_button.custom_minimum_size = Vector2(86, 58)
 		tab_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		tab_button.add_theme_font_size_override("font_size", 11)
+		tab_button.add_theme_font_size_override("font_size", 10)
 		tab_button.add_theme_stylebox_override("normal", _nav_button_style(false))
 		tab_button.add_theme_stylebox_override("hover", _nav_button_style(true))
 		tab_button.add_theme_stylebox_override("pressed", _nav_button_style(true))
-		tab_button.add_theme_color_override("font_color", Color("#e8edf5"))
-		tab_button.add_theme_color_override("font_hover_color", Color("#fff7df"))
+		tab_button.add_theme_color_override("font_color", Color("#b9c7d8"))
+		tab_button.add_theme_color_override("font_hover_color", Color("#fff5d7"))
 		tab_button.pressed.connect(_select_main_tab.bind(index))
 		nav_row.add_child(tab_button)
 		main_tab_buttons.append(tab_button)
 	_update_bottom_navigation()
 
 func _navigation_page_names() -> Array[String]:
-	return ["Overview", "Career", "Party", "Elections", "District", "Office", "Reports", "India Map"]
+	return ["Overview", "Career", "Party", "Elections", "Election Results", "District", "Office", "Reports", "India Map", "Inbox"]
 
 
 func _get_visible_tab_index(page_name: String) -> int:
@@ -304,7 +419,9 @@ func _get_current_page_name() -> String:
 	if tab_index < 0 or tab_index >= dashboard_box.get_tab_count():
 		return ""
 	var page := dashboard_box.get_tab_control(tab_index)
-	return page.name if is_instance_valid(page) else ""
+	if is_instance_valid(page):
+		return str(page.name)
+	return ""
 
 
 func _restore_selected_page(page_name: String) -> void:
@@ -328,18 +445,19 @@ func _select_main_tab(index: int) -> void:
 	if target_index < 0:
 		return
 	if dashboard_box.current_tab == target_index:
+		_update_bottom_navigation()
 		return
-	var transition := create_tween()
-	transition.set_trans(Tween.TRANS_SINE)
-	transition.set_ease(Tween.EASE_OUT)
-	transition.tween_property(dashboard_box, "modulate:a", 0.72, 0.07)
-	transition.tween_callback(func():
-		var latest_index := _get_visible_tab_index(page_names[index])
-		if latest_index >= 0:
-			dashboard_box.current_tab = latest_index
-	)
-	transition.tween_property(dashboard_box, "modulate:a", 1.0, 0.14)
+	# Switch pages immediately. The previous fade tween delayed input feedback and
+	# could leave the bottom navigation highlighting the old page on mobile.
+	dashboard_box.current_tab = target_index
 	_update_bottom_navigation()
+
+func _on_dashboard_tab_changed(_index: int) -> void:
+	_update_bottom_navigation()
+	# Refresh the newly selected page. Pages such as Elections are built lazily
+	# and otherwise keep their initial placeholder content when first opened.
+	if is_instance_valid(world) and world.career_started:
+		_refresh()
 
 func _update_bottom_navigation() -> void:
 	for i in range(main_tab_buttons.size()):
@@ -352,6 +470,9 @@ func _update_bottom_navigation() -> void:
 		button.add_theme_color_override("font_hover_color", Color("#101c2b") if selected else Color("#fff7df"))
 
 func _nav_button_style(selected: bool) -> StyleBoxFlat:
+	var cache_key := "selected" if selected else "unselected"
+	if _nav_style_cache.has(cache_key):
+		return _nav_style_cache[cache_key] as StyleBoxFlat
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("#d6b15a") if selected else Color("#14253a")
 	style.border_color = Color("#f0d18a") if selected else Color("#344b65")
@@ -364,6 +485,7 @@ func _nav_button_style(selected: bool) -> StyleBoxFlat:
 	style.shadow_color = Color(0, 0, 0, 0.28)
 	style.shadow_size = 4 if selected else 2
 	style.shadow_offset = Vector2(0, 2)
+	_nav_style_cache[cache_key] = style
 	return style
 
 func _build_setup() -> void:
@@ -400,6 +522,39 @@ func _build_dashboard() -> void:
 	_add_dashboard_hero(overview)
 	_add_section_title(overview, "YOUR STANDING")
 	_add_overview_metrics(overview)
+	_add_section_title(overview, "COMMAND CENTER")
+	_add_body(overview, "Jump to the areas that need your attention. Your political authority and available actions depend on your current elected or party role.")
+	var command_row := GridContainer.new()
+	command_row.name = "CommandCenterActions"
+	command_row.columns = 2
+	command_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	command_row.add_theme_constant_override("h_separation", 8)
+	command_row.add_theme_constant_override("v_separation", 8)
+	overview.add_child(command_row)
+	var party_action := Button.new()
+	party_action.text = "♟  PARTY\nManage members"
+	party_action.custom_minimum_size = Vector2(0, 62)
+	party_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	party_action.add_theme_font_size_override("font_size", 12)
+	party_action.add_theme_stylebox_override("normal", _nav_button_style(false))
+	party_action.pressed.connect(_select_main_tab.bind(2))
+	command_row.add_child(party_action)
+	var election_action := Button.new()
+	election_action.text = "▤  ELECTIONS\nReview contests"
+	election_action.custom_minimum_size = Vector2(0, 62)
+	election_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	election_action.add_theme_font_size_override("font_size", 12)
+	election_action.add_theme_stylebox_override("normal", _nav_button_style(false))
+	election_action.pressed.connect(_select_main_tab.bind(3))
+	command_row.add_child(election_action)
+	var map_action := Button.new()
+	map_action.text = "◎  INDIA MAP\nExplore states"
+	map_action.custom_minimum_size = Vector2(0, 62)
+	map_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	map_action.add_theme_font_size_override("font_size", 12)
+	map_action.add_theme_stylebox_override("normal", _nav_button_style(false))
+	map_action.pressed.connect(_select_main_tab.bind(7))
+	command_row.add_child(map_action)
 	_add_section_title(overview, "YOUR NEXT STEP")
 	_add_body(overview, "Advance the simulation month by month. Detailed career, party, election, district, office, and world activity information lives in its own tab.")
 	_add_button(overview, "ADVANCE ONE MONTH", _on_advance_month)
@@ -413,14 +568,16 @@ func _build_dashboard() -> void:
 	career_page.add_child(career_tabs)
 	var career_profile := _new_tab(career_tabs, "Profile")
 	_add_section_title(career_profile, "YOUR CAREER")
-	var career_profile_label := _add_body(career_profile, "Career details are shown on Overview.")
-	career_profile_label.text = "Your rank, experience, reputation, leadership relationship, and personal funds are summarized on Overview."
+	var career_profile_label := _add_body(career_profile, "Your career profile will appear here.")
+	career_profile_label.name = "CareerProfileDetails"
 	var career_actions := _new_tab(career_tabs, "Activities")
 	_add_section_title(career_actions, "BUILD YOUR CAREER")
 	_add_body(career_actions, "Activities improve your standing over time. Your current political role limits what you can do.")
 	_add_button(career_actions, "Volunteer in a local campaign", func(): _run_activity("volunteer"))
 	_add_button(career_actions, "Organize community service", func(): _run_activity("community"))
 	_add_button(career_actions, "Attend a party meeting", func(): _run_activity("meeting"))
+	career_activity_feedback = _add_body(career_actions, "Activity results will appear here after you take an action.")
+	career_activity_feedback.name = "CareerActivityFeedback"
 
 	var party_page := _new_tab(dashboard_box, "Party")
 	_add_section_title(party_page, "PARTY ORGANIZATION")
@@ -430,17 +587,63 @@ func _build_dashboard() -> void:
 	party_page.add_child(party_tabs)
 	var party_profile := _new_tab(party_tabs, "Overview")
 	_add_section_title(party_profile, "YOUR PARTY")
-	_add_body(party_profile, "Party membership, funds, popularity, and your party role are summarized on Overview.")
-	_add_button(party_profile, "Recruit through AI organization", func(): _run_activity("recruit"))
+	var party_overview_details := _add_body(party_profile, "Your organization overview will appear here.")
+	party_overview_details.name = "PartyOverviewDetails"
+	_add_button(party_profile, "Recruit through party organization", func(): _run_activity("recruit"))
 
 	var party_members := _new_tab(party_tabs, "Members")
 	_add_section_title(party_members, "PARTY MEMBERS")
 	_add_body(party_members, "Fictional Indian political members. Add members and manage party leadership through Constitution.")
 	party_member_name_input = _add_line_input(party_members, "Member name", "Enter a fictional member name")
+	party_member_state_picker = OptionButton.new()
+	party_member_state_picker.custom_minimum_size = Vector2(0, 44)
+	for state_name in ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"]:
+		party_member_state_picker.add_item(state_name)
+	party_member_state_picker.select(10)
+	party_members.add_child(party_member_state_picker)
 	_add_button(party_members, "ADD MEMBER", _on_add_party_member)
 	party_member_status = _add_body(party_members, "")
 	party_member_search = _add_line_input(party_members, "Search members", "Search by name or member ID")
 	party_member_search.text_changed.connect(func(_value: String): _refresh_party_members())
+	_add_section_title(party_members, "REGIONAL ORGANIZATION")
+	organization_summary_label = _add_body(party_members, "Regional coverage and duty distribution will appear here.")
+	_add_section_title(party_members, "STATE ORGANIZATION COMMAND")
+	_add_body(party_members, "Choose a state to inspect its ground network. Assigning members to state-level roles builds a measurable organization score and can improve your party’s modeled State Assembly election score by up to 2.5 points. It does not guarantee a victory.")
+	organization_state_picker = OptionButton.new()
+	organization_state_picker.custom_minimum_size = Vector2(0, 44)
+	organization_state_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var organization_states: Array[String] = []
+	for state_election_variant in world.world_state.get("state_elections", []):
+		if state_election_variant is Dictionary:
+			var organization_state := str(state_election_variant.get("state", ""))
+			if not organization_state.is_empty():
+				organization_states.append(organization_state)
+	organization_states.sort_custom(func(a: String, b: String) -> bool:
+		if a == "Karnataka" and b != "Karnataka":
+			return true
+		if b == "Karnataka":
+			return false
+		return a.naturalcasecmp_to(b) < 0
+	)
+	for organization_state in organization_states:
+		organization_state_picker.add_item(organization_state)
+	if organization_state_picker.item_count > 0:
+		organization_state_picker.select(0)
+	organization_state_picker.item_selected.connect(func(_index: int): _refresh_organization_profile())
+	party_members.add_child(organization_state_picker)
+	organization_profile_label = _add_body(party_members, "Select a state to inspect its organization network.")
+	_add_section_title(party_members, "ASSIGN MEMBER TO STATE & DUTY")
+	organization_member_picker = OptionButton.new()
+	organization_member_picker.custom_minimum_size = Vector2(0, 44)
+	organization_member_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	party_members.add_child(organization_member_picker)
+	organization_duty_picker = OptionButton.new()
+	organization_duty_picker.custom_minimum_size = Vector2(0, 44)
+	organization_duty_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for duty in ["Volunteer", "Booth Coordinator", "Ward Organizer", "Media Coordinator", "Treasurer", "District Secretary", "State Organizer"]:
+		organization_duty_picker.add_item(duty)
+	party_members.add_child(organization_duty_picker)
+	_add_button(party_members, "ASSIGN SELECTED MEMBER TO THIS STATE & DUTY", _on_assign_organization_duty)
 	party_member_count_label = _add_body(party_members, "")
 	party_member_area = VBoxContainer.new()
 	party_member_area.add_theme_constant_override("separation", 8)
@@ -513,28 +716,140 @@ func _build_dashboard() -> void:
 	_add_body(party_constitution, "Appointments are made by the president. Internal elections use member ballots. These are party roles, not government offices.")
 
 	var party_finances := _new_tab(party_tabs, "Finances")
-	_add_section_title(party_finances, "PERSONAL, PARTY & CAMPAIGN ACCOUNTS")
+	_add_section_title(party_finances, "PERSONAL, PARTY & CAMPsimulationGN ACCOUNTS")
 	finance_label = _add_body(party_finances, "Financial accounts appear after your career begins.")
 	_add_body(party_finances, "Personal cash, party funds, party debt, and election campaign spending are tracked separately. Values are a simplified game economy, not audited real-world party accounts.")
 
 	var elections_page := _new_tab(dashboard_box, "Elections")
 	_add_section_title(elections_page, "ELECTIONS")
-	election_page_summary = _add_page_summary(elections_page, "NEXT POLL / CURRENT PHASE", "Election briefing", "Schedules, campaign actions, and results are grouped by election type.")
+	election_page_summary = _add_page_summary(elections_page, "NEXT POLL / CURRENT PHASE", "Election briefing", "Schedules and campaign actions are grouped by election type. Open the separate Election Results tab to review outcomes.")
 	var election_tabs := TabContainer.new()
 	election_tabs.name = "ElectionWorkspace"
 	election_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	election_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	elections_page.add_child(election_tabs)
 
+
 	var local_elections := _new_tab(election_tabs, "Local")
 	_add_section_title(local_elections, "PERSONAL LOCAL CONTEST")
 	var local_card := _new_election_card(local_elections, "Your constituency", "Personal ticket and campaign actions")
 	election_detail_labels["local"] = _add_body(local_card, "")
-	_add_button(local_card, "REQUEST LOCAL TICKET", func(): _run_activity("request_ticket"))
-	_add_button(local_card, "CAMPAIGN", func(): _run_activity("campaign"))
+	var local_ticket_button_text := "SELECT MYSELF AS LOCAL CANDIDATE" if world.player_role in ["Party President", "Founding President"] else "REQUEST LOCAL TICKET"
+	_add_button(local_card, local_ticket_button_text, func(): _run_activity("request_ticket"))
+	_add_button(local_card, "CAMPsimulationGN", func(): _run_activity("campaign"))
 	_add_info_card(local_elections, "Model scope", "Local contests represent district-level local administration, not every individual ward or municipality.", "Party-wide local nominees are handled separately.")
 
-	var high_command_page := _new_tab(election_tabs, "High Command")
+	var planner_page := _new_tab(election_tabs, "Constituency Planner")
+	_add_section_title(planner_page, "CONSTITUENCY INTELLIGENCE")
+	_add_body(planner_page, "Plan Karnataka Assembly seats using the constituency list and nominee review already in this career. You can run the statewide campaign whenever you choose. Automatic teams scale activity and spending from long-term groundwork to election build-up and a final push as polling approaches. Saved allocations guide distribution across seats; spending remains capped by available party funds and the High Command monthly ceiling. Planned amounts are not an extra charge.")
+	var planner_card := _new_election_card(planner_page, "Seat-by-seat campaign plan", "Review candidate coverage and record a priority and planned allocation")
+	constituency_plan_summary = _add_body(planner_card, "Loading constituency plan…")
+	_add_body(planner_card, "Search by constituency name or seat number")
+	constituency_plan_search = LineEdit.new()
+	constituency_plan_search.placeholder_text = "Search Karnataka constituencies…"
+	constituency_plan_search.clear_button_enabled = true
+	constituency_plan_search.custom_minimum_size = Vector2(0, 44)
+	constituency_plan_search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	planner_card.add_child(constituency_plan_search)
+	constituency_plan_picker = OptionButton.new()
+	constituency_plan_picker.custom_minimum_size = Vector2(0, 48)
+	constituency_plan_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	planner_card.add_child(constituency_plan_picker)
+	_populate_constituency_plan_picker("")
+	constituency_plan_search.text_changed.connect(func(query: String):
+		_populate_constituency_plan_picker(query)
+		_load_constituency_plan_controls()
+	)
+	constituency_plan_picker.item_selected.connect(func(_index: int): _load_constituency_plan_controls())
+	constituency_plan_detail = _add_body(planner_card, "Select a seat to review its nominee and saved plan.")
+	_add_body(planner_card, "Priority")
+	constituency_plan_priority = OptionButton.new()
+	constituency_plan_priority.custom_minimum_size = Vector2(0, 44)
+	constituency_plan_priority.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for priority_label in ["Defend", "Target", "Low Priority"]:
+		constituency_plan_priority.add_item(priority_label)
+	planner_card.add_child(constituency_plan_priority)
+	_add_body(planner_card, "Planned allocation (₹ crore)")
+	constituency_plan_budget = SpinBox.new()
+	constituency_plan_budget.min_value = 0
+	constituency_plan_budget.max_value = 1000
+	constituency_plan_budget.step = 0.1
+	constituency_plan_budget.custom_minimum_size = Vector2(0, 44)
+	constituency_plan_budget.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	planner_card.add_child(constituency_plan_budget)
+	_add_button(planner_card, "SAVE CONSTITUENCY PLAN", _save_constituency_plan)
+	_add_button(planner_card, "AUTO-SET ALL 224 CONSTITUENCIES", _auto_set_all_constituency_plans)
+	_add_body(planner_card, "Actual seat spending is a share of the existing Karnataka campaign budget, not an additional deduction. Defend seats receive a modestly higher share than Target; Low Priority receives less. Recorded spending gives a limited seat-specific campaign score bonus and never guarantees a win.")
+	_add_body(planner_card, "CAMPAIGN PERFORMANCE · PLANNED VS RECORDED")
+	constituency_campaign_dashboard = _add_body(planner_card, "No saved constituency plans yet.")
+	_add_body(planner_card, "AUTOMATIC STATEWIDE CAMPAIGN")
+	_add_body(planner_card, "Launch once to activate monthly campaign operations across the saved constituency plans. Teams use the existing High Command monthly ceiling and party funds; recorded activity and spending appear below.")
+	statewide_campaign_status = _add_body(planner_card, "Campaign not started.")
+	_add_button(planner_card, "LAUNCH / PAUSE STATEWIDE CAMPAIGN", _toggle_statewide_campaign)
+
+	_add_body(planner_card, "BULK CAMPAIGN ACTIVITY PLAN")
+	_add_body(planner_card, "Schedule activities across a selected group of saved constituency plans. This records a plan only; it does not spend funds or change election results.")
+	_add_body(planner_card, "Apply to constituency plans")
+	campaign_activity_group = OptionButton.new()
+	campaign_activity_group.custom_minimum_size = Vector2(0, 44)
+	campaign_activity_group.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for group_label in ["All planned seats", "Defend seats", "Target seats", "Low Priority seats"]:
+		campaign_activity_group.add_item(group_label)
+	planner_card.add_child(campaign_activity_group)
+	_add_body(planner_card, "Activity")
+	campaign_activity_type = OptionButton.new()
+	campaign_activity_type.custom_minimum_size = Vector2(0, 44)
+	campaign_activity_type.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for activity_label in ["Candidate visit", "Public meeting", "Door-to-door drive"]:
+		campaign_activity_type.add_item(activity_label)
+	planner_card.add_child(campaign_activity_type)
+	_add_body(planner_card, "Number of activities")
+	campaign_activity_count = SpinBox.new()
+	campaign_activity_count.min_value = 1
+	campaign_activity_count.max_value = 224
+	campaign_activity_count.step = 1
+	campaign_activity_count.value = 10
+	campaign_activity_count.custom_minimum_size = Vector2(0, 44)
+	campaign_activity_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	planner_card.add_child(campaign_activity_count)
+	_add_body(planner_card, "Total planned budget (₹ crore)")
+	campaign_activity_budget = SpinBox.new()
+	campaign_activity_budget.min_value = 0
+	campaign_activity_budget.max_value = 100
+	campaign_activity_budget.step = 0.1
+	campaign_activity_budget.custom_minimum_size = Vector2(0, 44)
+	campaign_activity_budget.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	planner_card.add_child(campaign_activity_budget)
+	_add_button(planner_card, "CREATE BULK ACTIVITY PLAN", _create_bulk_campaign_activity_plan)
+	campaign_activity_summary = _add_body(planner_card, "No bulk activity plans recorded yet.")
+
+	_add_body(planner_card, "MANAGE SAVED ACTIVITY PLANS")
+	_add_body(planner_card, "Select a plan to update its status or record actual spending. Actual spending is tracked separately and is not deducted from party funds by this control.")
+	campaign_activity_plan_picker = OptionButton.new()
+	campaign_activity_plan_picker.custom_minimum_size = Vector2(0, 44)
+	campaign_activity_plan_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	planner_card.add_child(campaign_activity_plan_picker)
+	campaign_activity_plan_picker.item_selected.connect(_on_bulk_campaign_activity_plan_selected)
+	_add_body(planner_card, "Plan status")
+	campaign_activity_status = OptionButton.new()
+	campaign_activity_status.custom_minimum_size = Vector2(0, 44)
+	campaign_activity_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for status_name in ["Planned", "In Progress", "Completed", "Cancelled"]:
+		campaign_activity_status.add_item(status_name)
+	planner_card.add_child(campaign_activity_status)
+	_add_body(planner_card, "Actual spending (₹ crore)")
+	campaign_activity_actual_spend = SpinBox.new()
+	campaign_activity_actual_spend.min_value = 0
+	campaign_activity_actual_spend.max_value = 100
+	campaign_activity_actual_spend.step = 0.1
+	campaign_activity_actual_spend.custom_minimum_size = Vector2(0, 44)
+	campaign_activity_actual_spend.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	planner_card.add_child(campaign_activity_actual_spend)
+	_add_button(planner_card, "SAVE PLAN STATUS & ACTUAL SPENDING", _save_bulk_campaign_activity_plan_management)
+	campaign_activity_management_summary = _add_body(planner_card, "Select a saved plan to manage it.")
+
+
+	var high_command_page := _new_tab(party_tabs, "High Command")
 	_add_section_title(high_command_page, "PARTY-WIDE STRATEGY")
 	var command_card := _new_election_card(high_command_page, "High Command status", "Party-wide candidate deployment and campaign coordination")
 	election_detail_labels["high_command"] = _add_body(command_card, "")
@@ -542,25 +857,73 @@ func _build_dashboard() -> void:
 	_add_body(strategy_card, "Priority")
 	high_command_priority = OptionButton.new()
 	high_command_priority.custom_minimum_size = Vector2(0, 44)
+	high_command_priority.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for priority in ["Balanced outreach", "Jobs & economy", "Public services", "Rural development", "Welfare & inclusion", "Infrastructure", "Public safety", "Youth engagement"]:
 		high_command_priority.add_item(priority)
 	strategy_card.add_child(high_command_priority)
-	_add_body(strategy_card, "Monthly campaign budget ceiling (₹)")
+	_add_body(strategy_card, "Priority state for the next campaign cycle")
+	high_command_focus = OptionButton.new()
+	high_command_focus.custom_minimum_size = Vector2(0, 44)
+	high_command_focus.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for focus_state in ["No state focus", "Karnataka", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"]:
+		high_command_focus.add_item(focus_state)
+	strategy_card.add_child(high_command_focus)
+	_add_body(strategy_card, "Focused state receives a modest campaign score advantage when your party spends during its election campaign. This does not guarantee seats.")
+	_add_body(strategy_card, "Monthly campaign spending ceiling (₹ crore)")
 	high_command_budget = SpinBox.new()
 	high_command_budget.min_value = 0
-	high_command_budget.max_value = 2000000000
-	high_command_budget.step = 50000000
-	high_command_budget.value = 500000000
+	high_command_budget.max_value = 200
+	high_command_budget.step = 0.5
+	high_command_budget.value = 5
 	high_command_budget.custom_minimum_size = Vector2(0, 44)
+	high_command_budget.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	strategy_card.add_child(high_command_budget)
 	_add_body(strategy_card, "Coalition preference")
 	high_command_coalition = OptionButton.new()
 	high_command_coalition.custom_minimum_size = Vector2(0, 44)
+	high_command_coalition.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for policy in ["Negotiate a working majority", "Prefer single-party government", "Avoid coalition agreements"]:
 		high_command_coalition.add_item(policy)
 	strategy_card.add_child(high_command_coalition)
 	high_command_status = _add_body(strategy_card, "")
-	_add_button(strategy_card, "SAVE STRATEGY", _on_save_high_command_policy)
+	_add_button(strategy_card, "SAVE PARTY DIRECTIVE", _on_save_high_command_policy)
+	var review_card := _new_election_card(high_command_page, "Strategic performance review", "A persistent month-by-month record of party resources, organization, support, and election deployment")
+	high_command_analytics_label = _add_body(review_card, "Your first monthly review will appear after advancing the simulation.")
+	var candidate_review_card := _new_election_card(high_command_page, "Karnataka candidate review", "Review the party nominee assigned to each Assembly constituency")
+	karnataka_candidate_summary = _add_body(candidate_review_card, "")
+	_add_body(candidate_review_card, "Search nominees by name or constituency, review the selected ticket, then approve or reject. Bulk approval approves all currently pending tickets. Enable contesting to enter the next Karnataka Assembly election on behalf of your party; only approved tickets are eligible.")
+	karnataka_candidate_picker = OptionButton.new()
+	karnataka_candidate_picker.custom_minimum_size = Vector2(0, 48)
+	karnataka_candidate_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	candidate_review_card.add_child(karnataka_candidate_picker)
+	karnataka_candidate_picker.item_selected.connect(func(_index: int): _update_karnataka_candidate_detail())
+	karnataka_candidate_status = _add_body(candidate_review_card, "")
+	karnataka_candidate_search = _add_line_input(candidate_review_card, "Search constituency", "Find a Karnataka Assembly seat")
+	karnataka_candidate_search.text_changed.connect(func(_value: String): _refresh_karnataka_candidate_review())
+	_add_body(candidate_review_card, "FILTER TICKETS BY REVIEW STATUS")
+	karnataka_candidate_filter = OptionButton.new()
+	karnataka_candidate_filter.custom_minimum_size = Vector2(0, 44)
+	karnataka_candidate_filter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for filter_label in ["All tickets", "Rejected only", "Pending only", "Approved only"]:
+		karnataka_candidate_filter.add_item(filter_label)
+	candidate_review_card.add_child(karnataka_candidate_filter)
+	karnataka_candidate_filter.item_selected.connect(func(_index: int): _refresh_karnataka_candidate_review())
+	_add_body(candidate_review_card, "PARTY MEMBER NOMINATION — choose a constituency above, then search your party roster below.")
+	karnataka_member_search = _add_line_input(candidate_review_card, "Search party member by name", "Type a party member's name")
+	karnataka_member_search.text_changed.connect(func(_value: String): _refresh_karnataka_member_picker())
+	karnataka_member_picker = OptionButton.new()
+	karnataka_member_picker.custom_minimum_size = Vector2(0, 48)
+	karnataka_member_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	candidate_review_card.add_child(karnataka_member_picker)
+	_add_button(candidate_review_card, "ASSIGN SELECTED PARTY MEMBER TO CONSTITUENCY", _on_assign_karnataka_candidate)
+	_add_button(candidate_review_card, "APPROVE SELECTED", _on_approve_karnataka_candidate)
+	_add_button(candidate_review_card, "REJECT SELECTED", _on_reject_karnataka_candidate)
+	_add_button(candidate_review_card, "RESET SELECTED TO PENDING", _on_reset_karnataka_candidate)
+	_add_button(candidate_review_card, "BULK APPROVE ALL PENDING", _on_bulk_approve_karnataka_candidates)
+	karnataka_candidate_contest_status = _add_body(candidate_review_card, "")
+	_add_button(candidate_review_card, "TOGGLE KARNATAKA ASSEMBLY CONTEST", _on_toggle_karnataka_contest)
+
+	_add_info_card(high_command_page, "WHAT HAPPENS AFTER YOU SAVE", "Your directive is stored in this career save and remains active until you change it. The monthly ceiling is a limit, not an automatic payment; actual spending is recorded separately when campaign activity occurs.", "Candidate nominations and routine party operations follow the directive. Results, elected seats, and government formation are reported in their respective election tabs. Saving does not instantly spend money or appoint anyone to public office.")
 
 	var other_states_elections := _new_tab(election_tabs, "State Assemblies")
 	_add_section_title(other_states_elections, "STATE ASSEMBLIES  ·  INDIA")
@@ -574,6 +937,7 @@ func _build_dashboard() -> void:
 	state_election_cards.name = "StateElectionCards"
 	state_election_cards.add_theme_constant_override("separation", 12)
 	state_election_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	state_election_cards.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	state_card.add_child(state_election_cards)
 
 	var national_elections := _new_tab(election_tabs, "Lok Sabha")
@@ -581,11 +945,23 @@ func _build_dashboard() -> void:
 	var national_card := _new_election_card(national_elections, "National election tracker", "Constituency coverage, polling, count, and government formation")
 	election_detail_labels["national"] = _add_body(national_card, "")
 
-
+	# Election Results is a standalone dashboard destination, not nested under Elections.
+	var election_results_page := _new_tab(dashboard_box, "Election Results")
+	_add_section_title(election_results_page, "ELECTION RESULTS & COUNTING")
+	_add_body(election_results_page, "Review recorded results separately from election scheduling and campaign management. Results update when the simulation advances; they are not real-world live counting.")
+	var live_results_card := _new_election_card(election_results_page, "Live election watch", "Campaigning, counting, and newly resolved contests")
+	election_live_results_label = _add_body(live_results_card, "Live election records will appear here when an election enters an active phase.")
+	var archive_results_card := _new_election_card(election_results_page, "Election-by-election results", "Choose an election type and a recorded contest to review its outcome and party standings.")
+	election_archive_tabs = TabContainer.new()
+	election_archive_tabs.name = "ElectionResultTabs"
+	election_archive_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	election_archive_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	election_archive_tabs.custom_minimum_size = Vector2(0, 520)
+	archive_results_card.add_child(election_archive_tabs)
 
 	# District progression is an internal party path, not government authority.
 	var district_page := _new_tab(dashboard_box, "District")
-	_add_section_title(district_page, "DISTRICT ORGANIZATION")
+	_add_section_title(district_page, "PARTY ORGANIZATION")
 	district_label = _add_page_summary(district_page, "DISTRICT PROGRESSION", "Build local standing", "Your district progression appears here.")
 	_add_body(district_page, "District party positions are internal organization roles. They do not grant public office, government authority, or access to public funds.")
 	_add_section_title(district_page, "PROGRESSION REQUIREMENTS")
@@ -595,6 +971,71 @@ func _build_dashboard() -> void:
 	var district_details := _add_body(district_page, "")
 	district_details.name = "DistrictProgressDetails"
 
+	_add_section_title(district_page, "KARNATAKA DISTRICT PARTY OFFICES")
+	_add_body(district_page, "Your party maintains an office network across all 31 Karnataka districts. Select a district to review its organization, support, activity, and monthly operating costs. Outreach and recruitment are paid from party funds.")
+	district_office_picker = OptionButton.new()
+	district_office_picker.custom_minimum_size = Vector2(0, 48)
+	district_office_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for district_name in KARNATAKA_MAP_DISTRICTS:
+		district_office_picker.add_item(district_name)
+	district_office_picker.select(KARNATAKA_MAP_DISTRICTS.find("Udupi"))
+	district_office_picker.item_selected.connect(_on_district_office_selected)
+	district_page.add_child(district_office_picker)
+	var district_office_actions := HBoxContainer.new()
+	district_office_actions.add_theme_constant_override("separation", 8)
+	district_page.add_child(district_office_actions)
+	var outreach_button := Button.new()
+	outreach_button.text = "HOLD PUBLIC OUTREACH"
+	outreach_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	outreach_button.custom_minimum_size = Vector2(0, 48)
+	outreach_button.pressed.connect(_on_district_office_action.bind("outreach"))
+	district_office_actions.add_child(outreach_button)
+	var recruit_button := Button.new()
+	recruit_button.text = "RECRUIT VOLUNTEERS"
+	recruit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	recruit_button.custom_minimum_size = Vector2(0, 48)
+	recruit_button.pressed.connect(_on_district_office_action.bind("recruit"))
+	district_office_actions.add_child(recruit_button)
+	district_office_feedback = _add_body(district_page, "Office actions and their results will appear here.")
+	district_office_feedback.name = "DistrictOfficeFeedback"
+	district_office_feedback.add_theme_color_override("font_color", Color("#d6b15a"))
+	district_office_report = _add_body(district_page, "Select a district to view its office report.")
+	district_office_report.name = "DistrictOfficeReport"
+
+	_add_section_title(district_page, "OTHER STATES — ASSEMBLY CONSTITUENCY OFFICES")
+	_add_body(district_page, "Party offices are created for every Assembly constituency outside Karnataka. Placeholder constituency names remain visibly marked as fictional, not official. Each office has its own membership, workers, support, activity log, and monthly cost.")
+	assembly_office_state_picker = OptionButton.new()
+	assembly_office_state_picker.custom_minimum_size = Vector2(0, 48)
+	assembly_office_state_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for state_name in world.assembly_office_states():
+		assembly_office_state_picker.add_item(state_name)
+	assembly_office_state_picker.item_selected.connect(_on_assembly_office_state_selected)
+	district_page.add_child(assembly_office_state_picker)
+	assembly_office_constituency_picker = OptionButton.new()
+	assembly_office_constituency_picker.custom_minimum_size = Vector2(0, 48)
+	assembly_office_constituency_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	district_page.add_child(assembly_office_constituency_picker)
+	assembly_office_constituency_picker.item_selected.connect(_on_assembly_office_constituency_selected)
+	var assembly_office_actions := HBoxContainer.new()
+	assembly_office_actions.add_theme_constant_override("separation", 8)
+	district_page.add_child(assembly_office_actions)
+	var assembly_outreach := Button.new()
+	assembly_outreach.text = "HOLD OUTREACH"
+	assembly_outreach.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	assembly_outreach.custom_minimum_size = Vector2(0, 48)
+	assembly_outreach.pressed.connect(_on_assembly_office_action.bind("outreach"))
+	assembly_office_actions.add_child(assembly_outreach)
+	var assembly_recruit := Button.new()
+	assembly_recruit.text = "RECRUIT VOLUNTEERS"
+	assembly_recruit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	assembly_recruit.custom_minimum_size = Vector2(0, 48)
+	assembly_recruit.pressed.connect(_on_assembly_office_action.bind("recruit"))
+	assembly_office_actions.add_child(assembly_recruit)
+	assembly_office_feedback = _add_body(district_page, "Constituency office actions will appear here.")
+	assembly_office_feedback.add_theme_color_override("font_color", Color("#d6b15a"))
+	assembly_office_report = _add_body(district_page, "Select a state and Assembly constituency.")
+	_populate_assembly_office_constituencies()
+	
 	# The Office page is available only after the player personally wins office.
 	office_tab = _new_tab(dashboard_box, "Office")
 	office_tab.visible = false
@@ -603,7 +1044,7 @@ func _build_dashboard() -> void:
 	_add_body(office_tab, "You may represent residents and submit requests or proposals. Councils, civil servants, and competent departments retain their legal powers and operational duties.")
 	_add_section_title(office_tab, "OFFICIAL ACTIONS")
 	_add_office_action_card(office_tab, "Submit a development proposal", "File a proposal for council review. Approval and implementation are handled by the competent authorities.", "SUBMIT PROPOSAL", _on_submit_office_proposal)
-	_add_office_action_card(office_tab, "Raise a public-service issue", "Refer a local service concern to the responsible department for follow-up.", "RAISE ISSUE", _on_raise_constituency_issue)
+	_add_office_action_card(office_tab, "Raise a public-service issue", "Refer a local service concern to the responsible department for follow-up.", "RsimulationSE ISSUE", _on_raise_constituency_issue)
 	office_action_feedback = _add_body(office_tab, "Action results will appear here after you submit a proposal or raise an issue.")
 	office_action_feedback.name = "OfficeActionFeedback"
 	office_action_feedback.add_theme_color_override("font_color", Color("#d6b15a"))
@@ -651,7 +1092,7 @@ func _build_dashboard() -> void:
 	india_map_legend.add_theme_constant_override("h_separation", 10)
 	india_map_legend.add_theme_constant_override("v_separation", 8)
 	india_map_page.add_child(india_map_legend)
-	_add_body(india_map_page, "MAP KEY: Choose a layer to compare recorded political and administration indicators. Navy means no recorded data; gold marks the selected district. Population remains unavailable until the simulation includes population records.")
+	_add_body(india_map_page, "MAP KEY: Political power and influence use party colours; other layers compare recorded indicators. Navy means no recorded data; gold marks the selected district.")
 	india_map_grid = preload("res://scripts/india_map_view.gd").new()
 	india_map_grid.name = "InteractiveIndiaMap"
 	india_map_grid.custom_minimum_size = Vector2(0, 620)
@@ -668,10 +1109,21 @@ func _build_dashboard() -> void:
 	world_politics_label = _add_body(reports_page, "India-wide political simulation will initialize with your career.")
 	_add_section_title(reports_page, "YOUR LEGAL AUTHORITY")
 	authority_summary_label = _add_body(reports_page, "Your current political office and permitted actions will appear here.")
-	_add_section_title(reports_page, "AI GOVERNMENTS & ADMINISTRATION")
-	government_summary_label = _add_body(reports_page, "Union, state, and local governments are administered by AI unless the player holds a specific executive office.")
-	_add_section_title(reports_page, "WORLD & ACTIVITY REPORT")
+	_add_section_title(reports_page, "GOVERNMENTS & ADMINISTRATION")
+	government_summary_label = _add_body(reports_page, "Union, state, and local governments are administered by their elected leadership. Your party role alone does not grant executive office.")
+	_add_section_title(reports_page, "MONTHLY TURN BRIEFING")
 	report_label = _add_body(reports_page, "Your political journey is ready to begin.")
+	_add_section_title(reports_page, "AUTOMATIC RECORDS")
+	automatic_records_label = _add_body(reports_page, "Your activity history will be recorded automatically.")
+
+	var inbox_page := _new_tab(dashboard_box, "Inbox")
+	_add_section_title(inbox_page, "POLITICAL INBOX")
+	_add_body(inbox_page, "A single review list for pending party and constituency matters. Items link to the system where they can be handled. The inbox does not grant powers your current role does not have.")
+	inbox_summary = _add_body(inbox_page, "No pending matters.")
+	inbox_list = VBoxContainer.new()
+	inbox_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	inbox_list.add_theme_constant_override("separation", 9)
+	inbox_page.add_child(inbox_list)
 
 
 	_configure_touch_scroll_passthrough(overview)
@@ -1007,7 +1459,7 @@ func _on_complete_office_mission(mission_id: int) -> void:
 
 func _on_request_district_role() -> void:
 	world.request_district_party_role()
-	report_label.text = "\\n".join(PackedStringArray(world.notifications))
+	report_label.text = "\n".join(PackedStringArray(world.notifications))
 	_refresh()
 	_save_progress()
 
@@ -1044,6 +1496,7 @@ func _new_election_card(parent: VBoxContainer, title_text: String, subtitle_text
 	panel.add_theme_stylebox_override("panel", _card_style())
 	parent.add_child(panel)
 	var body := VBoxContainer.new()
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", 9)
 	panel.add_child(body)
 	var title := Label.new()
@@ -1154,12 +1607,24 @@ func _after_start(started: bool) -> void:
 		report_label.text = "\n".join(PackedStringArray(world.notifications))
 
 func _run_activity(activity: String) -> void:
-	report_label.text = "\n".join(PackedStringArray(world.perform_activity(activity)))
+	var activity_result := PackedStringArray(world.perform_activity(activity))
+	var result_text := "\n".join(activity_result)
+	report_label.text = result_text
+	if is_instance_valid(career_activity_feedback):
+		career_activity_feedback.text = result_text
 	_refresh()
 	_save_progress()
 
 func _on_advance_month() -> void:
-	report_label.text = "\n".join(PackedStringArray(world.advance_month()))
+	var monthly_events: Array[String] = world.advance_month()
+	var report_lines := PackedStringArray()
+	report_lines.append("MONTHLY TURN REPORT — " + world.date_label().to_upper())
+	report_lines.append("")
+	for event in monthly_events:
+		report_lines.append("• " + event)
+	report_lines.append("")
+	report_lines.append("NEXT: Review Elections, Party Organization, Office, or Inbox for matters that need your attention.")
+	report_label.text = "\n".join(report_lines)
 	_refresh()
 	_save_progress()
 
@@ -1169,56 +1634,261 @@ func _on_save_game() -> void:
 	else:
 		report_label.text = "Save failed. Check available storage and try again."
 
+func _record_current_activity() -> void:
+	if not is_instance_valid(world) or not world.career_started or not is_instance_valid(report_label):
+		return
+	var activity := report_label.text.strip_edges()
+	if activity.is_empty():
+		return
+	var records: Array = world.world_state.get("automatic_activity_records", [])
+	var entry := {
+		"date": world.date_label(),
+		"activity": activity
+	}
+	# Avoid duplicate entries when the same refresh/save path runs more than once.
+	if records.is_empty() or str(records.back().get("activity", "")) != activity or str(records.back().get("date", "")) != world.date_label():
+		records.append(entry)
+	while records.size() > 150:
+		records.pop_front()
+	world.world_state["automatic_activity_records"] = records
+	if is_instance_valid(automatic_records_label):
+		var lines: Array[String] = []
+		for i in range(maxi(0, records.size() - 20), records.size()):
+			var row: Dictionary = records[i]
+			lines.append("%s — %s" % [str(row.get("date", "")), str(row.get("activity", ""))])
+		automatic_records_label.text = "\n\n".join(PackedStringArray(lines)) if not lines.is_empty() else "No recorded activities yet."
+
 func _save_progress() -> void:
 	if is_instance_valid(world) and world.career_started:
+		_record_current_activity()
 		world.save_game()
 
+func _refresh_automatic_records() -> void:
+	if not is_instance_valid(world) or not is_instance_valid(automatic_records_label):
+		return
+	var records: Array = world.world_state.get("automatic_activity_records", [])
+	var lines: Array[String] = []
+	for i in range(maxi(0, records.size() - 20), records.size()):
+		var row: Dictionary = records[i]
+		if row is Dictionary:
+			lines.append("%s — %s" % [str(row.get("date", "")), str(row.get("activity", ""))])
+	automatic_records_label.text = "\n\n".join(PackedStringArray(lines)) if not lines.is_empty() else "No recorded activities yet."
+
 func _refresh() -> void:
-	# Keep the selected page by name while Office is shown/hidden. TabContainer
-	# indexes shift when a page is hidden, so preserving a raw index can land on Office.
+	_refresh_automatic_records()
+	# Refresh shared date/status immediately, then update only the visible page.
+	# This avoids rebuilding large rosters, election tickets, and office logs on unrelated taps.
 	var selected_page_name := _get_current_page_name()
 	date_label.text = world.date_label()
-	if world.career_started:
-		if world.apply_player_party_fund_grant_once():
-			_save_progress()
-		_refresh_overview_metrics()
-		if is_instance_valid(career_page_summary):
-			career_page_summary.text = world.career_summary()
-		if is_instance_valid(party_page_summary):
-			party_page_summary.text = world.party_summary()
-		finance_label.text = world.finance_summary()
-		_refresh_party_members()
-		if is_instance_valid(election_page_summary):
-			election_page_summary.text = world.election_summary()
-		_refresh_election_tabs()
-		if is_instance_valid(world_politics_label):
-			world_politics_label.text = world.world_politics_summary()
-		if is_instance_valid(authority_summary_label):
-			authority_summary_label.text = world.player_authority_summary()
-		if is_instance_valid(government_summary_label):
-			government_summary_label.text = world.government_system_summary()
-		if is_instance_valid(office_tab):
-			office_tab.visible = world.has_elected_office
-		if main_tab_buttons.size() > 5 and is_instance_valid(main_tab_buttons[5]):
-			main_tab_buttons[5].visible = world.has_elected_office
-		_restore_selected_page(selected_page_name)
-		if is_instance_valid(district_label):
-			district_label.text = world.district_progression_summary()
-		var district_details := dashboard_box.find_child("DistrictProgressDetails", true, false)
-		if is_instance_valid(district_details) and district_details is Label:
-			district_details.text = "Career rank: %s\\nExperience: %d / 30\\nReputation: %.1f / 10\\nParty leadership relationship: %.1f / 20\\nParty membership: %d / 50\\nLocal responsibilities completed: %d / 3\\nDistrict role: %s" % [
-				world.career_rank, world.experience, world.reputation, world.local_leader_relationship,
-				int(world.parties.get(world.player_party_id, {}).get("members", 0)),
-				world.district_service_record,
-				world.district_party_role if world.district_role_approved else ("Application pending" if world.district_role_application_pending else "Not appointed")
-			]
-		if world.has_elected_office:
-			if is_instance_valid(office_label):
-				office_label.text = world.office_summary()
-			_refresh_office_missions()
-			_refresh_office_log()
-		_refresh_india_map()
+	if not world.career_started:
+		return
 
+	if world.apply_player_party_fund_grant_once():
+		_save_progress()
+
+	# Office visibility can change after an election; keep navigation accurate without
+	# regenerating every page's content.
+	if is_instance_valid(office_tab):
+		office_tab.visible = world.has_elected_office
+	if main_tab_buttons.size() > 5 and is_instance_valid(main_tab_buttons[5]):
+		main_tab_buttons[5].visible = world.has_elected_office
+	_restore_selected_page(selected_page_name)
+	selected_page_name = _get_current_page_name()
+
+	match selected_page_name:
+		"Overview":
+			_refresh_overview_metrics()
+			if is_instance_valid(career_page_summary):
+				career_page_summary.text = world.career_summary()
+			if is_instance_valid(party_page_summary):
+				party_page_summary.text = world.party_summary()
+			if is_instance_valid(election_page_summary):
+				election_page_summary.text = world.election_summary()
+			if is_instance_valid(world_politics_label):
+				world_politics_label.text = world.world_politics_summary()
+			if is_instance_valid(authority_summary_label):
+				authority_summary_label.text = world.player_authority_summary()
+			if is_instance_valid(government_summary_label):
+				government_summary_label.text = world.government_system_summary()
+		"Career":
+			if is_instance_valid(career_page_summary):
+				career_page_summary.text = world.career_summary()
+			var career_profile_details := dashboard_box.find_child("CareerProfileDetails", true, false)
+			if is_instance_valid(career_profile_details) and career_profile_details is Label:
+				career_profile_details.text = world.career_summary() + "\n\nNEXT STEP\nChoose a Career Activity to build experience and reputation, or review Elections to pursue a public ticket."
+		"Party":
+			if is_instance_valid(party_page_summary):
+				party_page_summary.text = world.party_summary()
+			var party_overview_details := dashboard_box.find_child("PartyOverviewDetails", true, false)
+			if is_instance_valid(party_overview_details) and party_overview_details is Label:
+				party_overview_details.text = world.party_summary() + "\n\nORGANIZATION\nUse Members to manage the roster, Constitution to set leadership rules, and Finances to track personal, party, and campaign accounts."
+			finance_label.text = world.finance_summary()
+			_refresh_party_members()
+		"Elections":
+			if is_instance_valid(election_page_summary):
+				election_page_summary.text = world.election_summary()
+			_refresh_election_tabs()
+		"District":
+			if is_instance_valid(district_label):
+				district_label.text = world.district_progression_summary()
+			var district_details := dashboard_box.find_child("DistrictProgressDetails", true, false)
+			if is_instance_valid(district_details) and district_details is Label:
+				district_details.text = "Career rank: %s\nExperience: %d / 30\nReputation: %.1f / 10\nParty leadership relationship: %.1f / 20\nParty membership: %d / 50\nLocal responsibilities completed: %d / 3\nDistrict role: %s" % [
+					world.career_rank, world.experience, world.reputation, world.local_leader_relationship,
+					int(world.parties.get(world.player_party_id, {}).get("members", 0)),
+					world.district_service_record,
+					world.district_party_role if world.district_role_approved else ("Application pending" if world.district_role_application_pending else "Not appointed")
+				]
+			if is_instance_valid(district_office_picker):
+				var selected_index := district_office_picker.selected
+				if selected_index >= 0 and selected_index < district_office_picker.item_count:
+					district_office_selected = district_office_picker.get_item_text(selected_index)
+			if is_instance_valid(district_office_report):
+				district_office_report.text = world.party_district_office_report(district_office_selected) + "\n\n" + world.party_district_offices_statewide_report()
+			_refresh_assembly_office_report()
+		"Reports":
+			if is_instance_valid(world_politics_label):
+				world_politics_label.text = world.world_politics_summary()
+		"Office":
+			if is_instance_valid(authority_summary_label):
+				authority_summary_label.text = world.player_authority_summary()
+			if is_instance_valid(government_summary_label):
+				government_summary_label.text = world.government_system_summary()
+			if world.has_elected_office:
+				if is_instance_valid(office_label):
+					office_label.text = world.office_summary()
+				_refresh_office_missions()
+				_refresh_office_log()
+		"India Map":
+			_refresh_india_map()
+		"Inbox":
+			_refresh_inbox()
+		_:
+			pass
+
+
+func _refresh_inbox() -> void:
+	if not is_instance_valid(inbox_list):
+		return
+	_clear_children(inbox_list)
+	var items: Array[Dictionary] = []
+	for proposal in world.office_proposals:
+		var status := str(proposal.get("status", "Pending"))
+		if status.to_lower().contains("pending") or status.to_lower().contains("awaiting"):
+			items.append({"title": str(proposal.get("title", "Development proposal")), "detail": "Constituency proposal · Council review", "status": status, "page": "Office"})
+	for issue in world.constituency_issues:
+		var status := str(issue.get("status", "Submitted"))
+		if status.to_lower().contains("pending") or status.to_lower().contains("submitted"):
+			items.append({"title": str(issue.get("topic", "Public-service issue")), "detail": "Constituency issue · Department follow-up", "status": status, "page": "Office"})
+	if world.is_karnataka_contest_enabled():
+		var pending_tickets := 0
+		for row in world.karnataka_candidate_review_rows():
+			if str(row.get("decision", "Pending")) == "Pending":
+				pending_tickets += 1
+		if pending_tickets > 0:
+			items.append({"title": "Karnataka candidate nominations", "detail": "Assembly election · %d tickets need party review" % pending_tickets, "status": "Pending party review", "page": "Elections"})
+	if is_instance_valid(inbox_summary):
+		inbox_summary.text = "%d pending item(s) · Select an item’s destination to review it." % items.size()
+	if items.is_empty():
+		_add_info_card(inbox_list, "You’re all caught up", "New pending proposals, constituency issues and candidate reviews will appear here when recorded.", "INBOX CLEAR")
+		return
+	for item in items:
+		var card := PanelContainer.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.add_theme_stylebox_override("panel", _card_style())
+		inbox_list.add_child(card)
+		var body := VBoxContainer.new()
+		body.add_theme_constant_override("separation", 6)
+		card.add_child(body)
+		var title := Label.new()
+		title.text = str(item.title)
+		title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		title.add_theme_font_size_override("font_size", 16)
+		body.add_child(title)
+		_add_body(body, str(item.detail) + "\nStatus: " + str(item.status))
+		var destination := str(item.page)
+		if destination == "Office" and not world.has_elected_office:
+			_add_body(body, "LOCKED · Government office actions become available only after you personally win elected office. This item remains visible for reference.")
+		else:
+			var open_button := Button.new()
+			open_button.text = "OPEN " + destination.to_upper()
+			open_button.custom_minimum_size = Vector2(0, 42)
+			open_button.pressed.connect(_open_inbox_destination.bind(destination))
+			body.add_child(open_button)
+		_configure_touch_scroll_passthrough(card)
+
+func _open_inbox_destination(page_name: String) -> void:
+	# Inbox destinations must respect the player's current role and visible pages.
+	if page_name == "Office" and not world.has_elected_office:
+		return
+	var target_index := _get_visible_tab_index(page_name)
+	if target_index >= 0:
+		dashboard_box.current_tab = target_index
+		_update_bottom_navigation()
+		_refresh()
+
+
+func _populate_assembly_office_constituencies() -> void:
+	if not is_instance_valid(assembly_office_constituency_picker):
+		return
+	assembly_office_constituency_picker.clear()
+	var rows: Array = world.assembly_office_constituencies(assembly_office_selected_state)
+	for row in rows:
+		var name := str(row.get("name", "Assembly Constituency %03d" % int(row.get("number", 0))))
+		var status := str(row.get("record_status", ""))
+		if status != "verified":
+			name += "  [FICTIONAL PLACEHOLDER]"
+		assembly_office_constituency_picker.add_item("%03d — %s" % [int(row.get("number", 0)), name])
+	if not rows.is_empty():
+		assembly_office_constituency_picker.select(0)
+		assembly_office_selected_seat = int(rows[0].get("number", 1))
+	_refresh_assembly_office_report()
+
+func _on_assembly_office_state_selected(index: int) -> void:
+	if not is_instance_valid(assembly_office_state_picker) or index < 0 or index >= assembly_office_state_picker.item_count:
+		return
+	assembly_office_selected_state = assembly_office_state_picker.get_item_text(index)
+	_populate_assembly_office_constituencies()
+
+func _on_assembly_office_constituency_selected(index: int) -> void:
+	var rows: Array = world.assembly_office_constituencies(assembly_office_selected_state)
+	if index < 0 or index >= rows.size():
+		return
+	assembly_office_selected_seat = int(rows[index].get("number", 1))
+	_refresh_assembly_office_report()
+
+func _refresh_assembly_office_report() -> void:
+	if not is_instance_valid(assembly_office_report) or not is_instance_valid(assembly_office_constituency_picker):
+		return
+	var rows: Array = world.assembly_office_constituencies(assembly_office_selected_state)
+	var index := assembly_office_constituency_picker.selected
+	if index >= 0 and index < rows.size():
+		assembly_office_selected_seat = int(rows[index].get("number", 1))
+		assembly_office_report.text = world.assembly_constituency_office_report(assembly_office_selected_state, assembly_office_selected_seat) + "\n\n" + world.assembly_constituency_offices_state_report(assembly_office_selected_state)
+
+func _on_assembly_office_action(action: String) -> void:
+	var result := world.run_assembly_constituency_office_action(assembly_office_selected_state, assembly_office_selected_seat, action)
+	if is_instance_valid(assembly_office_feedback):
+		assembly_office_feedback.text = result
+	_refresh_assembly_office_report()
+	_refresh()
+	_save_progress()
+
+func _on_district_office_selected(index: int) -> void:
+	if not is_instance_valid(district_office_picker):
+		return
+	if index < 0 or index >= district_office_picker.item_count:
+		return
+	district_office_selected = district_office_picker.get_item_text(index)
+	if is_instance_valid(district_office_report):
+		district_office_report.text = world.party_district_office_report(district_office_selected) + "\n\n" + world.party_district_offices_statewide_report()
+
+func _on_district_office_action(action: String) -> void:
+	var result := world.run_party_district_office_action(district_office_selected, action)
+	if is_instance_valid(district_office_feedback):
+		district_office_feedback.text = result
+	_refresh()
+	_save_progress()
 
 const INDIA_MAP_STATES: Array[String] = [
 	"Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
@@ -1266,7 +1936,8 @@ func _on_map_geometry_selected(region_name: String, state_name: String) -> void:
 		_on_map_district_selected(region_name)
 	else:
 		india_map_selected_district = region_name
-		_refresh_india_map()
+		if _get_current_page_name() == "India Map":
+			_refresh_india_map()
 
 func _refresh_india_map() -> void:
 	if not is_instance_valid(india_map_grid) or not is_instance_valid(india_map_details):
@@ -1274,7 +1945,7 @@ func _refresh_india_map() -> void:
 	var layer := india_map_layer_picker.get_item_text(india_map_layer_picker.selected) if is_instance_valid(india_map_layer_picker) else "Political control"
 	if not world.career_started:
 		india_map_grid.set_map_state(india_map_level, india_map_selected_state, india_map_selected_district, layer, {}, {}, {}, {}, {}, world.party_map_colors(), {})
-		india_map_details.text = "INDIA POLITICAL ATLAS\nStart a political career to initialize the AI-managed Union, state, and district administrations. The map shows the real supplied boundaries; political control appears after your career begins."
+		india_map_details.text = "INDIA POLITICAL ATLAS\nStart a political career to initialize the Union, state, and district administrations. The map shows the real supplied boundaries; political control appears after your career begins."
 		_refresh_india_map_legend(layer, {}, {}, world.party_map_colors())
 		return
 	var winners: Dictionary = {}
@@ -1282,31 +1953,46 @@ func _refresh_india_map() -> void:
 	var seats: Dictionary = {}
 	var phases: Dictionary = {}
 	var map_metrics: Dictionary = {}
+	var needs_numeric_metrics := layer not in ["Political control", "Political influence", "Political power"]
 	var national_government: Dictionary = world.get_national_government()
 	var national_party_id := str(national_government.get("ruling_party_id", ""))
 	for state_variant in INDIA_MAP_STATES:
 		var state_name := str(state_variant)
 		var government: Dictionary = world.get_state_government(state_name)
 		var winner_id := str(government.get("ruling_party_id", ""))
+		# Influence maps identify the party with the strongest recorded support;
+		# power/control maps identify the party leading the government.
+		if layer == "Political influence":
+			winner_id = _india_map_most_supported_party(state_name)
 		# Union Territories use the Union administration as the simplified map fallback.
-		if winner_id.is_empty():
+		if winner_id.is_empty() and layer != "Political influence":
 			winner_id = national_party_id
 		if not winner_id.is_empty():
 			winners[state_name] = winner_id
-		supports[state_name] = _india_map_support(state_name)
-		var election := _india_map_state_election(state_name)
-		map_metrics[state_name] = _india_map_government_metrics(government, state_name, election)
-		seats[state_name] = int(election.get("assembly_seats", 0))
-		phases[state_name] = str(election.get("phase", "No assembly election record"))
+		if needs_numeric_metrics:
+			supports[state_name] = _india_map_support(state_name)
+			var election := _india_map_state_election(state_name)
+			map_metrics[state_name] = _india_map_government_metrics(government, state_name, election)
+			seats[state_name] = int(election.get("assembly_seats", 0))
+			phases[state_name] = str(election.get("phase", "No assembly election record"))
 	var local_winners: Dictionary = world.local_government_party_map(india_map_selected_state if india_map_level > 0 else "")
-	if india_map_level > 0:
-		for district_key_variant in local_winners.keys():
-			var district_key := str(district_key_variant)
-			var parts := district_key.split("|", false, 2)
-			if parts.size() != 2:
+	if india_map_level > 0 and needs_numeric_metrics:
+		# Build metric entries from the full district catalog, not only districts
+		# with a recorded ruling-party winner. Metric layers are independent of
+		# political-control records, so every district can show its saved
+		# administration scores even when its party-control record is absent.
+		var district_catalog: Array = world._load_india_district_catalog()
+		for district_variant in district_catalog:
+			if not district_variant is Dictionary:
 				continue
-			var local_government: Dictionary = world.get_local_government(parts[0], parts[1])
-			map_metrics[district_key] = _india_map_government_metrics(local_government, parts[0], {})
+			var district_entry: Dictionary = district_variant
+			var district_state := str(district_entry.get("state", ""))
+			var district_name := str(district_entry.get("district", ""))
+			if district_state != india_map_selected_state or district_name.is_empty():
+				continue
+			var district_key := "%s|%s" % [district_state.strip_edges(), district_name.strip_edges()]
+			var local_government: Dictionary = world.get_local_government(district_state, district_name)
+			map_metrics[district_key] = _india_map_government_metrics(local_government, district_state, {})
 	var party_colors: Dictionary = world.party_map_colors()
 	india_map_grid.set_map_state(
 		india_map_level, india_map_selected_state, india_map_selected_district,
@@ -1319,10 +2005,10 @@ func _refresh_india_map() -> void:
 		india_map_details.text = "INDIA-WIDE BRIEFING\n%s\nTap a state boundary on the map to open its state government and district map." % world.national_government_briefing()
 	elif india_map_level == 1:
 		india_map_breadcrumb.text = "INDIA  /  %s  /  DISTRICTS" % india_map_selected_state.to_upper()
-		india_map_details.text = _india_map_state_summary(india_map_selected_state, state_election, layer) + "\n\nTap a district boundary to view its AI-managed local administration."
+		india_map_details.text = _india_map_state_summary(india_map_selected_state, state_election, layer) + "\n\nTap a district boundary to view its local administration."
 	else:
 		india_map_breadcrumb.text = "INDIA  /  %s  /  %s" % [india_map_selected_state.to_upper(), india_map_selected_district.to_upper()]
-		india_map_details.text = "DISTRICT / LOCAL GOVERNMENT BRIEFING\n%s, %s\n\n%s\n\nBoundary source: supplied district GeoJSON. Local political control is an AI-managed simulation baseline unless a future local-body election record replaces it." % [
+		india_map_details.text = "DISTRICT / LOCAL GOVERNMENT BRIEFING\n%s, %s\n\n%s\n\nBoundary source: supplied district GeoJSON. Local political control is an simulation baseline unless a future local-body election record replaces it." % [
 			india_map_selected_district, india_map_selected_state,
 			world.local_government_briefing(india_map_selected_state, india_map_selected_district)
 		]
@@ -1332,7 +2018,7 @@ func _refresh_india_map_legend(layer: String, state_winners: Dictionary, local_w
 	if not is_instance_valid(india_map_legend):
 		return
 	_clear_children(india_map_legend)
-	if layer == "Political control":
+	if layer in ["Political control", "Political influence", "Political power"]:
 		var visible_party_ids: Dictionary = {}
 		var source_map: Dictionary = state_winners if india_map_level == 0 else local_winners
 		for party_id_variant in source_map.values():
@@ -1346,7 +2032,7 @@ func _refresh_india_map_legend(layer: String, state_winners: Dictionary, local_w
 			var party: Dictionary = world.parties.get(legend_party_id, {})
 			var color_hex := str(party_colors.get(legend_party_id, "#263b54"))
 			_add_india_map_legend_item(Color(color_hex), str(party.get("name", legend_party_id)))
-		_add_india_map_legend_item(Color("#263b54"), "No government record")
+		_add_india_map_legend_item(Color("#263b54"), "No party record")
 		if india_map_level == 2:
 			_add_india_map_legend_item(Color("#f2d27b"), "Selected district")
 	else:
@@ -1395,6 +2081,19 @@ func _india_map_state_election(state_name: String) -> Dictionary:
 			return election
 	return {}
 
+func _india_map_most_supported_party(state_name: String) -> String:
+	var support_by_party: Dictionary = world.world_state.get("regional_support", {})
+	var best_party_id := ""
+	var best_support := -1.0
+	for party_id_variant in support_by_party.keys():
+		var party_id := str(party_id_variant)
+		var by_state: Dictionary = support_by_party.get(party_id, {})
+		var support := float(by_state.get(state_name, 0.0))
+		if support > best_support:
+			best_support = support
+			best_party_id = party_id
+	return best_party_id if best_support > 0.0 else ""
+
 func _india_map_support(state_name: String) -> float:
 	var support_by_party: Dictionary = world.world_state.get("regional_support", {})
 	var best_support := 0.0
@@ -1410,18 +2109,21 @@ func _india_map_tile_text(state_name: String, layer: String) -> String:
 	var metrics := _india_map_government_metrics(government, state_name, election)
 	if layer != "Political control":
 		var value := float(metrics.get(layer, -1.0))
-		return "%s\\n%s" % [state_name, "%.0f/100" % value if value >= 0.0 else "No data"]
+		return "%s\n%s" % [state_name, "%.0f/100" % value if value >= 0.0 else "No data"]
 	var party_id := str(government.get("ruling_party_id", ""))
-	return "%s\\n%s" % [state_name, _india_map_party_name(party_id) if not party_id.is_empty() else "No government"]
+	return "%s\n%s" % [state_name, _india_map_party_name(party_id) if not party_id.is_empty() else "No government"]
 
 func _india_map_government_metrics(government: Dictionary, state_name: String, election: Dictionary) -> Dictionary:
 	var performance: Dictionary = government.get("performance", {})
-	var service := float(performance.get("service_delivery", -1.0))
-	var welfare := float(performance.get("welfare", -1.0))
-	var economy := float(performance.get("economy", -1.0))
-	var infrastructure := float(performance.get("infrastructure", -1.0))
-	var safety := float(performance.get("public_safety", -1.0))
-	var approval := float(performance.get("public_approval", -1.0))
+	# Legacy/local government records may exist without a populated performance
+	# dictionary. Use a neutral baseline for simulation metrics so map layers
+	# remain meaningful; keep Population explicitly unavailable below.
+	var service := float(performance.get("service_delivery", 50.0))
+	var welfare := float(performance.get("welfare", 50.0))
+	var economy := float(performance.get("economy", 50.0))
+	var infrastructure := float(performance.get("infrastructure", 50.0))
+	var safety := float(performance.get("public_safety", 50.0))
+	var approval := float(performance.get("public_approval", 50.0))
 	var result: Dictionary = {
 		"Development index": _average_available([service, welfare, economy, infrastructure, safety]),
 		"Political influence": _india_map_support(state_name),
@@ -1460,25 +2162,25 @@ func _india_map_layer_summary(layer: String) -> String:
 		"Development index":
 			return "Composite of recorded economy, welfare, infrastructure, service delivery, and public-safety scores. Regions without these records are marked No data."
 		"Political influence":
-			return "Shows the strongest recorded regional party support, not a measure of legal authority."
+			return "Colors each state by the party with the strongest recorded regional support. Districts use the recorded local ruling party where available."
 		"Political power":
-			return "Shows the governing coalition's recorded share of assembly seats where seat data exists."
+			return "Colors each state by its ruling party and each district by its recorded local ruling party, rather than showing a numeric score."
 		"Economy":
-			return "Shows the AI government's recorded economy performance score."
+			return "Shows the government's recorded economy performance score."
 		"Population":
 			return "Population is not yet stored in this simulation, so regions show No data rather than invented figures."
 		"Public welfare":
-			return "Shows the AI government's recorded welfare performance score."
+			return "Shows the government's recorded welfare performance score."
 		"Infrastructure":
-			return "Shows the AI government's recorded infrastructure performance score."
+			return "Shows the government's recorded infrastructure performance score."
 		"Election performance":
 			return "Shows recorded player-party vote share when that value exists; otherwise the region is marked No data."
 		"Public approval":
-			return "Shows the AI government's recorded public-approval score."
+			return "Shows the government's recorded public-approval score."
 		"Social indicators":
 			return "Uses recorded service-delivery performance as the available social-services indicator."
 		"Law & order":
-			return "Shows the AI government's recorded public-safety score."
+			return "Shows the government's recorded public-safety score."
 	return "Each region is coloured by its recorded ruling party. On state maps, district colours show the recorded local administration."
 
 func _india_map_state_summary(state_name: String, election: Dictionary, layer: String) -> String:
@@ -1506,7 +2208,7 @@ func _refresh_election_tabs() -> void:
 		world.local_election_year,
 		world.last_local_election_result if world.last_local_election_year > 0 else "No personal result recorded",
 		world._government_party_name(str(home_local_government.get("ruling_party_id", ""))),
-		str(home_local_government.get("leader_name", "AI administrator pending")),
+		str(home_local_government.get("leader_name", "Administrator not recorded")),
 		world._month_name(int(home_local_government.get("next_election_month", 12))),
 		int(home_local_government.get("next_election_year", world.year + 5)),
 		str(home_local_government.get("last_local_election_result", "No district-local result recorded yet"))
@@ -1514,13 +2216,29 @@ func _refresh_election_tabs() -> void:
 	if election_detail_labels.has("local") and is_instance_valid(election_detail_labels["local"]):
 		election_detail_labels["local"].text = local_text
 
+	# Ensure legacy saves are migrated before the state cards read their election list.
+	world._ensure_election_schema()
 	var state_elections: Array = world.world_state.get("state_elections", [])
 	_refresh_state_election_cards(state_elections)
+	_refresh_election_results(state_elections)
 	var high_command: Dictionary = world.world_state.get("high_command", {})
 	if is_instance_valid(high_command_status):
 		high_command_status.text = world.high_command_summary()
+	_refresh_karnataka_candidate_review()
+	_refresh_constituency_planner()
+	if is_instance_valid(high_command_analytics_label):
+		high_command_analytics_label.text = world.strategic_performance_summary()
+	if is_instance_valid(high_command_readiness_label):
+		high_command_readiness_label.text = world.election_readiness_summary()
 	if is_instance_valid(high_command_budget):
-		high_command_budget.value = int(high_command.get("monthly_campaign_budget", 50000))
+		high_command_budget.value = float(int(high_command.get("monthly_campaign_budget", 500000000))) / 10000000.0
+	if is_instance_valid(high_command_focus):
+		var focus_value := str(high_command.get("campaign_focus_state", ""))
+		var focus_label := focus_value if not focus_value.is_empty() else "No state focus"
+		for fi in range(high_command_focus.item_count):
+			if high_command_focus.get_item_text(fi) == focus_label:
+				high_command_focus.select(fi)
+				break
 	if is_instance_valid(high_command_priority):
 		var selected_priority := str(high_command.get("strategy", "Balanced outreach"))
 		for pi in range(high_command_priority.item_count):
@@ -1528,7 +2246,7 @@ func _refresh_election_tabs() -> void:
 				high_command_priority.select(pi)
 				break
 	if is_instance_valid(high_command_coalition):
-		var selected_coalition := str(high_command.get("coalition_policy", "AI negotiate a working majority"))
+		var selected_coalition := str(high_command.get("coalition_policy", "Negotiate a working majority"))
 		for ci in range(high_command_coalition.item_count):
 			if high_command_coalition.get_item_text(ci) == selected_coalition:
 				high_command_coalition.select(ci)
@@ -1544,28 +2262,352 @@ func _refresh_election_tabs() -> void:
 			int(national.get("last_eligible_voters", 0)), int(national.get("last_ballots_cast", 0)),
 			str(national.get("last_result", "Not yet held")),
 			world._government_party_name(str(union_government.get("ruling_party_id", ""))),
-			str(union_government.get("leader_name", "AI leader pending")),
+			str(union_government.get("leader_name", "leader pending")),
 			str(union_government.get("formation_type", "Coalition administration"))
 		]
+
+func _format_election_number(value: int) -> String:
+	var raw := str(maxi(0, value))
+	var output := ""
+	var group_count := 0
+	for index in range(raw.length() - 1, -1, -1):
+		output = raw.substr(index, 1) + output
+		group_count += 1
+		if group_count == 3 and index > 0:
+			output = "," + output
+			group_count = 0
+	return output
+
+
+func _refresh_election_results(state_elections: Array) -> void:
+	if is_instance_valid(election_live_results_label):
+		var live_lines: PackedStringArray = []
+		for item in state_elections:
+			if not item is Dictionary:
+				continue
+			var phase := str(item.get("phase", "Scheduled"))
+			if phase not in ["Campaigning", "Counting", "Results"]:
+				continue
+			var state_name := str(item.get("state", "State"))
+			var year := int(item.get("next_year", world.year))
+			var month := int(item.get("month", world.month))
+			var contested := int(item.get("player_party_candidates_contested", 0))
+			var elected := int(item.get("player_party_candidates_elected", 0))
+			var seats := int(item.get("assembly_seats", 0))
+			var vote_shares: Dictionary = item.get("last_vote_shares", {})
+			var player_share := float(vote_shares.get(world.player_party_id, 0.0))
+			var result_text := str(item.get("last_result", "Result not finalized"))
+			live_lines.append("%s — %s %d\nPhase: %s\nAssembly seats: %d\nParty candidates: %d contested · %d elected so far\nRecorded party vote share: %.1f%%\nStatus: %s" % [state_name, world._month_name(month), year, phase, seats, contested, elected, player_share, result_text])
+		election_live_results_label.text = "\n\n".join(live_lines) if not live_lines.is_empty() else "No state assembly election is currently campaigning or counting. Upcoming elections remain listed under State Assemblies."
+
+	if not is_instance_valid(election_archive_tabs):
+		return
+
+	# Building detailed constituency cards creates a large Control tree. Reuse it
+	# when the saved election records have not changed instead of rebuilding on
+	# every visit to the Elections page.
+	var result_key_parts: PackedStringArray = [
+		world.player_party_id,
+		str(world.last_local_election_year),
+		world.last_local_election_result
+	]
+	for cache_item_variant in state_elections:
+		if not cache_item_variant is Dictionary:
+			continue
+		var cache_item: Dictionary = cache_item_variant
+		var cache_seats: Dictionary = cache_item.get("last_seats", {})
+		var cache_shares: Dictionary = cache_item.get("last_vote_shares", {})
+		var cache_constituencies: Array = cache_item.get("last_constituency_results", [])
+		result_key_parts.append("%s|%s|%s|%s|%d|%s|%s|%d|%d|%.2f" % [
+			str(cache_item.get("state", "")),
+			str(cache_item.get("phase", "")),
+			str(cache_item.get("last_year", "")),
+			str(cache_item.get("last_result", "")),
+			cache_constituencies.size(),
+			str(cache_seats),
+			str(cache_shares),
+			int(cache_item.get("last_ballots_cast", 0)),
+			int(cache_item.get("last_eligible_voters", 0)),
+			float(cache_item.get("last_turnout_percent", 0.0))
+		])
+	var national_cache_data: Dictionary = world.world_state.get("national_election", {})
+	result_key_parts.append("%s|%s|%s|%s" % [
+		str(national_cache_data.get("last_year", "")),
+		str(national_cache_data.get("last_result", "")),
+		str(national_cache_data.get("last_winner", "")),
+		str(national_cache_data.get("last_seats", {}))
+	])
+	var result_cache_key := "\n".join(result_key_parts)
+	if result_cache_key == _election_results_render_key:
+		return
+	_election_results_render_key = result_cache_key
+
+	for child in election_archive_tabs.get_children():
+		election_archive_tabs.remove_child(child)
+		child.queue_free()
+
+	var local_page := _new_tab(election_archive_tabs, "Local Elections")
+	_add_section_title(local_page, "LOCAL ELECTION RESULTS")
+	var state_page := _new_tab(election_archive_tabs, "State Assembly")
+	_add_section_title(state_page, "STATE ASSEMBLY RESULTS")
+	var state_result_tabs := TabContainer.new()
+	state_result_tabs.name = "StateAssemblyResultTabs"
+	state_result_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	state_result_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	state_result_tabs.custom_minimum_size = Vector2(0, 460)
+	state_page.add_child(state_result_tabs)
+	var national_page := _new_tab(election_archive_tabs, "Lok Sabha")
+	_add_section_title(national_page, "LOK SABHA RESULTS")
+
+	var ordered: Array = state_elections.duplicate()
+	ordered.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var ay := int(a.get("last_year", a.get("next_year", 0)))
+		var by := int(b.get("last_year", b.get("next_year", 0)))
+		if ay == by:
+			return str(a.get("state", "")) < str(b.get("state", ""))
+		return ay > by
+	)
+
+	var added_count := 0
+	for item_variant in ordered:
+		if not item_variant is Dictionary:
+			continue
+		var item: Dictionary = item_variant
+		var state_name := str(item.get("state", "State"))
+		var completed_year := int(item.get("last_year", -1))
+		var phase := str(item.get("phase", "Scheduled"))
+		var election_year := completed_year if completed_year >= 0 else int(item.get("next_year", world.year))
+		var tab_title := "%s %d" % [state_name, election_year]
+		if completed_year < 0:
+			tab_title = "%s · %s" % [state_name, phase]
+		var election_page := _new_tab(state_result_tabs, tab_title)
+		added_count += 1
+
+		_add_section_title(election_page, "%s STATE ASSEMBLY ELECTION" % state_name.to_upper())
+		if completed_year < 0:
+			var upcoming_card := _new_election_card(election_page, "Election status", "No completed result is saved for this election")
+			_add_body(upcoming_card, "Scheduled: %s %d\nCurrent phase: %s\nAssembly seats: %d\nResults will appear here after the simulation resolves this election." % [world._month_name(int(item.get("month", world.month))), election_year, phase, int(item.get("assembly_seats", 0))])
+			continue
+
+		var winner_id := str(item.get("last_winner", ""))
+		var winner := world._government_party_name(winner_id)
+		var result_summary := str(item.get("last_result", "Result recorded"))
+		var seats: Dictionary = item.get("last_seats", {})
+		var total_seats := int(item.get("assembly_seats", 0))
+		var majority := int(floor(float(total_seats) / 2.0)) + 1
+		var player_seats := int(seats.get(world.player_party_id, 0))
+		var vote_shares: Dictionary = item.get("last_vote_shares", {})
+		var ballots := int(item.get("last_ballots_cast", 0))
+		var eligible := int(item.get("last_eligible_voters", 0))
+		var turnout := float(item.get("last_turnout_percent", 0.0))
+		var player_share := float(vote_shares.get(world.player_party_id, 0.0))
+		var spending_by_party: Dictionary = item.get("last_campaign_spending", {})
+		var player_spending := int(spending_by_party.get(world.player_party_id, 0))
+		var constituency_results: Array = item.get("last_constituency_results", [])
+
+		var party_votes: Dictionary = {}
+		var player_contested := 0
+		var player_won := 0
+		var player_lost := 0
+		for seat_variant in constituency_results:
+			if not seat_variant is Dictionary:
+				continue
+			var seat_record: Dictionary = seat_variant
+			var winner_party_id := str(seat_record.get("winner_party_id", ""))
+			var candidates: Array = seat_record.get("candidates", [])
+			var player_candidate_found := false
+			for candidate_variant in candidates:
+				if not candidate_variant is Dictionary:
+					continue
+				var candidate_row: Dictionary = candidate_variant
+				var party_id := str(candidate_row.get("party_id", ""))
+				party_votes[party_id] = int(party_votes.get(party_id, 0)) + int(candidate_row.get("votes", 0))
+				if party_id == world.player_party_id:
+					player_candidate_found = true
+			if player_candidate_found:
+				player_contested += 1
+				if winner_party_id == world.player_party_id:
+					player_won += 1
+				else:
+					player_lost += 1
+
+		var overview_card := _new_election_card(election_page, "Election outcome", "Recorded result · %d seats · majority mark %d" % [total_seats, majority])
+		_add_body(overview_card, "WINNING PARTY\n%s\n\nRESULT\n%s\n\nYOUR PARTY\n%d seats · %.1f%% recorded vote share\n%d contested · %d won · %d lost\n\nTURNOUT\n%.1f%% · %s ballots cast from %s eligible voters\n\nYOUR CAMPAIGN SPENDING\n₹%s" % [winner, result_summary, player_seats, player_share, player_contested, player_won, player_lost, turnout, _format_election_number(ballots), _format_election_number(eligible), _format_election_number(player_spending)])
+
+		var standings_card := _new_election_card(election_page, "Party standings", "Seats, recorded vote share, and votes counted from constituency candidate records")
+		var standings: Array[Dictionary] = []
+		for party_id_variant in seats.keys():
+			var party_id := str(party_id_variant)
+			var vote_total := int(party_votes.get(party_id, 0))
+			var share := float(vote_total) * 100.0 / float(maxi(1, ballots))
+			standings.append({"id": party_id, "name": world._government_party_name(party_id), "seats": int(seats.get(party_id_variant, 0)), "votes": vote_total, "share": share})
+		standings.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			if int(a.get("seats", 0)) == int(b.get("seats", 0)):
+				return int(a.get("votes", 0)) > int(b.get("votes", 0))
+			return int(a.get("seats", 0)) > int(b.get("seats", 0))
+		)
+		var standings_lines: PackedStringArray = []
+		for rank in range(standings.size()):
+			var standing: Dictionary = standings[rank]
+			standings_lines.append("%d. %s\n%d seats · %s votes · %.1f%%" % [rank + 1, str(standing.get("name", "Party")), int(standing.get("seats", 0)), _format_election_number(int(standing.get("votes", 0))), float(standing.get("share", 0.0))])
+		_add_body(standings_card, "\n\n".join(standings_lines) if not standings_lines.is_empty() else "Party standings were not saved.")
+
+		var constituency_card := _new_election_card(election_page, "Constituency results", "Recorded candidate results · each constituency shown separately")
+		var constituency_list := VBoxContainer.new()
+		constituency_list.add_theme_constant_override("separation", 8)
+		constituency_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		constituency_card.add_child(constituency_list)
+		if constituency_results.is_empty():
+			_add_body(constituency_card, "Constituency-level candidate records were not saved for this election.")
+		else:
+			for seat_variant in constituency_results:
+				if not seat_variant is Dictionary:
+					continue
+				var seat_record: Dictionary = seat_variant
+				var constituency_name := str(seat_record.get("constituency", "Constituency %d" % int(seat_record.get("seat_number", 0))))
+				var winner_party_id := str(seat_record.get("winner_party_id", ""))
+				var winner_party_name := world._government_party_name(winner_party_id)
+				var winner_candidate := str(seat_record.get("winner_candidate_name", "Winner not recorded"))
+				var candidates: Array = seat_record.get("candidates", [])
+				var winner_votes := 0
+				var player_candidate_name := ""
+				var player_candidate_votes := 0
+				var candidate_name_counts: Dictionary = {}
+				for candidate_variant in candidates:
+					if not candidate_variant is Dictionary:
+						continue
+					var candidate_row: Dictionary = candidate_variant
+					var candidate_party_id := str(candidate_row.get("party_id", ""))
+					var candidate_votes := int(candidate_row.get("votes", 0))
+					var candidate_name := str(candidate_row.get("candidate_name", "")).strip_edges()
+					candidate_name_counts[candidate_name] = int(candidate_name_counts.get(candidate_name, 0)) + 1
+					if candidate_party_id == winner_party_id:
+						winner_votes = candidate_votes
+				if int(candidate_name_counts.get(winner_candidate, 0)) > 1:
+					winner_candidate = "Candidate name ambiguous in saved record"
+				for candidate_variant in candidates:
+					if not candidate_variant is Dictionary:
+						continue
+					var candidate_row: Dictionary = candidate_variant
+					if str(candidate_row.get("party_id", "")) == world.player_party_id:
+						player_candidate_name = str(candidate_row.get("candidate_name", ""))
+						player_candidate_votes = int(candidate_row.get("votes", 0))
+						if int(candidate_name_counts.get(player_candidate_name, 0)) > 1:
+							player_candidate_name = "Candidate name ambiguous in saved record"
+				var player_party_name := world._government_party_name(world.player_party_id)
+				var player_result_text := "No candidate result recorded."
+				if not player_candidate_name.is_empty():
+					if winner_party_id == world.player_party_id:
+						player_result_text = "%s (%s) · %s votes · WON" % [player_candidate_name, player_party_name, _format_election_number(player_candidate_votes)]
+					else:
+						player_result_text = "%s (%s) · %s votes · lost by %s votes" % [player_candidate_name, player_party_name, _format_election_number(player_candidate_votes), _format_election_number(maxi(0, winner_votes - player_candidate_votes))]
+				var outcome_label := "Your party won" if winner_party_id == world.player_party_id else "Your party lost" if not player_candidate_name.is_empty() else "No party candidate recorded"
+				var constituency_card_row := _new_election_card(constituency_list, constituency_name, "%s · %s" % [winner_party_name, outcome_label])
+				_add_body(constituency_card_row, "WINNER\n%s (%s) · %s votes\n\nYOUR PARTY\n%s" % [winner_candidate, winner_party_name, _format_election_number(winner_votes), player_result_text])
+
+	# National and local contests get their own result tabs too; only fields actually saved by the career are displayed.
+	var national: Dictionary = world.world_state.get("national_election", {})
+	var national_year := int(national.get("last_year", -1))
+	 
+	var national_card := _new_election_card(national_page, "National result", "Recorded parliamentary election outcome")
+	if national_year >= 0:
+		var national_winner_id := str(national.get("last_winner", ""))
+		var national_winner := world._government_party_name(national_winner_id)
+		var national_seats: Dictionary = national.get("last_seats", {})
+		var national_total_seats := int(national.get("seats", 543))
+		var national_majority := int(floor(float(national_total_seats) / 2.0)) + 1
+		var national_result := str(national.get("last_result", "Result recorded"))
+		var national_standings: PackedStringArray = []
+		for party_id_variant in national_seats.keys():
+			var party_id := str(party_id_variant)
+			national_standings.append("%s — %d seats" % [world._government_party_name(party_id), int(national_seats.get(party_id_variant, 0))])
+		national_standings.sort()
+		_add_body(national_card, "Election year: %d\nWinning party: %s\nSeats: %d · Majority mark: %d\n\n%s\n\nPARTY SEATS\n%s" % [national_year, national_winner, national_total_seats, national_majority, national_result, "\n".join(national_standings) if not national_standings.is_empty() else "Party seat totals not recorded."])
+	else:
+		_add_body(national_card, "Next modeled election: %s %d\nNo completed Lok Sabha result is recorded in this career yet." % [world._month_name(int(national.get("month", 5))), int(national.get("next_year", world.year))])
+
+	 
+	var local_card := _new_election_card(local_page, "Local contest record", "Personal local election outcome")
+	var local_year := int(world.last_local_election_year)
+	if local_year > 0:
+		_add_body(local_card, "Election year: %d\nResult: %s" % [local_year, str(world.last_local_election_result)])
+	else:
+		_add_body(local_card, "No completed personal local election result is recorded yet.\nNext modeled election year: %d" % int(world.local_election_year))
+
+	if added_count == 0:
+		var empty_page := _new_tab(state_result_tabs, "No records")
+		_add_section_title(empty_page, "NO STATE ASSEMBLY RECORDS")
+		_add_body(empty_page, "No state assembly election records are available in this career yet.")
 
 func _refresh_state_election_cards(state_elections: Array) -> void:
 	if not is_instance_valid(state_election_cards):
 		return
+	# Election cards contain many controls. Skip rebuilding them when the saved
+	# election data is unchanged; the full results archive has its own cache.
+	# A compact UI cache key based on the complete saved election records prevents
+	# rebuilding hundreds of controls when the player returns to an unchanged page.
+	var render_key := "%d|%d|%s" % [world.year, world.month, str(state_elections)]
+	if render_key == _state_election_cards_render_key:
+		return
+	_state_election_cards_render_key = render_key
 	for child in state_election_cards.get_children():
 		state_election_cards.remove_child(child)
 		child.queue_free()
 
 	var ordered: Array = state_elections.duplicate(true)
+	# UI-level fallback: older or malformed saves can still contain only a subset.
+	# Keep every saved record, then add only missing modeled states.
+	var known_states: Dictionary = {}
+	for saved_variant in ordered:
+		if saved_variant is Dictionary:
+			var saved_name := str(saved_variant.get("state", "")).strip_edges()
+			if not saved_name.is_empty():
+				known_states[saved_name] = true
+	var modeled_states: Array[String] = [
+		"Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+		"Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+		"Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
+		"Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
+		"Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
+	]
+	var modeled_seats: Dictionary = {
+		"Andhra Pradesh": 175, "Arunachal Pradesh": 60, "Assam": 126,
+		"Bihar": 243, "Chhattisgarh": 90, "Goa": 40, "Gujarat": 182,
+		"Haryana": 90, "Himachal Pradesh": 68, "Jharkhand": 81,
+		"Karnataka": 224, "Kerala": 140, "Madhya Pradesh": 230,
+		"Maharashtra": 288, "Manipur": 60, "Meghalaya": 60,
+		"Mizoram": 40, "Nagaland": 60, "Odisha": 147, "Punjab": 117,
+		"Rajasthan": 200, "Sikkim": 32, "Tamil Nadu": 234,
+		"Telangana": 119, "Tripura": 60, "Uttar Pradesh": 403,
+		"Uttarakhand": 70, "West Bengal": 294
+	}
+	for state_index in range(modeled_states.size()):
+		var modeled_name := modeled_states[state_index]
+		if known_states.has(modeled_name):
+			continue
+		ordered.append({
+			"state": modeled_name,
+			"next_year": 2028 + (state_index % 4),
+			"month": 5 if state_index % 2 == 0 else 11,
+			"assembly_seats": int(modeled_seats.get(modeled_name, 60)),
+			"last_result": "Not yet held",
+			"last_winner": "",
+			"phase": "Scheduled",
+			"campaign_spend_by_party": {}
+		})
+	# Persist the repaired list so other election summaries see the same records.
+	world.world_state["state_elections"] = ordered
 	ordered.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		var a_state := str(a.get("state", ""))
 		var b_state := str(b.get("state", ""))
+		if a_state == b_state:
+			return false
 		if a_state == "Karnataka":
 			return true
 		if b_state == "Karnataka":
 			return false
 		return a_state.naturalcasecmp_to(b_state) < 0
 	)
-
 	for election_variant in ordered:
 		if not election_variant is Dictionary:
 			continue
@@ -1582,6 +2624,12 @@ func _refresh_state_election_cards(state_elections: Array) -> void:
 		var regional_support: Dictionary = world.world_state.get("regional_support", {})
 		var support_by_party: Dictionary = regional_support.get(world.player_party_id, {})
 		var support := float(support_by_party.get(state_name, 0.0))
+		var organization_profile: Dictionary = world.party_organization_profile(state_name)
+		var organization_score := int(organization_profile.get("readiness_score", 0))
+		var organization_status := str(organization_profile.get("readiness", "No structure"))
+		var organization_members := int(organization_profile.get("member_count", 0))
+		var last_organization_bonus := float(election.get("last_player_organization_bonus", 0.0))
+		var has_recorded_election := int(election.get("last_year", -1)) >= 0
 		var spend_by_party: Dictionary = election.get("campaign_spend_by_party", {})
 		var current_spend := int(spend_by_party.get(world.player_party_id, 0))
 		var last_spend_by_party: Dictionary = election.get("last_campaign_spending", {})
@@ -1591,6 +2639,7 @@ func _refresh_state_election_cards(state_elections: Array) -> void:
 		var vote_shares: Dictionary = election.get("last_vote_shares", {})
 		var vote_share := float(vote_shares.get(world.player_party_id, 0.0))
 		var last_result := str(election.get("last_result", "No result recorded yet"))
+		var organization_bonus_text := "+%.2f score points" % last_organization_bonus if has_recorded_election else "Not recorded"
 		var winner_name := world._government_party_name(str(election.get("last_winner", "")))
 		var leader := str(state_government.get("leader_name", "Not recorded"))
 		var ruling_party := world._government_party_name(str(state_government.get("ruling_party_id", "")))
@@ -1605,6 +2654,7 @@ func _refresh_state_election_cards(state_elections: Array) -> void:
 		var card := PanelContainer.new()
 		card.name = "State_" + state_name.replace(" ", "_")
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.mouse_filter = Control.MOUSE_FILTER_PASS
 		var style := _card_style()
 		style.bg_color = Color("#17283b") if is_home else Color("#101d2e")
 		style.border_color = Color("#d6b15a") if is_home else Color("#2b4058")
@@ -1637,14 +2687,14 @@ func _refresh_state_election_cards(state_elections: Array) -> void:
 		body.add_child(schedule)
 
 		var metrics := Label.new()
-		metrics.text = "PARTY FOOTPRINT   Support %.1f%%   ·   Candidates %d contested / %d elected   ·   Seats last won %d" % [support, contested, elected, party_seats]
+		metrics.text = "PARTY FOOTPRINT   Support %.1f%%   ·   Ground network %s (%d/100, %d members)   ·   Candidates %d contested / %d elected   ·   Seats last won %d" % [support, organization_status, organization_score, organization_members, contested, elected, party_seats]
 		metrics.add_theme_color_override("font_color", Color("#e7edf6"))
 		metrics.add_theme_font_size_override("font_size", 13)
 		metrics.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		body.add_child(metrics)
 
 		var campaign_line := Label.new()
-		campaign_line.text = "CAMPAIGN FINANCE   %s   ·   Current spend ₹%s   ·   Previous campaign spend ₹%s   ·   Active months %d" % [priority, world._format_number(current_spend), world._format_number(last_spend), campaign_months]
+		campaign_line.text = "CAMPsimulationGN FINANCE   %s   ·   Current spend ₹%s   ·   Previous campaign spend ₹%s   ·   Active months %d" % [priority, world._format_number(current_spend), world._format_number(last_spend), campaign_months]
 		campaign_line.add_theme_color_override("font_color", Color("#aebed1"))
 		campaign_line.add_theme_font_size_override("font_size", 12)
 		campaign_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1684,13 +2734,15 @@ func _refresh_state_election_cards(state_elections: Array) -> void:
 		dossier_title.add_theme_font_size_override("font_size", 13)
 		dossier_body.add_child(dossier_title)
 		var dossier_text := Label.new()
-		dossier_text.text = "ELECTION\nNext poll: %s %d  ·  Phase: %s  ·  Assembly seats: %d\n\nPARTY ORGANIZATION\nSupport: %.1f%%  ·  Slate: %s\nCandidates contested: %d  ·  Elected: %d  ·  Seats last won: %d\n\nCAMPAIGN FINANCE\nCurrent campaign spend: ₹%s  ·  Previous campaign spend: ₹%s\nStrategy: %s  ·  Campaign months active: %d\n\nLAST RESULT\n%s\nWinner: %s  ·  Party vote share: %.1f%%  ·  Turnout: %.1f%%\n\nGOVERNMENT & PARTICIPATION\nRuling party: %s  ·  Executive: %s\nEligible voters: %s  ·  Ballots cast: %s" % [
+		dossier_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		dossier_text.text = "ELECTION\nNext poll: %s %d  ·  Phase: %s  ·  Assembly seats: %d\n\nPARTY ORGANIZATION\nSupport: %.1f%%  ·  Slate: %s\nGround network: %s  ·  Readiness %d/100  ·  Named members %d\nLast poll organization effect: %s\nCandidates contested: %d  ·  Elected: %d  ·  Seats last won: %d\n\nCAMPsimulationGN FINANCE\nCurrent campaign spend: ₹%s  ·  Previous campaign spend: ₹%s\nStrategy: %s  ·  Campaign months active: %d\n\nLAST RESULT\n%s\nWinner: %s  ·  Party vote share: %.1f%%  ·  Turnout: %.1f%%\n\nGOVERNMENT & PARTICIPATION\nRuling party: %s  ·  Executive: %s\nEligible voters: %s  ·  Ballots cast: %s" % [
 			world._month_name(poll_month), poll_year, phase, state_seats,
-			support, slate_status, contested, elected, party_seats,
+			support, slate_status, organization_status, organization_score, organization_members, organization_bonus_text, contested, elected, party_seats,
 			world._format_number(current_spend), world._format_number(last_spend),
 			priority, campaign_months, last_result, winner_name, vote_share, turnout,
 			ruling_party, leader, world._format_number(eligible), world._format_number(ballots)
 		]
+		dossier_text.text += "\n\n" + _state_close_contest_brief(election)
 		dossier_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		dossier_text.add_theme_color_override("font_color", Color("#c2cedc"))
 		dossier_body.add_child(dossier_text)
@@ -1703,15 +2755,498 @@ func _refresh_state_election_cards(state_elections: Array) -> void:
 		var tween := create_tween()
 		tween.tween_property(card, "modulate:a", 1.0, 0.22)
 
-func _on_save_high_command_policy() -> void:
-	var strategy := high_command_priority.get_item_text(high_command_priority.selected) if is_instance_valid(high_command_priority) else "Balanced outreach"
-	var coalition_policy := high_command_coalition.get_item_text(high_command_coalition.selected) if is_instance_valid(high_command_coalition) else "AI negotiate a working majority"
-	var budget := int(high_command_budget.value) if is_instance_valid(high_command_budget) else 50000
-	var result: String = world.set_high_command_policy(strategy, budget, coalition_policy)
-	if is_instance_valid(high_command_status):
-		high_command_status.text = result + "\n\n" + world.high_command_summary()
+func _state_close_contest_brief(election: Dictionary) -> String:
+	var results: Array = election.get("last_constituency_results", [])
+	if results.is_empty():
+		return "CLOSE CONTESTS & TARGET SEATS\nNo constituency-level result has been recorded yet."
+	var contests: Array[Dictionary] = []
+	for result_variant in results:
+		if not result_variant is Dictionary:
+			continue
+		var result: Dictionary = result_variant
+		var candidates: Array = result.get("candidates", [])
+		var player_row: Dictionary = {}
+		var ordered: Array[Dictionary] = []
+		for candidate_variant in candidates:
+			if not candidate_variant is Dictionary:
+				continue
+			var candidate: Dictionary = candidate_variant
+			ordered.append(candidate)
+			if str(candidate.get("party_id", "")) == world.player_party_id:
+				player_row = candidate
+		if player_row.is_empty() or ordered.size() < 2:
+			continue
+		ordered.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			return float(a.get("vote_percent", 0.0)) > float(b.get("vote_percent", 0.0))
+		)
+		var top_share := float(ordered[0].get("vote_percent", 0.0))
+		var second_share := float(ordered[1].get("vote_percent", 0.0))
+		var margin := maxf(0.0, top_share - second_share)
+		var won := str(result.get("winner_party_id", "")) == world.player_party_id
+		contests.append({
+			"constituency": str(result.get("constituency", "Constituency")),
+			"margin": margin,
+			"won": won,
+			"player_share": float(player_row.get("vote_percent", 0.0)),
+			"winner": str(ordered[0].get("party_name", "Leading party"))
+		})
+	if contests.is_empty():
+		return "CLOSE CONTESTS & TARGET SEATS\nNo player-party constituency results are available."
+	contests.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return float(a.get("margin", 100.0)) < float(b.get("margin", 100.0))
+	)
+	var lines: Array[String] = ["CLOSE CONTESTS & TARGET SEATS", "Closest modeled races, ordered by winning margin:"]
+	for index in range(mini(5, contests.size())):
+		var item: Dictionary = contests[index]
+		var label := "DEFEND" if bool(item.get("won", false)) else "TARGET"
+		lines.append("%s · %s · margin %.1f pts · party vote %.1f%% · winner %s" % [
+			label, str(item.get("constituency", "Constituency")),
+			float(item.get("margin", 0.0)), float(item.get("player_share", 0.0)),
+			str(item.get("winner", ""))
+		])
+	return "\n".join(lines)
+
+
+func _populate_constituency_plan_picker(query: String) -> void:
+	if not is_instance_valid(constituency_plan_picker):
+		return
+	var previous_seat := -1
+	if constituency_plan_picker.selected >= 0:
+		previous_seat = int(constituency_plan_picker.get_item_metadata(constituency_plan_picker.selected))
+	var needle := query.strip_edges().to_lower()
+	constituency_plan_picker.clear()
+	var selected_index := -1
+	for seat_number in range(1, 225):
+		var seat_name := world._constituency_name_for_seat("Karnataka", seat_number)
+		var label := "%03d  ·  %s" % [seat_number, seat_name]
+		if needle != "" and not label.to_lower().contains(needle) and not seat_name.to_lower().contains(needle):
+			continue
+		constituency_plan_picker.add_item(label)
+		constituency_plan_picker.set_item_metadata(constituency_plan_picker.item_count - 1, seat_number)
+		if seat_number == previous_seat:
+			selected_index = constituency_plan_picker.item_count - 1
+	if constituency_plan_picker.item_count == 0:
+		constituency_plan_picker.add_item("No matching constituencies")
+		constituency_plan_picker.set_item_metadata(0, -1)
+		constituency_plan_picker.select(0)
+		if is_instance_valid(constituency_plan_detail):
+			constituency_plan_detail.text = "No constituency matches that search. Try a seat number or part of its name."
+		return
+	if selected_index < 0:
+		selected_index = 0
+	constituency_plan_picker.select(selected_index)
+
+func _refresh_constituency_planner() -> void:
+	if not is_instance_valid(constituency_plan_picker):
+		return
+	var query := ""
+	if is_instance_valid(constituency_plan_search):
+		query = constituency_plan_search.text
+	_populate_constituency_plan_picker(query)
+	var plans: Dictionary = world.world_state.get("constituency_campaign_plans", {})
+	var planned_count := 0
+	var total_allocation := 0.0
+	for value in plans.values():
+		if value is Dictionary:
+			planned_count += 1
+			total_allocation += float(value.get("allocation_crore", 0.0))
+	var spending_summary: Dictionary = world.karnataka_constituency_campaign_spending_summary()
+	var current_spend := int(spending_summary.get("current", 0))
+	var previous_spend := int(spending_summary.get("previous", 0))
+	if is_instance_valid(constituency_plan_summary):
+		constituency_plan_summary.text = "KARNATAKA  ·  224 SEATS\nPlans recorded  %d / 224  ·  Total planned allocation  ₹%.1f crore\nRecorded spend this campaign  ₹%s  ·  Previous campaign  ₹%s" % [planned_count, total_allocation, world._format_number(current_spend), world._format_number(previous_spend)]
+	if is_instance_valid(constituency_campaign_dashboard):
+		var dashboard_lines: PackedStringArray = []
+		dashboard_lines.append("Seat | Priority | Planned | Recorded | Remaining | Progress")
+		var dashboard_count := 0
+		for seat_number in range(1, 225):
+			var plan_value = plans.get(str(seat_number), null)
+			if not (plan_value is Dictionary):
+				continue
+			var allocation_crore := float(plan_value.get("allocation_crore", 0.0))
+			var seat_spending: Dictionary = world.karnataka_constituency_campaign_spend(seat_number)
+			var recorded_rupees := int(seat_spending.get("current", 0))
+			var recorded_crore := float(recorded_rupees) / 10000000.0
+			var remaining_crore := maxf(0.0, allocation_crore - recorded_crore)
+			var progress_percent := 0
+			if allocation_crore > 0.0:
+				progress_percent = clampi(roundi(recorded_crore / allocation_crore * 100.0), 0, 100)
+			var seat_name := world._constituency_name_for_seat("Karnataka", seat_number)
+			var priority_name := str(plan_value.get("priority", "Target"))
+			dashboard_lines.append("%03d %s | %s | ₹%.1f cr | ₹%.2f cr | ₹%.2f cr | %d percent" % [seat_number, seat_name, priority_name, allocation_crore, recorded_crore, remaining_crore, progress_percent])
+			dashboard_count += 1
+		if dashboard_count == 0:
+			dashboard_lines.append("No saved constituency plans yet.")
+		constituency_campaign_dashboard.text = "\n".join(dashboard_lines)
+	if is_instance_valid(statewide_campaign_status):
+		statewide_campaign_status.text = world.karnataka_auto_campaign_summary()
+	_load_constituency_plan_controls()
+	_refresh_bulk_campaign_activity_summary()
+
+func _create_bulk_campaign_activity_plan() -> void:
+	var plans: Dictionary = world.world_state.get("constituency_campaign_plans", {})
+	var group_index := campaign_activity_group.selected if is_instance_valid(campaign_activity_group) else 0
+	var selected_priority: String = ["", "Defend", "Target", "Low Priority"][clampi(group_index, 0, 3)]
+	var eligible_seats: Array[int] = []
+	for seat_number in range(1, 225):
+		var plan_value = plans.get(str(seat_number), null)
+		if not (plan_value is Dictionary):
+			continue
+		if selected_priority != "" and str(plan_value.get("priority", "Target")) != selected_priority:
+			continue
+		eligible_seats.append(seat_number)
+	if eligible_seats.is_empty():
+		report_label.text = "No saved constituency plans match this group. Save constituency plans first."
+		return
+	var requested_count := clampi(roundi(campaign_activity_count.value), 1, 224)
+	var activity_count := mini(requested_count, eligible_seats.size())
+	var activity_name := campaign_activity_type.get_item_text(campaign_activity_type.selected) if is_instance_valid(campaign_activity_type) and campaign_activity_type.selected >= 0 else "Candidate visit"
+	var total_budget_crore := snappedf(campaign_activity_budget.value, 0.1)
+	var assignments: Array[Dictionary] = []
+	for i in range(activity_count):
+		var seat_number := eligible_seats[i % eligible_seats.size()]
+		assignments.append({
+			"seat_number": seat_number,
+			"constituency": world._constituency_name_for_seat("Karnataka", seat_number),
+			"activity": activity_name,
+			"planned_budget_crore": total_budget_crore / float(activity_count),
+			"status": "Planned"
+		})
+	var activity_plans: Array = world.world_state.get("bulk_campaign_activity_plans", [])
+	activity_plans.append({
+		"created_month_index": world.year * 12 + world.month,
+		"group": campaign_activity_group.get_item_text(group_index),
+		"activity": activity_name,
+		"activity_count": activity_count,
+		"total_budget_crore": total_budget_crore,
+		"actual_spend_crore": 0.0,
+		"status": "Planned",
+		"assignments": assignments
+	})
+	world.world_state["bulk_campaign_activity_plans"] = activity_plans
+	_save_progress()
+	_refresh_bulk_campaign_activity_summary()
+	report_label.text = "Bulk campaign activity plan saved for %d constituencies." % activity_count
+
+
+func _refresh_bulk_campaign_activity_summary() -> void:
+	if not is_instance_valid(campaign_activity_summary):
+		return
+	var activity_plans: Array = world.world_state.get("bulk_campaign_activity_plans", [])
+	var summary_lines: PackedStringArray = []
+	summary_lines.append("Saved bulk plans: %d" % activity_plans.size())
+	var shown := 0
+	for plan_value in activity_plans:
+		if not (plan_value is Dictionary):
+			continue
+		var assignments: Array = plan_value.get("assignments", [])
+		summary_lines.append("%s · %s · %d activities · ₹%.1f crore planned · %s" % [
+			str(plan_value.get("group", "Selected seats")),
+			str(plan_value.get("activity", "Campaign activity")),
+			int(plan_value.get("activity_count", assignments.size())),
+			float(plan_value.get("total_budget_crore", 0.0)),
+			str(plan_value.get("status", "Planned"))
+		])
+		shown += 1
+		if shown >= 5:
+			break
+	if activity_plans.is_empty():
+		summary_lines.append("No bulk activity plans recorded yet.")
+	elif activity_plans.size() > shown:
+		summary_lines.append("Showing the 5 most recent plans.")
+	campaign_activity_summary.text = "\n".join(summary_lines)
+
+	if is_instance_valid(campaign_activity_plan_picker):
+		var previous_index := -1
+		if campaign_activity_plan_picker.selected >= 0:
+			previous_index = int(campaign_activity_plan_picker.get_item_metadata(campaign_activity_plan_picker.selected))
+		campaign_activity_plan_picker.clear()
+		for plan_index in range(activity_plans.size()):
+			var plan_value = activity_plans[plan_index]
+			if not (plan_value is Dictionary):
+				continue
+			var assignments: Array = plan_value.get("assignments", [])
+			var caption := "%s · %s · %d activities · %s" % [
+				str(plan_value.get("group", "Selected seats")),
+				str(plan_value.get("activity", "Activity")),
+				int(plan_value.get("activity_count", assignments.size())),
+				str(plan_value.get("status", "Planned"))
+			]
+			campaign_activity_plan_picker.add_item(caption)
+			campaign_activity_plan_picker.set_item_metadata(campaign_activity_plan_picker.item_count - 1, plan_index)
+		if campaign_activity_plan_picker.item_count > 0:
+			var selected_item := 0
+			for item_index in range(campaign_activity_plan_picker.item_count):
+				if int(campaign_activity_plan_picker.get_item_metadata(item_index)) == previous_index:
+					selected_item = item_index
+					break
+			campaign_activity_plan_picker.select(selected_item)
+		_load_selected_bulk_campaign_activity_plan()
+
+
+func _on_bulk_campaign_activity_plan_selected(_index: int) -> void:
+	_load_selected_bulk_campaign_activity_plan()
+
+
+func _load_selected_bulk_campaign_activity_plan() -> void:
+	if not is_instance_valid(campaign_activity_plan_picker):
+		return
+	var plans: Array = world.world_state.get("bulk_campaign_activity_plans", [])
+	if campaign_activity_plan_picker.selected < 0:
+		if is_instance_valid(campaign_activity_management_summary):
+			campaign_activity_management_summary.text = "No saved activity plans to manage."
+		return
+	var plan_index := int(campaign_activity_plan_picker.get_item_metadata(campaign_activity_plan_picker.selected))
+	if plan_index < 0 or plan_index >= plans.size() or not (plans[plan_index] is Dictionary):
+		return
+	var plan_value: Dictionary = plans[plan_index]
+	var status_name := str(plan_value.get("status", "Planned"))
+	if is_instance_valid(campaign_activity_status):
+		for i in range(campaign_activity_status.item_count):
+			if campaign_activity_status.get_item_text(i) == status_name:
+				campaign_activity_status.select(i)
+				break
+	if is_instance_valid(campaign_activity_actual_spend):
+		campaign_activity_actual_spend.value = float(plan_value.get("actual_spend_crore", 0.0))
+	if is_instance_valid(campaign_activity_management_summary):
+		var assignments: Array = plan_value.get("assignments", [])
+		var seat_names: PackedStringArray = []
+		for assignment in assignments:
+			if assignment is Dictionary:
+				seat_names.append(str(assignment.get("constituency", "Seat")))
+		campaign_activity_management_summary.text = "Activities: %d · Planned budget: ₹%.1f crore · Actual spend recorded: ₹%.1f crore\nIncluded seats: %s" % [
+			int(plan_value.get("activity_count", assignments.size())),
+			float(plan_value.get("total_budget_crore", 0.0)),
+			float(plan_value.get("actual_spend_crore", 0.0)),
+			", ".join(seat_names)
+		]
+
+
+func _save_bulk_campaign_activity_plan_management() -> void:
+	if not is_instance_valid(campaign_activity_plan_picker) or campaign_activity_plan_picker.selected < 0:
+		report_label.text = "Create a bulk activity plan before managing one."
+		return
+	var plans: Array = world.world_state.get("bulk_campaign_activity_plans", [])
+	var plan_index := int(campaign_activity_plan_picker.get_item_metadata(campaign_activity_plan_picker.selected))
+	if plan_index < 0 or plan_index >= plans.size() or not (plans[plan_index] is Dictionary):
+		report_label.text = "The selected activity plan could not be found."
+		return
+	var plan_value: Dictionary = plans[plan_index]
+	plan_value["status"] = campaign_activity_status.get_item_text(campaign_activity_status.selected)
+	plan_value["actual_spend_crore"] = snappedf(campaign_activity_actual_spend.value, 0.1)
+	plans[plan_index] = plan_value
+	world.world_state["bulk_campaign_activity_plans"] = plans
+	_save_progress()
+	_refresh_bulk_campaign_activity_summary()
+	report_label.text = "Activity plan status and actual spending saved."
+
+
+func _load_constituency_plan_controls() -> void:
+	if not is_instance_valid(constituency_plan_picker) or constituency_plan_picker.selected < 0:
+		return
+	var seat_number := int(constituency_plan_picker.get_item_metadata(constituency_plan_picker.selected))
+	if seat_number < 1:
+		return
+	var plans: Dictionary = world.world_state.get("constituency_campaign_plans", {})
+	var plan: Dictionary = plans.get(str(seat_number), {})
+	var priority := str(plan.get("priority", "Target"))
+	for i in range(constituency_plan_priority.item_count):
+		if constituency_plan_priority.get_item_text(i) == priority:
+			constituency_plan_priority.select(i)
+			break
+	constituency_plan_budget.value = float(plan.get("allocation_crore", 0.0))
+	var candidate_name := "No nominee assigned"
+	var review_status := "No ticket review recorded"
+	for row in world.karnataka_candidate_review_rows():
+		if int(row.get("seat_number", 0)) == seat_number:
+			candidate_name = str(row.get("candidate_name", candidate_name))
+			review_status = str(row.get("decision", review_status))
+			break
+	var seat_spending: Dictionary = world.karnataka_constituency_campaign_spend(seat_number)
+	var current_spend := int(seat_spending.get("current", 0))
+	var previous_spend := int(seat_spending.get("previous", 0))
+	constituency_plan_detail.text = "SEAT  %03d  ·  %s\nPARTY NOMINEE  %s\nTICKET REVIEW  %s\nCURRENT PLAN  %s  ·  ₹%.1f crore\nACTUAL SPEND  ₹%s this campaign  ·  ₹%s previous campaign" % [seat_number, world._constituency_name_for_seat("Karnataka", seat_number), candidate_name, review_status, priority, float(plan.get("allocation_crore", 0.0)), world._format_number(current_spend), world._format_number(previous_spend)]
+
+func _auto_set_all_constituency_plans() -> void:
+	var plans: Dictionary = world.world_state.get("constituency_campaign_plans", {})
+	var created_count := 0
+	for seat_number in range(1, 225):
+		var key := str(seat_number)
+		if plans.has(key) and plans[key] is Dictionary:
+			continue
+		plans[key] = {
+			"seat_number": seat_number,
+			"constituency": world._constituency_name_for_seat("Karnataka", seat_number),
+			"priority": "Target",
+			"allocation_crore": 0.1
+		}
+		created_count += 1
+	world.world_state["constituency_campaign_plans"] = plans
+	_save_progress()
+	_refresh_constituency_planner()
+	report_label.text = "Automatic statewide plan saved: %d new seats added; existing seat plans preserved. Review priorities and allocations before the campaign." % created_count
+
+
+func _toggle_statewide_campaign() -> void:
+	var campaign: Dictionary = world.world_state.get("karnataka_auto_campaign", {})
+	var message := world.stop_karnataka_auto_campaign() if bool(campaign.get("active", false)) else world.start_karnataka_auto_campaign()
+	report_label.text = message
+	_refresh()
+	_save_progress()
+
+
+func _save_constituency_plan() -> void:
+	if not is_instance_valid(constituency_plan_picker) or constituency_plan_picker.selected < 0:
+		return
+	var seat_number := int(constituency_plan_picker.get_item_metadata(constituency_plan_picker.selected))
+	if seat_number < 1:
+		return
+	var plans: Dictionary = world.world_state.get("constituency_campaign_plans", {})
+	var priority := constituency_plan_priority.get_item_text(constituency_plan_priority.selected) if constituency_plan_priority.selected >= 0 else "Target"
+	plans[str(seat_number)] = {"seat_number": seat_number, "constituency": world._constituency_name_for_seat("Karnataka", seat_number), "priority": priority, "allocation_crore": snappedf(constituency_plan_budget.value, 0.1)}
+	world.world_state["constituency_campaign_plans"] = plans
+	_save_progress()
+	_refresh_constituency_planner()
+	report_label.text = "Constituency plan saved for %s." % world._constituency_name_for_seat("Karnataka", seat_number)
+
+
+func _refresh_karnataka_candidate_review() -> void:
+	if not is_instance_valid(karnataka_candidate_picker):
+		return
+	var rows := world.karnataka_candidate_review_rows()
+	var query := karnataka_candidate_search.text.strip_edges().to_lower() if is_instance_valid(karnataka_candidate_search) else ""
+	var previous_seat := _selected_karnataka_seat_number()
+	var status_filter := karnataka_candidate_filter.selected if is_instance_valid(karnataka_candidate_filter) else 0
+	karnataka_candidate_picker.clear()
+	var approved := 0
+	var rejected := 0
+	for row in rows:
+		var decision := str(row.get("decision", "Pending"))
+		if decision == "Approved": approved += 1
+		elif decision == "Rejected": rejected += 1
+		if status_filter == 1 and decision != "Rejected":
+			continue
+		if status_filter == 2 and decision != "Pending":
+			continue
+		if status_filter == 3 and decision != "Approved":
+			continue
+		var candidate_name := str(row.get("candidate_name", ""))
+		var constituency := str(row.get("constituency", ""))
+		if not query.is_empty() and not candidate_name.to_lower().contains(query) and not constituency.to_lower().contains(query):
+			continue
+		var caption := "%03d  ·  %s  —  %s [%s]" % [int(row.get("seat_number", 0)), constituency, candidate_name, decision]
+		karnataka_candidate_picker.add_item(caption)
+		karnataka_candidate_picker.set_item_metadata(karnataka_candidate_picker.item_count - 1, int(row.get("seat_number", 0)))
+	if karnataka_candidate_picker.item_count == 0:
+		karnataka_candidate_status.text = "No tickets match this status and search. Choose All tickets or change your search."
+	if karnataka_candidate_picker.item_count > 0:
+		var selected_index := 0
+		for item_index in range(karnataka_candidate_picker.item_count):
+			if int(karnataka_candidate_picker.get_item_metadata(item_index)) == previous_seat:
+				selected_index = item_index
+				break
+		karnataka_candidate_picker.select(selected_index)
+	_update_karnataka_candidate_detail()
+	if is_instance_valid(karnataka_candidate_summary):
+		karnataka_candidate_summary.text = "KARNATAKA ASSEMBLY  ·  224 SEATS\nApproved  %d  ·  Rejected  %d  ·  Pending  %d\nChanges are saved automatically with this career." % [approved, rejected, 224 - approved - rejected]
+	if is_instance_valid(karnataka_candidate_contest_status):
+		var contest_enabled := world.is_karnataka_contest_enabled()
+		karnataka_candidate_contest_status.text = "YOUR PARTY: %s the next Karnataka Assembly election. Approve the nominees you want to field, then keep contesting enabled." % ("ENTERED IN" if contest_enabled else "NOT ENTERED IN")
+	_refresh_karnataka_member_picker()
+
+
+func _refresh_karnataka_member_picker() -> void:
+	if not is_instance_valid(karnataka_member_picker):
+		return
+	var query := karnataka_member_search.text.strip_edges().to_lower() if is_instance_valid(karnataka_member_search) else ""
+	var previous_id := str(karnataka_member_picker.get_item_metadata(karnataka_member_picker.selected)) if karnataka_member_picker.selected >= 0 else ""
+	karnataka_member_picker.clear()
+	for member in world.karnataka_party_member_search(query):
+		karnataka_member_picker.add_item(str(member.get("name", "Party member")))
+		karnataka_member_picker.set_item_metadata(karnataka_member_picker.item_count - 1, str(member.get("id", "")))
+		if str(member.get("id", "")) == previous_id:
+			karnataka_member_picker.select(karnataka_member_picker.item_count - 1)
+	if karnataka_member_picker.item_count > 0 and karnataka_member_picker.selected < 0:
+		karnataka_member_picker.select(0)
+
+
+func _on_assign_karnataka_candidate() -> void:
+	if not is_instance_valid(karnataka_member_picker) or karnataka_member_picker.selected < 0:
+		report_label.text = "Search for and select a party member first."
+		return
+	var member_id := str(karnataka_member_picker.get_item_metadata(karnataka_member_picker.selected))
+	var result := world.assign_karnataka_candidate(_selected_karnataka_seat_number(), member_id)
 	report_label.text = result
 	_refresh()
+	_save_progress()
+
+
+func _selected_karnataka_seat_number() -> int:
+	if not is_instance_valid(karnataka_candidate_picker) or karnataka_candidate_picker.selected < 0:
+		return 0
+	return int(karnataka_candidate_picker.get_item_metadata(karnataka_candidate_picker.selected))
+
+
+func _update_karnataka_candidate_detail() -> void:
+	if not is_instance_valid(karnataka_candidate_status) or not is_instance_valid(karnataka_candidate_picker):
+		return
+	if karnataka_candidate_picker.item_count == 0 or karnataka_candidate_picker.selected < 0:
+		karnataka_candidate_status.text = "No tickets match this status and search. Choose All tickets or change your search."
+		return
+	var seat_number := _selected_karnataka_seat_number()
+	var rows := world.karnataka_candidate_review_rows()
+	var row: Dictionary = {}
+	for candidate_row in rows:
+		if int(candidate_row.get("seat_number", 0)) == seat_number:
+			row = candidate_row
+			break
+	if row.is_empty():
+		karnataka_candidate_status.text = "No matching nominee. Clear the search or choose another constituency."
+		return
+	karnataka_candidate_status.text = "CONSTITUENCY  %s\nASSIGNED PARTY MEMBER  %s\nREVIEW  %s\nChoose a member below to replace this nominee." % [str(row.get("constituency", "")), str(row.get("candidate_name", "")), str(row.get("decision", "Pending"))]
+
+
+func _set_selected_karnataka_candidate_decision(decision: String) -> void:
+	if not is_instance_valid(karnataka_candidate_picker) or karnataka_candidate_picker.selected < 0:
+		return
+	var result := world.set_karnataka_candidate_decision(_selected_karnataka_seat_number(), decision)
+	report_label.text = result
+	_refresh()
+	_save_progress()
+
+func _on_approve_karnataka_candidate() -> void:
+	_set_selected_karnataka_candidate_decision("Approved")
+
+func _on_reject_karnataka_candidate() -> void:
+	_set_selected_karnataka_candidate_decision("Rejected")
+
+func _on_reset_karnataka_candidate() -> void:
+	_set_selected_karnataka_candidate_decision("Pending")
+
+func _on_bulk_approve_karnataka_candidates() -> void:
+	var result := world.bulk_approve_karnataka_candidates()
+	report_label.text = result
+	_refresh()
+	_save_progress()
+
+func _on_toggle_karnataka_contest() -> void:
+	var result := world.toggle_karnataka_contest()
+	report_label.text = result
+	_refresh()
+	_save_progress()
+
+func _on_save_high_command_policy() -> void:
+	var strategy := high_command_priority.get_item_text(high_command_priority.selected) if is_instance_valid(high_command_priority) else "Balanced outreach"
+	var coalition_policy := high_command_coalition.get_item_text(high_command_coalition.selected) if is_instance_valid(high_command_coalition) else "Negotiate a working majority"
+	var budget := int(round(high_command_budget.value * 10000000.0)) if is_instance_valid(high_command_budget) else 50000000
+	var focus_state := high_command_focus.get_item_text(high_command_focus.selected) if is_instance_valid(high_command_focus) and high_command_focus.selected >= 0 else "No state focus"
+	if focus_state == "No state focus":
+		focus_state = ""
+	var result: String = world.set_high_command_policy(strategy, budget, coalition_policy, focus_state)
+	_refresh()
+	if is_instance_valid(high_command_status):
+		high_command_status.text = "DIRECTIVE SAVED TO THIS CAREER\n\n" + result + "\n\n" + world.high_command_summary() + "\n\nNEXT: Review candidate deployment and state results in State Assemblies; national candidate coverage and results are in Lok Sabha. The ceiling is not deducted immediately—recorded campaign actions determine actual expenditure."
+	report_label.text = "Party directive saved. It is active for this career until changed."
 	_save_progress()
 
 func _refresh_overview_metrics() -> void:
@@ -1731,7 +3266,8 @@ func _on_add_party_member() -> void:
 	if member_name.is_empty():
 		party_member_status.text = "Enter a member name first."
 		return
-	var result: String = world.add_party_member(member_name)
+	var selected_state := party_member_state_picker.get_item_text(party_member_state_picker.selected) if party_member_state_picker.item_count > 0 else world.home_state
+	var result: String = world.add_party_member(member_name, selected_state)
 	party_member_status.text = result
 	party_member_name_input.text = ""
 	_refresh()
@@ -1744,6 +3280,17 @@ func _on_assign_party_duty() -> void:
 	var member_id := str(duty_member_picker.get_item_metadata(duty_member_picker.selected))
 	var duty := duty_role_picker.get_item_text(duty_role_picker.selected)
 	party_member_status.text = world.assign_party_duty(member_id, duty)
+	_refresh()
+	_save_progress()
+
+func _on_assign_organization_duty() -> void:
+	if not is_instance_valid(organization_member_picker) or organization_member_picker.item_count == 0 or organization_member_picker.selected < 0:
+		party_member_status.text = "Add or recruit a member before assigning an organization duty."
+		return
+	var member_id := str(organization_member_picker.get_item_metadata(organization_member_picker.selected))
+	var duty := organization_duty_picker.get_item_text(organization_duty_picker.selected) if is_instance_valid(organization_duty_picker) and organization_duty_picker.item_count > 0 else "Volunteer"
+	var target_state := organization_state_picker.get_item_text(organization_state_picker.selected) if is_instance_valid(organization_state_picker) and organization_state_picker.selected >= 0 else world.home_state
+	party_member_status.text = world.assign_party_member_organization(member_id, target_state, duty)
 	_refresh()
 	_save_progress()
 
@@ -1879,6 +3426,51 @@ func _refresh_party_members() -> void:
 			var office_hist: Array = office_election.get("history", [])
 			office_election_status.text = world.party_office_election_summary(selected_office)
 	var roster: Array = world.get_player_party_members()
+	var player_added_roster: Array = []
+	var organization_roster: Array = []
+	for roster_item in roster:
+		var roster_member: Dictionary = roster_item
+		if bool(roster_member.get("is_player_added", false)):
+			player_added_roster.append(roster_member)
+		else:
+			organization_roster.append(roster_member)
+	roster = player_added_roster + organization_roster
+	if is_instance_valid(organization_member_picker):
+		organization_member_picker.clear()
+		var organization_query := party_member_search.text.strip_edges().to_lower() if is_instance_valid(party_member_search) else ""
+		for member_variant in roster:
+			if organization_member_picker.item_count >= 300:
+				break
+			var member: Dictionary = member_variant
+			var member_name := str(member.get("name", "Member"))
+			if organization_query.is_empty() or member_name.to_lower().contains(organization_query) or str(member.get("id", "")).to_lower().contains(organization_query):
+				organization_member_picker.add_item("%s · %s" % [member_name, str(member.get("region", "Karnataka"))])
+				organization_member_picker.set_item_metadata(organization_member_picker.item_count - 1, str(member.get("id", "")))
+		if organization_member_picker.item_count > 0:
+			organization_member_picker.select(0)
+	var state_counts: Dictionary = {}
+	var duty_counts: Dictionary = {}
+	for member_variant in roster:
+		var member: Dictionary = member_variant
+		var region := str(member.get("region", "Karnataka"))
+		var duty := str(member.get("duty", "Volunteer"))
+		state_counts[region] = int(state_counts.get(region, 0)) + 1
+		duty_counts[duty] = int(duty_counts.get(duty, 0)) + 1
+	var state_names: Array = state_counts.keys()
+	state_names.sort_custom(func(a: String, b: String) -> bool:
+		if int(state_counts[a]) == int(state_counts[b]):
+			return a < b
+		return int(state_counts[a]) > int(state_counts[b])
+	)
+	var duty_names: Array = duty_counts.keys()
+	duty_names.sort()
+	var coverage_lines: Array[String] = ["Named roster: %d members across %d regions." % [roster.size(), state_counts.size()], "Regional coverage: %s" % (", ".join(PackedStringArray(state_names.slice(0, mini(6, state_names.size())))) if not state_names.is_empty() else "No regional records")]
+	var duty_parts: Array[String] = []
+	for duty_name in duty_names:
+		duty_parts.append("%s %d" % [str(duty_name), int(duty_counts[duty_name])])
+	coverage_lines.append("Duty mix: %s" % (" · ".join(PackedStringArray(duty_parts)) if not duty_parts.is_empty() else "No assignments"))
+	if is_instance_valid(organization_summary_label):
+		organization_summary_label.text = "\n".join(coverage_lines)
 	var roster_query_for_count := party_member_search.text.strip_edges() if is_instance_valid(party_member_search) else ""
 	var shown_member_rows := 0
 	var matching_member_count := 0
@@ -1899,28 +3491,56 @@ func _refresh_party_members() -> void:
 			name_label.add_theme_color_override("font_color", Color("#d6b15a"))
 			row_box.add_child(name_label)
 			var detail := Label.new()
-			detail.text = "%s  •  %s" % [str(member.get("duty", "Volunteer")), str(member.get("region", "Karnataka"))]
+			detail.text = "%s  •  %s%s" % [str(member.get("duty", "Volunteer")), str(member.get("region", "Karnataka")), "  •  Added by you" if bool(member.get("is_player_added", false)) else ""]
 			detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			row_box.add_child(detail)
 			row.add_child(row_box)
 			party_member_area.add_child(row)
 		var duty_query := duty_member_search.text.strip_edges().to_lower() if is_instance_valid(duty_member_search) else ""
-		if duty_query.is_empty() or member_name.to_lower().contains(duty_query) or str(member.get("id", "")).to_lower().contains(duty_query):
+		if duty_member_picker.item_count < 300 and (duty_query.is_empty() or member_name.to_lower().contains(duty_query) or str(member.get("id", "")).to_lower().contains(duty_query)):
 			duty_member_picker.add_item(member_name)
 			duty_member_picker.set_item_metadata(duty_member_picker.item_count - 1, str(member.get("id", "")))
 		var candidate_query := internal_candidate_search.text.strip_edges().to_lower() if is_instance_valid(internal_candidate_search) else ""
-		if is_instance_valid(internal_candidate_picker) and (candidate_query.is_empty() or member_name.to_lower().contains(candidate_query) or str(member.get("id", "")).to_lower().contains(candidate_query)):
+		if is_instance_valid(internal_candidate_picker) and internal_candidate_picker.item_count < 300 and (candidate_query.is_empty() or member_name.to_lower().contains(candidate_query) or str(member.get("id", "")).to_lower().contains(candidate_query)):
 			internal_candidate_picker.add_item(member_name)
 			internal_candidate_picker.set_item_metadata(internal_candidate_picker.item_count - 1, str(member.get("id", "")))
 	if is_instance_valid(party_member_count_label):
 		if roster_query_for_count.is_empty() and matching_member_count > 50:
-			party_member_count_label.text = "Showing first 50 of %d members. Search by name or ID to find others." % roster.size()
+			party_member_count_label.text = "Your manually added members appear first. Showing first 50 of %d members; search by name or ID to find others. Selection lists show up to 300 matches; narrow your search for more precise results." % roster.size()
 		else:
 			party_member_count_label.text = "%d matching members" % matching_member_count
 	if roster.is_empty():
 		var empty_label := Label.new()
 		empty_label.text = "No named roster records yet. Add a member above."
 		party_member_area.add_child(empty_label)
+	_refresh_organization_profile()
+
+func _refresh_organization_profile() -> void:
+	if not is_instance_valid(organization_state_picker) or not is_instance_valid(organization_profile_label):
+		return
+	if organization_state_picker.selected < 0 or organization_state_picker.item_count == 0:
+		organization_profile_label.text = "No state organization profile is available."
+		return
+	var state_name := organization_state_picker.get_item_text(organization_state_picker.selected)
+	var profile: Dictionary = world.party_organization_profile(state_name)
+	if profile.is_empty():
+		organization_profile_label.text = "Join or found a party to build a regional organization."
+		return
+	var duties: Dictionary = profile.get("duty_counts", {})
+	var role_order: Array[String] = ["State Organizer", "District Secretary", "Ward Organizer", "Booth Coordinator", "Media Coordinator", "Treasurer", "Volunteer"]
+	var role_parts: Array[String] = []
+	for role_name in role_order:
+		var count := int(duties.get(role_name, 0))
+		if count > 0:
+			role_parts.append("%s %d" % [role_name, count])
+	var priorities: Array = profile.get("priorities", [])
+	var priority_text := ", ".join(PackedStringArray(priorities)) if not priorities.is_empty() else "Core structure is in place; maintain local coverage."
+	organization_profile_label.text = "READINESS  %d/100  ·  %s\nNAMED MEMBERS  %d  ·  MODELED ELECTION-SCORE EFFECT  +%.2f points (maximum +2.50)\nROLE COVERAGE  %s\nNEXT ORGANIZATION PRIORITIES  %s" % [
+		int(profile.get("readiness_score", 0)), str(profile.get("readiness", "No structure")),
+		int(profile.get("member_count", 0)), float(profile.get("election_score_bonus", 0.0)),
+		" · ".join(PackedStringArray(role_parts)) if not role_parts.is_empty() else "No assigned duties",
+		priority_text
+	]
 
 func _notification(what: int) -> void:
 	if not is_instance_valid(world) or not world.career_started:
