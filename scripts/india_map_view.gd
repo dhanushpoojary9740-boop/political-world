@@ -35,13 +35,36 @@ var _cached_bounds_level := -1
 var _cached_bounds_state := ""
 var _bounds_cache_valid := false
 var _data_loaded := false
+var _pulse_time := 0.0
+var _redraw_accumulator := 0.0
+var _label_candidate_cache: Dictionary = {}
+var _label_cache_size := Vector2(-1.0, -1.0)
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	set_process(true)
 	custom_minimum_size = Vector2(0, 760)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_load_geojson()
+	queue_redraw()
+
+func _process(delta: float) -> void:
+	# The map is expensive to redraw because its polygons and boundary edges are
+	# prepared in _draw(). Do not animate it while hidden or when no region glow
+	# is active; explicit map changes still call queue_redraw() immediately.
+	if not is_visible_in_tree():
+		_redraw_accumulator = 0.0
+		return
+	if selected_state.is_empty():
+		_redraw_accumulator = 0.0
+		return
+	_redraw_accumulator += delta
+	# Keep the selected-region glow subtle while limiting redraw work to 4 FPS.
+	if _redraw_accumulator < 0.25:
+		return
+	_redraw_accumulator = 0.0
+	_pulse_time += 0.25
 	queue_redraw()
 
 func set_map_state(level: int, state_name: String, district_name: String, layer: String,
@@ -77,6 +100,11 @@ func _load_geojson() -> void:
 	_data_loaded = not features.is_empty()
 
 func _draw() -> void:
+	# Label placement is geometry-only for a given map size and view. Cache it
+	# between redraws so the selected-state glow does not rerun 49-point scans.
+	if _label_cache_size != size:
+		_label_candidate_cache.clear()
+		_label_cache_size = size
 	_screen_polygons.clear()
 	draw_rect(Rect2(Vector2.ZERO, size), MAP_BACKDROP, true)
 	draw_rect(Rect2(Vector2(1.0, 1.0), size - Vector2(2.0, 2.0)), MAP_INNER_EDGE, false, 1.0)
@@ -140,12 +168,12 @@ func _draw() -> void:
 				var previous_state_candidate: Dictionary = state_label_candidates.get(state, {})
 				var polygon_area := (max_point.x - min_point.x) * (max_point.y - min_point.y)
 				if polygon_area > float(previous_state_candidate.get("area", 0.0)):
-					state_label_candidates[state] = _interior_label_candidate(points)
+					state_label_candidates[state] = _cached_interior_label_candidate("state:" + str(state) + ":" + str(district) + ":" + str(points.size()) + ":" + str(min_point) + ":" + str(max_point), points)
 			elif view_level == 1:
 				var previous_district_candidate: Dictionary = district_label_candidates.get(district, {})
 				var district_polygon_area := (max_point.x - min_point.x) * (max_point.y - min_point.y)
 				if district_polygon_area > float(previous_district_candidate.get("area", 0.0)):
-					district_label_candidates[district] = _interior_label_candidate(points)
+					district_label_candidates[district] = _cached_interior_label_candidate("district:" + selected_state + ":" + str(district) + ":" + str(points.size()) + ":" + str(min_point) + ":" + str(max_point), points)
 
 	if view_level == 0:
 		# Fast edge counting: shared district edges cancel; only exterior state edges remain.
@@ -160,11 +188,19 @@ func _draw() -> void:
 					var key := _edge_key(a, b)
 					edge_counts[key] = int(edge_counts.get(key, 0)) + 1
 					edge_points[key] = [a, b]
+			var is_selected_state := str(state) == selected_state
+			var pulse := 0.5 + 0.5 * sin(_pulse_time * 2.4)
+			if is_selected_state:
+				var glow := Color(0.95, 0.82, 0.48, 0.20 + 0.30 * pulse)
+				for key in edge_counts:
+					if int(edge_counts[key]) == 1:
+						var glow_edge: Array = edge_points[key]
+						draw_line(glow_edge[0], glow_edge[1], glow, 6.0 + 2.0 * pulse, true)
 			for key in edge_counts:
 				if int(edge_counts[key]) == 1:
 					var edge: Array = edge_points[key]
 					draw_line(edge[0], edge[1], Color("#0a1320"), 4.2, true)
-					draw_line(edge[0], edge[1], STATE_BORDER, 1.8, true)
+					draw_line(edge[0], edge[1], SELECTED if is_selected_state else STATE_BORDER, 1.8 if not is_selected_state else 2.4, true)
 		for state in state_label_candidates:
 			var candidate: Dictionary = state_label_candidates[state]
 			var font_size := _fit_label_font(str(state), candidate["rect"], float(candidate["clearance"]), 11, 6)
@@ -180,7 +216,10 @@ func _draw() -> void:
 				draw_line(a, b, Color("#0a1320"), 3.2, true)
 				draw_line(a, b, DISTRICT_BORDER, 1.25, true)
 			if view_level == 2 and str(record["district"]) == selected_district:
-				draw_polyline(points, SELECTED, 3.0, true)
+				var pulse := 0.5 + 0.5 * sin(_pulse_time * 2.4)
+				var glow := Color(0.95, 0.82, 0.48, 0.22 + 0.32 * pulse)
+				draw_polyline(points, glow, 7.0 + 2.0 * pulse, true)
+				draw_polyline(points, SELECTED, 2.8, true)
 		if view_level == 1:
 			for district in district_label_candidates:
 				var candidate: Dictionary = district_label_candidates[district]
@@ -194,6 +233,13 @@ func _draw() -> void:
 		draw_string(ThemeDB.fallback_font, Vector2(12, size.y - 10), "Tap a state boundary", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#aebbd0"))
 	elif view_level == 1:
 		draw_string(ThemeDB.fallback_font, Vector2(12, size.y - 10), "Tap a district boundary", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#aebbd0"))
+
+func _cached_interior_label_candidate(cache_key: String, points: PackedVector2Array) -> Dictionary:
+	if _label_candidate_cache.has(cache_key):
+		return _label_candidate_cache[cache_key]
+	var candidate := _interior_label_candidate(points)
+	_label_candidate_cache[cache_key] = candidate
+	return candidate
 
 func _interior_label_candidate(points: PackedVector2Array) -> Dictionary:
 	var min_point := Vector2(INF, INF)

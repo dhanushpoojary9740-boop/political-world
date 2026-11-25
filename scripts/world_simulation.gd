@@ -121,11 +121,30 @@ const AI_GOVERNMENT_ACTIONS: Array[Dictionary] = [
 	{"metric": "public_safety", "action": "Reviewed public-safety coordination and emergency readiness."}
 ]
 
-const FICTIONAL_AI_NAMES: Array[String] = [
-	"Aarav Kulkarni", "Meera Hegde", "Rohan Shetty", "Ananya Rao",
-	"Vikram Nayak", "Kavya Bhat", "Nikhil Gowda", "Ishita Desai",
-	"Sanjay Menon", "Divya Acharya", "Arjun Patil", "Pooja Kamath"
-]
+var _fictional_name_cache: Array = []
+
+func _fictional_name_count() -> int:
+	_load_fictional_names()
+	return _fictional_name_cache.size()
+
+func _fictional_name_at(index: int) -> String:
+	_load_fictional_names()
+	if _fictional_name_cache.is_empty():
+		return "Unassigned Member"
+	return str(_fictional_name_cache[posmod(index, _fictional_name_cache.size())])
+
+func _load_fictional_names() -> void:
+	if not _fictional_name_cache.is_empty():
+		return
+	var file := FileAccess.open("res://Data/fictional_indian_names.json", FileAccess.READ)
+	if file == null:
+		_fictional_name_cache = ["Aarav Kulkarni", "Meera Hegde", "Rohan Shetty", "Ananya Rao"]
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if parsed is Array:
+		_fictional_name_cache = parsed
+	else:
+		_fictional_name_cache = ["Aarav Kulkarni", "Meera Hegde", "Rohan Shetty", "Ananya Rao"]
 
 
 const OFFICE_MISSION_CATALOG := [
@@ -186,6 +205,7 @@ var local_election_year: int = 2026
 var local_election_result: String = ""
 var last_local_election_year: int = 0
 var last_local_election_result: String = ""
+var last_local_election_details: Dictionary = {}
 var last_election_vote_share: float = 0.0
 var election_vote_share: float = 0.0
 var election_turnout: int = 0
@@ -231,6 +251,217 @@ func _load_lok_sabha_records() -> void:
 		_lok_sabha_records = rows
 		if _lok_sabha_records.size() != 543:
 			push_warning("Lok Sabha constituency database should contain 543 records; found %d." % _lok_sabha_records.size())
+
+func lok_sabha_integrity_summary() -> String:
+	_load_lok_sabha_records()
+	var expected_seats := 543
+	var seen_constituencies: Dictionary = {}
+	var invalid_rows := 0
+	var duplicate_rows := 0
+	for row_variant in _lok_sabha_records:
+		if not row_variant is Dictionary:
+			invalid_rows += 1
+			continue
+		var row: Dictionary = row_variant
+		var state_name := str(row.get("state", "")).strip_edges()
+		var constituency_name := str(row.get("name", "")).strip_edges()
+		var constituency_number := int(row.get("number", 0))
+		if state_name.is_empty() or constituency_name.is_empty() or constituency_number <= 0:
+			invalid_rows += 1
+			continue
+		var key := "%s|%d" % [state_name, constituency_number]
+		if seen_constituencies.has(key):
+			duplicate_rows += 1
+		else:
+			seen_constituencies[key] = true
+	var status := "PASS" if _lok_sabha_records.size() == expected_seats and invalid_rows == 0 and duplicate_rows == 0 else "REVIEW REQUIRED"
+	var summary := "CONSTITUENCY DATA  %s\nRecords  %d / %d\nUnique state-seat keys  %d\nInvalid rows  %d · Duplicate state-seat keys  %d" % [status, _lok_sabha_records.size(), expected_seats, seen_constituencies.size(), invalid_rows, duplicate_rows]
+	var national: Dictionary = world_state.get("national_election", {})
+	var phase := str(national.get("phase", "Scheduled"))
+	if phase == "Campaigning":
+		var slate_variant: Variant = national.get("player_candidate_slate", [])
+		var slate: Array = slate_variant if slate_variant is Array else []
+		var candidate_ids: Dictionary = {}
+		var missing_candidates := 0
+		var duplicate_candidates := 0
+		for candidate_variant in slate:
+			if not candidate_variant is Dictionary or candidate_variant.is_empty():
+				missing_candidates += 1
+				continue
+			var candidate: Dictionary = candidate_variant
+			var member_id := str(candidate.get("member_id", "")).strip_edges()
+			if member_id.is_empty():
+				missing_candidates += 1
+			elif candidate_ids.has(member_id):
+				duplicate_candidates += 1
+			else:
+				candidate_ids[member_id] = true
+		var slate_status := "PASS" if slate.size() == expected_seats and missing_candidates == 0 and duplicate_candidates == 0 else "REVIEW REQUIRED"
+		summary += "\n\nPLAYER TICKET SLATE  %s\nTickets  %d / %d\nMissing member IDs  %d · Duplicate member IDs  %d" % [slate_status, slate.size() - missing_candidates, expected_seats, missing_candidates, duplicate_candidates]
+	else:
+		summary += "\n\nPlayer ticket slate opens during the campaign period."
+	return summary
+
+
+func lok_sabha_candidate_review_rows() -> Array[Dictionary]:
+	_ensure_high_command_schema()
+	_load_lok_sabha_records()
+	var command: Dictionary = world_state.get("high_command", {})
+	var decisions: Dictionary = command.get("national_candidate_review", {})
+	var assignments: Dictionary = command.get("national_candidate_assignments", {})
+	var records := _ensure_player_candidate_records(543, "India")
+	var rows: Array[Dictionary] = []
+	for seat_index in range(mini(543, _lok_sabha_records.size())):
+		var seat_number := seat_index + 1
+		var source: Dictionary = _lok_sabha_records[seat_index]
+		var record: Dictionary = {}
+		var assigned_id := str(assignments.get(str(seat_number), ""))
+		if not assigned_id.is_empty():
+			for member_variant in records:
+				if member_variant is Dictionary and str(member_variant.get("id", "")) == assigned_id:
+					record = member_variant
+					break
+		rows.append({
+				"seat_number": seat_number,
+				"state": str(source.get("state", "")),
+				"constituency": str(source.get("name", "")),
+				"member_id": str(record.get("id", "")),
+				"candidate_name": str(record.get("name", "Nominee not assigned")),
+				"decision": str(decisions.get(str(seat_number), "Pending"))
+			})
+	return rows
+
+func lok_sabha_party_member_search(query: String = "") -> Array[Dictionary]:
+	var records := _ensure_player_candidate_records(543, "India")
+	var normalized := query.strip_edges().to_lower()
+	var results: Array[Dictionary] = []
+	for record_variant in records:
+		if not record_variant is Dictionary:
+			continue
+		var record: Dictionary = record_variant
+		var member_name := str(record.get("name", ""))
+		var member_id := str(record.get("id", ""))
+		if normalized.is_empty() or member_name.to_lower().contains(normalized) or member_id.to_lower().contains(normalized):
+			results.append({"id": member_id, "name": member_name})
+	return results
+
+func assign_lok_sabha_candidate(seat_number: int, member_id: String) -> String:
+	if seat_number < 1 or seat_number > 543:
+		return "Choose a valid Lok Sabha constituency."
+	var records := _ensure_player_candidate_records(543, "India")
+	var found := false
+	for record_variant in records:
+		if record_variant is Dictionary and str(record_variant.get("id", "")) == member_id:
+			found = true
+			break
+	if not found:
+		return "That party member could not be found in your roster."
+	_ensure_high_command_schema()
+	var command: Dictionary = world_state.get("high_command", {})
+	var assignments: Dictionary = command.get("national_candidate_assignments", {})
+	for assigned_seat_variant in assignments.keys():
+		var assigned_seat := int(assigned_seat_variant)
+		if assigned_seat != seat_number and str(assignments[assigned_seat_variant]) == member_id:
+			return "That member is already assigned to Lok Sabha constituency %d. Each member can be nominated to only one seat." % assigned_seat
+	assignments[str(seat_number)] = member_id
+	command["national_candidate_assignments"] = assignments
+	world_state["high_command"] = command
+	_invalidate_lok_sabha_candidate_slate()
+	return "Member assigned to Lok Sabha constituency %d. Ticket remains Pending until approved." % seat_number
+
+func set_lok_sabha_candidate_decision(seat_number: int, decision: String) -> String:
+	if seat_number < 1 or seat_number > 543 or decision not in ["Approved", "Rejected", "Pending"]:
+		return "Select a valid constituency and review decision."
+	_ensure_high_command_schema()
+	var command: Dictionary = world_state.get("high_command", {})
+	if decision == "Approved":
+		var assignments: Dictionary = command.get("national_candidate_assignments", {})
+		var assigned_id := str(assignments.get(str(seat_number), ""))
+		if assigned_id.is_empty():
+			var records := _ensure_player_candidate_records(543, "India")
+			var default_index := seat_number - 1
+			if default_index < 0 or default_index >= records.size():
+				return "No default nominee is available for this constituency."
+			assigned_id = str(records[default_index].get("id", ""))
+			assignments[str(seat_number)] = assigned_id
+			command["national_candidate_assignments"] = assignments
+		for assigned_seat_variant in assignments.keys():
+			if int(assigned_seat_variant) != seat_number and str(assignments[assigned_seat_variant]) == assigned_id:
+				return "This member is already assigned to another Lok Sabha constituency."
+	var decisions: Dictionary = command.get("national_candidate_review", {})
+	decisions[str(seat_number)] = decision
+	command["national_candidate_review"] = decisions
+	world_state["high_command"] = command
+	_invalidate_lok_sabha_candidate_slate()
+	return "Lok Sabha ticket %d marked %s." % [seat_number, decision.to_lower()]
+
+func auto_assign_unassigned_lok_sabha_candidates() -> String:
+	_ensure_high_command_schema()
+	var command: Dictionary = world_state.get("high_command", {})
+	var assignments: Dictionary = command.get("national_candidate_assignments", {})
+	var records := _ensure_player_candidate_records(543, "India")
+	var used_ids: Dictionary = {}
+	for value in assignments.values():
+		var existing_id := str(value)
+		if not existing_id.is_empty():
+			used_ids[existing_id] = true
+	var available_ids: Array[String] = []
+	for record_variant in records:
+		if not record_variant is Dictionary:
+			continue
+		var member_id := str(record_variant.get("id", ""))
+		if not member_id.is_empty() and not used_ids.has(member_id) and not available_ids.has(member_id):
+			available_ids.append(member_id)
+	var assigned_count := 0
+	var next_member_index := 0
+	for seat_number in range(1, 544):
+		if not str(assignments.get(str(seat_number), "")).is_empty():
+			continue
+		if next_member_index >= available_ids.size():
+			break
+		assignments[str(seat_number)] = available_ids[next_member_index]
+		next_member_index += 1
+		assigned_count += 1
+	command["national_candidate_assignments"] = assignments
+	world_state["high_command"] = command
+	_invalidate_lok_sabha_candidate_slate()
+	return "Auto-assigned %d previously unassigned Lok Sabha ticket(s). Existing assignments were preserved; each member is assigned at most once." % assigned_count
+
+
+func bulk_approve_assigned_lok_sabha_candidates() -> String:
+	_ensure_high_command_schema()
+	var command: Dictionary = world_state.get("high_command", {})
+	var assignments: Dictionary = command.get("national_candidate_assignments", {})
+	var decisions: Dictionary = command.get("national_candidate_review", {})
+	var approved_count := 0
+	var skipped_count := 0
+	var seen_ids: Dictionary = {}
+	for seat_variant in assignments.keys():
+		var seat_number := int(seat_variant)
+		var member_id := str(assignments[seat_variant])
+		if member_id.is_empty() or seat_number < 1 or seat_number > 543:
+			skipped_count += 1
+			continue
+		if str(decisions.get(str(seat_number), "Pending")) != "Pending":
+			continue
+		if seen_ids.has(member_id):
+			skipped_count += 1
+			continue
+		seen_ids[member_id] = true
+		decisions[str(seat_number)] = "Approved"
+		approved_count += 1
+	command["national_candidate_review"] = decisions
+	world_state["high_command"] = command
+	_invalidate_lok_sabha_candidate_slate()
+	return "Bulk approval complete: %d assigned pending ticket(s) approved; %d invalid or duplicate assignment(s) skipped. Rejected or already reviewed tickets were left unchanged." % [approved_count, skipped_count]
+
+
+func _invalidate_lok_sabha_candidate_slate() -> void:
+	var national: Dictionary = world_state.get("national_election", {})
+	national.erase("player_candidate_slate")
+	national.erase("player_candidate_slate_key")
+	world_state["national_election"] = national
+
 
 func _lok_sabha_record_for_seat(seat_number: int) -> Dictionary:
 	_load_lok_sabha_records()
@@ -540,8 +771,17 @@ func _process_world_politics_monthly() -> void:
 			parties[weakest_id] = weak_party
 			report_lines.append("Party movement: %d members shifted from %s to %s after a sustained support gap." % [transfer, str(weak_party.get("name", "a party")), str(strong_party.get("name", "a party"))])
 
-	# AI organization builds and loses support state by state. The player's party
-	# gets the same autonomous regional growth outside direct player decisions.
+	# AI organization builds and loses support state by state. Give the player's
+	# party a visible, gradual national-growth baseline so a newly founded party
+	# does not remain trapped near its initial 1% popularity. Growth scales modestly
+	# with membership; home-state activity receives an additional local bonus.
+	if parties.has(player_party_id):
+		var player_party: Dictionary = parties[player_party_id]
+		var player_members := maxi(0, int(player_party.get("members", 0)))
+		var monthly_popularity_growth := 0.15 + minf(0.20, float(player_members) / 20000.0)
+		player_party["popularity"] = minf(45.0, float(player_party.get("popularity", 0.0)) + monthly_popularity_growth)
+		parties[player_party_id] = player_party
+
 	for party_id_variant in parties.keys():
 		var party_id := str(party_id_variant)
 		var party: Dictionary = parties[party_id]
@@ -550,9 +790,12 @@ func _process_world_politics_monthly() -> void:
 		for state_name_variant in support_by_state.keys():
 			var state_name := str(state_name_variant)
 			var support := float(support_by_state[state_name])
-			var drift := (party_popularity - support) * 0.025
-			if state_name == home_state and party_id == player_party_id:
-				drift += 0.04
+			var drift := (party_popularity - support) * 0.05
+			if party_id == player_party_id:
+				# Small, persistent national outreach; stronger in the player's home state.
+				drift += 0.15
+				if state_name == home_state:
+					drift += 0.25
 			support_by_state[state_name] = clampf(support + drift, 0.5, 95.0)
 		regional[party_id] = support_by_state
 	world_state["regional_support"] = regional
@@ -733,6 +976,97 @@ func _months_until_election(election: Dictionary) -> int:
 	return (election_year - year) * 12 + (election_month - month)
 
 
+func _lok_sabha_nomination_readiness() -> Dictionary:
+	var rows := lok_sabha_candidate_review_rows()
+	var assigned := 0
+	var approved := 0
+	var duplicate_count := 0
+	var seen_member_ids: Dictionary = {}
+	for row in rows:
+		var member_id := str(row.get("member_id", "")).strip_edges()
+		if member_id.is_empty():
+			continue
+		assigned += 1
+		if seen_member_ids.has(member_id):
+			duplicate_count += 1
+		else:
+			seen_member_ids[member_id] = true
+		if str(row.get("decision", "Pending")) == "Approved":
+			approved += 1
+	var ready := rows.size() == 543 and assigned == 543 and approved == 543 and duplicate_count == 0
+	return {
+		"ready": ready,
+		"total": rows.size(),
+		"assigned": assigned,
+		"approved": approved,
+		"vacant": maxi(0, rows.size() - assigned),
+		"duplicate": duplicate_count
+	}
+
+
+func lok_sabha_polling_counting_summary() -> String:
+	var election: Dictionary = world_state.get("national_election", {})
+	if election.is_empty():
+		return "No Lok Sabha election record is available."
+	var phase := str(election.get("phase", "Scheduled"))
+	var next_date := "%s %d" % [_month_name(int(election.get("month", 5))), int(election.get("next_year", year))]
+	match phase:
+		"Polling":
+			return "POLLING DAY  ·  %s\nPolling is recorded for this election. Constituency declarations begin when the simulation advances to counting." % next_date
+		"Counting":
+			var total := maxi(1, int(election.get("counting_total_constituencies", election.get("seats", 543))))
+			var declared := clampi(int(election.get("counted_constituencies", 0)), 0, total)
+			var round_number := clampi(int(election.get("counting_round", 0)), 0, 4)
+			var pending: Dictionary = election.get("counting_pending_result", {})
+			var results: Array = pending.get("constituency_results", [])
+			var tally: Dictionary = {}
+			for index in range(mini(declared, results.size())):
+				var seat_variant: Variant = results[index]
+				if not seat_variant is Dictionary:
+					continue
+				var seat: Dictionary = seat_variant
+				var winner_id := str(seat.get("winner_party_id", ""))
+				if not winner_id.is_empty():
+					tally[winner_id] = int(tally.get(winner_id, 0)) + 1
+			var standings: Array[String] = []
+			var party_ids: Array = tally.keys()
+			party_ids.sort_custom(func(a: Variant, b: Variant) -> bool:
+				var a_count := int(tally.get(a, 0))
+				var b_count := int(tally.get(b, 0))
+				if a_count == b_count:
+					return _government_party_name(str(a)) < _government_party_name(str(b))
+				return a_count > b_count
+			)
+			for index in range(mini(5, party_ids.size())):
+				var party_id := str(party_ids[index])
+				standings.append("%s — %d declared seats" % [_government_party_name(party_id), int(tally.get(party_id, 0))])
+			return "COUNTING ROUND %d/4\nConstituencies declared: %d / %d\nConstituencies remaining: %d\n\nDECLARED-SEAT TALLY (not a projection)\n%s\n\nTurnout: %.1f%% · Ballots cast: %s / %s" % [
+				round_number, declared, total, total - declared,
+				"\n".join(standings) if not standings.is_empty() else "No constituencies declared yet.",
+				float(election.get("polling_turnout_percent", 0.0)),
+				_format_number(int(election.get("polling_ballots_cast", 0))),
+				_format_number(int(election.get("polling_eligible_voters", 0)))
+			]
+		"Completed":
+			return "COUNT COMPLETE  ·  FINAL RESULT LOCKED\nAll %d constituencies declared.\nFinal result: %s\nTurnout: %.1f%% · Ballots cast: %s / %s" % [
+				int(election.get("seats", 543)), str(election.get("last_result", "Final result recorded")),
+				float(election.get("last_turnout_percent", 0.0)),
+				_format_number(int(election.get("last_ballots_cast", 0))),
+				_format_number(int(election.get("last_eligible_voters", 0)))
+			]
+		"Campaigning":
+			return "PRE-POLL CAMPAIGN\nScheduled polling: %s\nNo votes have been counted." % next_date
+		_:
+			return "NEXT LOK SABHA POLL  ·  %s\nPhase: %s\nPolling and counting are simulated game records, not real-world live results." % [next_date, phase]
+
+
+func _shift_election_date(election: Dictionary, months_to_add: int) -> void:
+	var absolute_month := year * 12 + month - 1
+	absolute_month += maxi(1, months_to_add)
+	election["next_year"] = int(floor(float(absolute_month) / 12.0))
+	election["month"] = absolute_month % 12 + 1
+
+
 func _advance_modeled_election(
 	election: Dictionary,
 	jurisdiction: String,
@@ -745,6 +1079,33 @@ func _advance_modeled_election(
 		return election
 
 	var months_remaining := _months_until_election(election)
+	if jurisdiction == "Lok Sabha":
+		var nomination_status := _lok_sabha_nomination_readiness()
+		if not bool(nomination_status.get("ready", false)):
+			if months_remaining <= MODELED_CAMPAIGN_MONTHS:
+				var first_nomination_hold := not bool(election.get("nomination_hold", false))
+				_shift_election_date(election, MODELED_CAMPAIGN_MONTHS + 1)
+				election["phase"] = "Scheduled"
+				election["nomination_hold"] = true
+				election["nomination_hold_reason"] = "Campaign held: approve unique nominees for all 543 Lok Sabha constituencies."
+				election.erase("player_candidate_slate")
+				election.erase("player_candidate_slate_key")
+				if first_nomination_hold:
+					report_lines.append("Lok Sabha campaign held. %d of 543 seats have nominees and %d tickets are approved; %d duplicate member assignments must be resolved. Poll date moved to %s %d." % [
+						int(nomination_status.get("assigned", 0)),
+						int(nomination_status.get("approved", 0)),
+						int(nomination_status.get("duplicate", 0)),
+						_month_name(int(election.get("month", month))),
+						int(election.get("next_year", year))
+					])
+			return election
+		if bool(election.get("nomination_hold", false)):
+			if months_remaining <= MODELED_CAMPAIGN_MONTHS:
+				_shift_election_date(election, MODELED_CAMPAIGN_MONTHS + 1)
+				months_remaining = _months_until_election(election)
+			election.erase("nomination_hold")
+			election.erase("nomination_hold_reason")
+			report_lines.append("Lok Sabha nomination slate is complete. The national campaign can now begin.")
 	if months_remaining > MODELED_CAMPAIGN_MONTHS:
 		election["phase"] = "Scheduled"
 		return election
@@ -761,7 +1122,90 @@ func _advance_modeled_election(
 		_run_modeled_ai_campaigns(election, state_name)
 		return election
 
-	var result := _resolve_modeled_election(election, jurisdiction, seat_count, state_name, regional)
+	var result: Dictionary = {}
+	if jurisdiction != "Lok Sabha":
+		# State Assembly elections follow the same polling/counting lifecycle as Lok Sabha.
+		# Candidate results are computed at poll close, held privately, and released in four
+		# staged constituency-declaration rounds. No interim leads are fabricated.
+		var state_phase := str(election.get("phase", "Scheduled"))
+		if state_phase in ["Scheduled", "Campaigning"]:
+			election["phase"] = "Polling"
+			election["results_locked"] = false
+			election["polling_year"] = year
+			election["polling_month"] = month
+			election["counting_round"] = 0
+			election["counted_constituencies"] = 0
+			election["counting_total_constituencies"] = seat_count
+			report_lines.append("%s polling day reached. Constituency results will be declared in staged counting." % jurisdiction)
+			return election
+		elif state_phase == "Polling":
+			result = _resolve_modeled_election(election, jurisdiction, seat_count, state_name, regional)
+			election["counting_pending_result"] = result
+			election["phase"] = "Counting"
+			election["counting_round"] = 0
+			election["counted_constituencies"] = 0
+			election["counting_total_constituencies"] = seat_count
+			election["polling_eligible_voters"] = int(result.get("eligible_voters", 0))
+			election["polling_ballots_cast"] = int(result.get("ballots_cast", 0))
+			election["polling_turnout_percent"] = float(result.get("turnout_percent", 0.0))
+			report_lines.append("%s polling closed. Counting has begun; no constituency is declared until its counting round is released." % jurisdiction)
+			return election
+		elif state_phase == "Counting":
+			var next_round := mini(4, int(election.get("counting_round", 0)) + 1)
+			var total_constituencies := maxi(1, int(election.get("counting_total_constituencies", seat_count)))
+			var declared_target := mini(total_constituencies, int(ceil(float(total_constituencies * next_round) / 4.0)))
+			election["counting_round"] = next_round
+			election["counted_constituencies"] = declared_target
+			if next_round < 4:
+				report_lines.append("%s counting round %d/4 complete: %d of %d constituencies declared." % [jurisdiction, next_round, declared_target, total_constituencies])
+				return election
+			var pending_state_result: Variant = election.get("counting_pending_result", {})
+			result = pending_state_result if pending_state_result is Dictionary else {}
+			election.erase("counting_pending_result")
+		else:
+			result = _resolve_modeled_election(election, jurisdiction, seat_count, state_name, regional)
+	elif jurisdiction == "Lok Sabha":
+		var election_phase := str(election.get("phase", "Scheduled"))
+		if election_phase in ["Scheduled", "Campaigning"]:
+			election["phase"] = "Polling"
+			election["results_locked"] = false
+			election["polling_year"] = year
+			election["polling_month"] = month
+			election["counting_round"] = 0
+			election["counted_constituencies"] = 0
+			election["counting_total_constituencies"] = seat_count
+			report_lines.append("Lok Sabha polling day reached. Constituency results will be declared in staged counting.")
+			return election
+		elif election_phase == "Polling":
+			result = _resolve_modeled_election(election, jurisdiction, seat_count, state_name, regional)
+			election["counting_pending_result"] = result
+			election["phase"] = "Counting"
+			election["counting_round"] = 0
+			election["counted_constituencies"] = 0
+			election["counting_total_constituencies"] = seat_count
+			election["polling_eligible_voters"] = int(result.get("eligible_voters", 0))
+			election["polling_ballots_cast"] = int(result.get("ballots_cast", 0))
+			election["polling_turnout_percent"] = float(result.get("turnout_percent", 0.0))
+			report_lines.append("Lok Sabha polling closed. Counting has begun; no constituency is declared until its counting round is released.")
+			return election
+		elif election_phase == "Counting":
+			var next_round := mini(4, int(election.get("counting_round", 0)) + 1)
+			var total_constituencies := maxi(1, int(election.get("counting_total_constituencies", seat_count)))
+			var declared_target := mini(total_constituencies, int(ceil(float(total_constituencies * next_round) / 4.0)))
+			election["counting_round"] = next_round
+			election["counted_constituencies"] = declared_target
+			if next_round < 4:
+				report_lines.append("Lok Sabha counting round %d/4 complete: %d of %d constituencies declared." % [next_round, declared_target, total_constituencies])
+				return election
+			var pending_result: Variant = election.get("counting_pending_result", {})
+			result = pending_result if pending_result is Dictionary else {}
+			election.erase("counting_pending_result")
+		else:
+			result = _resolve_modeled_election(election, jurisdiction, seat_count, state_name, regional)
+	else:
+		result = _resolve_modeled_election(election, jurisdiction, seat_count, state_name, regional)
+	if result.is_empty():
+		return election
 	election["last_result"] = str(result.get("summary", "Election completed"))
 	election["last_winner"] = str(result.get("winner_id", ""))
 	election["last_seats"] = result.get("seats_by_party", {})
@@ -773,17 +1217,19 @@ func _advance_modeled_election(
 	election["player_party_candidates_elected"] = int(result.get("player_party_candidates_elected", 0))
 	election["last_player_organization_score"] = int(result.get("player_organization_score", 0))
 	election["last_player_organization_bonus"] = float(result.get("player_organization_bonus", 0.0))
-	election["last_year"] = year
+	election["last_year"] = int(election.get("polling_year", year))
+	election["last_month"] = int(election.get("polling_month", month))
 	election["last_turnout_percent"] = float(result.get("turnout_percent", 0.0))
 	election["phase"] = "Completed"
+	election["results_locked"] = true
 	election["last_campaign_spending"] = election.get("campaign_spend_by_party", {})
 	election["last_campaign_spend_by_constituency"] = election.get("campaign_spend_by_constituency", {})
 
 	var history: Array = world_state.get("election_history", [])
 	history.append({
 		"jurisdiction": jurisdiction,
-		"year": year,
-		"month": month,
+		"year": int(election.get("last_year", year)),
+		"month": int(election.get("last_month", month)),
 		"summary": election["last_result"],
 		"winner_id": election["last_winner"],
 		"seats_by_party": election["last_seats"],
@@ -828,23 +1274,45 @@ func _advance_modeled_election(
 		jurisdiction, election["last_result"], election["last_turnout_percent"]
 	])
 
-	var next_year := int(election.get("next_year", year))
-	while next_year <= year:
+	var election_cycle_base_year := int(election.get("polling_year", year)) if jurisdiction == "Lok Sabha" else year
+	var next_year := int(election.get("next_year", election_cycle_base_year))
+	while next_year <= election_cycle_base_year:
 		next_year += MODELED_ELECTION_CYCLE_YEARS
 	election["next_year"] = next_year
 	var government_level := "state" if not state_name.is_empty() else "national"
 	var government_jurisdiction := state_name if not state_name.is_empty() else "India"
-	var formed_government := _form_ai_government_from_result(
-		government_level, government_jurisdiction, result.get("seats_by_party", {}),
-		seat_count, next_year, int(election.get("month", 5))
-	)
-	election["government_status"] = str(formed_government.get("formation_type", "Government formed"))
-	election["government_party_id"] = str(formed_government.get("ruling_party_id", ""))
-	report_lines.append("Government formed in %s: %s, led by %s. Executive administration remains with the elected government; party leaders do not automatically receive office." % [
-		government_jurisdiction,
-		_government_party_name(str(formed_government.get("ruling_party_id", ""))),
-		str(formed_government.get("leader_name", "Leader not recorded"))
-	])
+	if government_level == "state" and government_jurisdiction == "Karnataka":
+		# Karnataka government formation is a player decision. Keep the incumbent record
+		# in place until High Command confirms a majority and appoints the CM.
+		election["government_status"] = "Awaiting High Command formation"
+		election["government_party_id"] = ""
+		election["government_formation_pending"] = true
+		world_state["pending_karnataka_government_formation"] = {
+			"pending": true,
+			"year": year,
+			"month": month,
+			"seats_by_party": (result.get("seats_by_party", {}) as Dictionary).duplicate(true),
+			"total_seats": seat_count,
+			"majority_required": int(floor(float(seat_count) / 2.0)) + 1,
+			"vote_shares": (result.get("vote_shares", {}) as Dictionary).duplicate(true),
+			"turnout_percent": float(result.get("turnout_percent", 0.0)),
+			"winner_id": str(result.get("winner_id", "")),
+			"next_year": next_year,
+			"next_month": int(election.get("month", 5))
+		}
+		report_lines.append("Karnataka results are final. Government formation is awaiting your High Command decision. Review the result, negotiate a coalition if needed, and appoint the Chief Minister and cabinet.")
+	else:
+		var formed_government := _form_ai_government_from_result(
+			government_level, government_jurisdiction, result.get("seats_by_party", {}),
+			seat_count, next_year, int(election.get("month", 5))
+		)
+		election["government_status"] = str(formed_government.get("formation_type", "Government formed"))
+		election["government_party_id"] = str(formed_government.get("ruling_party_id", ""))
+		report_lines.append("Government formed in %s: %s, led by %s. Executive administration remains with the elected government; party leaders do not automatically receive office." % [
+			government_jurisdiction,
+			_government_party_name(str(formed_government.get("ruling_party_id", ""))),
+			str(formed_government.get("leader_name", "Leader not recorded"))
+		])
 	election["phase"] = "Completed"
 	election["months_to_poll"] = -1
 	election["campaign_spend_by_party"] = {}
@@ -1116,6 +1584,9 @@ func _resolve_modeled_election(
 			"record_status": str(constituency_record.get("record_status", "not_in_database")),
 			"winner_party_id": winning_party_id,
 			"winner_candidate_name": winning_candidate_name,
+			"eligible_voters": eligible_voters,
+			"ballots_cast": ballots,
+			"turnout_percent": turnout_percent,
 			"candidates": candidate_rows
 		})
 
@@ -1163,6 +1634,10 @@ func _ensure_high_command_schema() -> void:
 	var command: Dictionary = world_state.get("high_command", {})
 	if not command.has("karnataka_contest_enabled"):
 		command["karnataka_contest_enabled"] = false
+	if not command.has("national_candidate_assignments"):
+		command["national_candidate_assignments"] = {}
+	if not command.has("national_candidate_review"):
+		command["national_candidate_review"] = {}
 	if command.is_empty():
 		command = {
 			"strategy": "Balanced outreach",
@@ -1389,8 +1864,8 @@ func _ensure_party_candidate_records(party_id: String, required_count: int, stat
 	var party_name_offset := maxi(0, sorted_party_ids.find(party_id))
 	while records.size() < target_count:
 		counter += 1
-		var base_name := FICTIONAL_AI_NAMES[posmod(counter - 1 + party_name_offset, FICTIONAL_AI_NAMES.size())]
-		var nominee_name := "%s %d" % [base_name, 100 + counter]
+		var base_name := _fictional_name_at(counter - 1 + party_name_offset)
+		var nominee_name := base_name
 		records.append({
 			"id": "%s_member_%d" % [party_id, counter],
 			"name": nominee_name,
@@ -1409,8 +1884,245 @@ func _ensure_party_candidate_records(party_id: String, required_count: int, stat
 	return records
 
 func _ensure_player_candidate_records(required_count: int, state_name: String = "") -> Array:
-	return _ensure_party_candidate_records(player_party_id, required_count, state_name)
+	var records := _ensure_party_candidate_records(player_party_id, required_count, state_name)
+	if not career_started or character_name.strip_edges().is_empty() or records.is_empty():
+		return records
 
+	# Keep the player character in the candidate search roster so the career
+	# profile and party nomination system use the same identity.
+	var player_record_id := "player_character"
+	var player_record_index := -1
+	for index in range(records.size()):
+		var record_variant: Variant = records[index]
+		if record_variant is Dictionary and str(record_variant.get("id", "")) == player_record_id:
+			player_record_index = index
+			break
+
+	var player_record := {
+		"id": player_record_id,
+		"name": character_name.strip_edges(),
+		"duty": career_rank,
+		"region": home_state,
+		"joined_year": year,
+		"joined_month": month,
+		"is_player_added": true,
+		"is_player_character": true
+	}
+	if player_record_index >= 0:
+		records[player_record_index] = player_record
+	else:
+		records.append(player_record)
+
+	if parties.has(player_party_id):
+		var party: Dictionary = parties[player_party_id]
+		party["member_records"] = records
+		party["member_counter"] = int(party.get("member_counter", records.size()))
+		parties[player_party_id] = party
+	return records
+
+
+
+func assembly_state_names() -> Array[String]:
+	_load_assembly_records()
+	var names: Array[String] = []
+	for row in _assembly_records:
+		if not row is Dictionary:
+			continue
+		var state_name := str(row.get("state", ""))
+		if not state_name.is_empty() and not names.has(state_name):
+			names.append(state_name)
+	names.sort()
+	return names
+
+func assembly_seat_count(state_name: String) -> int:
+	_load_assembly_records()
+	var count := 0
+	for row in _assembly_records:
+		if row is Dictionary and str(row.get("state", "")) == state_name:
+			count += 1
+	return count
+
+
+func _assembly_candidate_roster_offset(state_name: String) -> int:
+	# Preserve existing modeled-state roster ranges; place additional data-only
+	# states after all modeled ranges so they cannot alias one another.
+	for election_variant in world_state.get("state_elections", []):
+		if election_variant is Dictionary and str(election_variant.get("state", "")) == state_name:
+			return _candidate_pool_index_for_constituency(state_name, 0)
+	var national: Dictionary = world_state.get("national_election", {})
+	var offset := int(national.get("seats", 543)) + _total_modeled_state_seats()
+	var names := assembly_state_names()
+	for name in names:
+		if name == state_name:
+			return offset
+		var found_in_elections := false
+		for election_variant in world_state.get("state_elections", []):
+			if election_variant is Dictionary and str(election_variant.get("state", "")) == name:
+				found_in_elections = true
+				break
+		if not found_in_elections:
+			offset += assembly_seat_count(name)
+	return offset
+
+func _invalidate_state_candidate_slate(state_name: String) -> void:
+	var elections: Array = world_state.get("state_elections", [])
+	for index in range(elections.size()):
+		if not elections[index] is Dictionary:
+			continue
+		var election: Dictionary = elections[index]
+		if str(election.get("state", "")) == state_name:
+			election.erase("player_candidate_slate")
+			election.erase("player_candidate_slate_key")
+			elections[index] = election
+	world_state["state_elections"] = elections
+
+
+func state_candidate_review_rows(state_name: String) -> Array[Dictionary]:
+	_ensure_high_command_schema()
+	var seat_count := assembly_seat_count(state_name)
+	var command: Dictionary = world_state.get("high_command", {})
+	var decisions_by_state: Dictionary = command.get("state_candidate_review", {})
+	var assignments_by_state: Dictionary = command.get("state_candidate_assignments", {})
+	var decisions: Dictionary = command.get("karnataka_candidate_review", {}) if state_name == "Karnataka" else decisions_by_state.get(state_name, {})
+	var assignments: Dictionary = command.get("karnataka_candidate_assignments", {}) if state_name == "Karnataka" else assignments_by_state.get(state_name, {})
+	var roster_offset := _assembly_candidate_roster_offset(state_name)
+	var records := _ensure_player_candidate_records(roster_offset + seat_count, state_name)
+	var rows: Array[Dictionary] = []
+	for seat_index in range(seat_count):
+		var seat_number := seat_index + 1
+		var record: Dictionary = records[roster_offset + seat_index] if roster_offset + seat_index < records.size() else {}
+		var assigned_id := str(assignments.get(str(seat_number), ""))
+		if not assigned_id.is_empty():
+			for member_variant in records:
+				if member_variant is Dictionary and str(member_variant.get("id", "")) == assigned_id:
+					record = member_variant
+					break
+		rows.append({
+			"seat_number": seat_number,
+			"constituency": _constituency_name_for_seat(state_name, seat_number),
+			"candidate_name": str(record.get("name", "Party nominee %03d" % seat_number)),
+			"decision": str(decisions.get(str(seat_number), "Pending"))
+		})
+	return rows
+
+func state_party_member_search(state_name: String, query: String = "") -> Array[Dictionary]:
+	var seat_count := assembly_seat_count(state_name)
+	var roster_offset := _assembly_candidate_roster_offset(state_name)
+	var records := _ensure_player_candidate_records(roster_offset + seat_count, state_name)
+	var normalized := query.strip_edges().to_lower()
+	var results: Array[Dictionary] = []
+	for record_variant in records:
+		if not record_variant is Dictionary:
+			continue
+		var record: Dictionary = record_variant
+		var name := str(record.get("name", ""))
+		var member_id := str(record.get("id", ""))
+		if normalized.is_empty() or name.to_lower().contains(normalized) or member_id.to_lower().contains(normalized):
+			results.append({"id": member_id, "name": name})
+	return results
+
+func assign_state_candidate(state_name: String, seat_number: int, member_id: String) -> String:
+	var seat_count := assembly_seat_count(state_name)
+	if seat_number < 1 or seat_number > seat_count:
+		return "Choose a valid constituency in the selected state."
+	var roster_offset := _assembly_candidate_roster_offset(state_name)
+	var records := _ensure_player_candidate_records(roster_offset + seat_count, state_name)
+	var selected: Dictionary = {}
+	for record_variant in records:
+		if record_variant is Dictionary and str(record_variant.get("id", "")) == member_id:
+			selected = record_variant
+			break
+	if selected.is_empty():
+		return "That party member could not be found in your roster."
+	_ensure_high_command_schema()
+	var command: Dictionary = world_state.get("high_command", {})
+	if state_name == "Karnataka":
+		var assignments: Dictionary = command.get("karnataka_candidate_assignments", {})
+		assignments[str(seat_number)] = member_id
+		command["karnataka_candidate_assignments"] = assignments
+	else:
+		var assignments_by_state: Dictionary = command.get("state_candidate_assignments", {})
+		var assignments: Dictionary = assignments_by_state.get(state_name, {})
+		assignments[str(seat_number)] = member_id
+		assignments_by_state[state_name] = assignments
+		command["state_candidate_assignments"] = assignments_by_state
+	world_state["high_command"] = command
+	_invalidate_state_candidate_slate(state_name)
+	return "%s assigned to contest %s, %s. Review and approve the ticket before the election." % [str(selected.get("name", "Party member")), _constituency_name_for_seat(state_name, seat_number), state_name]
+
+func set_state_candidate_decision(state_name: String, seat_number: int, decision: String) -> String:
+	var seat_count := assembly_seat_count(state_name)
+	if seat_number < 1 or seat_number > seat_count:
+		return "Select a valid constituency."
+	if decision not in ["Approved", "Rejected", "Pending"]:
+		return "Invalid review decision."
+	_ensure_high_command_schema()
+	var command: Dictionary = world_state.get("high_command", {})
+	if state_name == "Karnataka":
+		var decisions: Dictionary = command.get("karnataka_candidate_review", {})
+		decisions[str(seat_number)] = decision
+		command["karnataka_candidate_review"] = decisions
+	else:
+		var decisions_by_state: Dictionary = command.get("state_candidate_review", {})
+		var decisions: Dictionary = decisions_by_state.get(state_name, {})
+		decisions[str(seat_number)] = decision
+		decisions_by_state[state_name] = decisions
+		command["state_candidate_review"] = decisions_by_state
+	world_state["high_command"] = command
+	_invalidate_state_candidate_slate(state_name)
+	return "%s, %s ticket marked %s." % [_constituency_name_for_seat(state_name, seat_number), state_name, decision.to_lower()]
+
+
+func bulk_assign_state_candidates(state_name: String) -> String:
+	var seat_count := assembly_seat_count(state_name)
+	if seat_count <= 0:
+		return "No assembly constituency records are available for %s." % state_name
+	var roster_offset := _assembly_candidate_roster_offset(state_name)
+	var records := _ensure_player_candidate_records(roster_offset + seat_count, state_name)
+	_ensure_high_command_schema()
+	var command: Dictionary = world_state.get("high_command", {})
+	var assignments_by_state: Dictionary = command.get("state_candidate_assignments", {})
+	var assignments: Dictionary = command.get("karnataka_candidate_assignments", {}) if state_name == "Karnataka" else assignments_by_state.get(state_name, {})
+	var assigned_count := 0
+	for seat_index in range(seat_count):
+		var seat_number := seat_index + 1
+		if not str(assignments.get(str(seat_number), "")).is_empty():
+			continue
+		var roster_index := roster_offset + seat_index
+		if roster_index >= records.size() or not (records[roster_index] is Dictionary):
+			continue
+		var member_id := str(records[roster_index].get("id", ""))
+		if member_id.is_empty():
+			continue
+		assignments[str(seat_number)] = member_id
+		assigned_count += 1
+	if state_name == "Karnataka":
+		command["karnataka_candidate_assignments"] = assignments
+	else:
+		assignments_by_state[state_name] = assignments
+		command["state_candidate_assignments"] = assignments_by_state
+	world_state["high_command"] = command
+	_invalidate_state_candidate_slate(state_name)
+	return "Bulk nominee preparation complete for %s: %d new tickets assigned. Tickets remain Pending until you approve them." % [state_name, assigned_count]
+
+func bulk_approve_state_candidates(state_name: String) -> String:
+	_ensure_high_command_schema()
+	var command: Dictionary = world_state.get("high_command", {})
+	var decisions_by_state: Dictionary = command.get("state_candidate_review", {})
+	var decisions: Dictionary = command.get("karnataka_candidate_review", {}) if state_name == "Karnataka" else decisions_by_state.get(state_name, {})
+	var count := 0
+	for seat_number in range(1, assembly_seat_count(state_name) + 1):
+		if str(decisions.get(str(seat_number), "Pending")) == "Pending":
+			decisions[str(seat_number)] = "Approved"
+			count += 1
+	if state_name == "Karnataka":
+		command["karnataka_candidate_review"] = decisions
+	else:
+		decisions_by_state[state_name] = decisions
+		command["state_candidate_review"] = decisions_by_state
+	world_state["high_command"] = command
+	_invalidate_state_candidate_slate(state_name)
+	return "Bulk review complete: %d pending %s tickets approved." % [count, state_name]
 
 func karnataka_candidate_review_rows() -> Array[Dictionary]:
 	_ensure_high_command_schema()
@@ -1445,8 +2157,9 @@ func karnataka_party_member_search(query: String = "") -> Array[Dictionary]:
 			continue
 		var record: Dictionary = record_variant
 		var name := str(record.get("name", ""))
-		if normalized.is_empty() or name.to_lower().contains(normalized):
-			results.append({"id": str(record.get("id", "")), "name": name})
+		var member_id := str(record.get("id", ""))
+		if normalized.is_empty() or name.to_lower().contains(normalized) or member_id.to_lower().contains(normalized):
+			results.append({"id": member_id, "name": name})
 	return results
 
 func assign_karnataka_candidate(seat_number: int, member_id: String) -> String:
@@ -1562,6 +2275,35 @@ func _candidate_record_for_party(party_id: String, roster_index: int, state_name
 	var member: Dictionary = records[roster_index]
 	return {"member_id": str(member.get("id", "")), "candidate_name": str(member.get("name", "party candidate"))}
 
+func _auto_assign_and_approve_state_tickets(state_name: String, seat_count: int, records: Array, roster_offset: int) -> void:
+	_ensure_high_command_schema()
+	var command: Dictionary = world_state.get("high_command", {})
+	var assignments_by_state: Dictionary = command.get("state_candidate_assignments", {})
+	var assignments: Dictionary = assignments_by_state.get(state_name, {})
+	var decisions_by_state: Dictionary = command.get("state_candidate_review", {})
+	var decisions: Dictionary = decisions_by_state.get(state_name, {})
+	var changed := false
+	for seat_index in range(seat_count):
+		var seat_key := str(seat_index + 1)
+		var roster_index := roster_offset + seat_index
+		if str(assignments.get(seat_key, "")).is_empty() and roster_index >= 0 and roster_index < records.size() and records[roster_index] is Dictionary:
+			var member_id := str(records[roster_index].get("id", ""))
+			if not member_id.is_empty():
+				assignments[seat_key] = member_id
+				changed = true
+		# Pending tickets are approved by the state president; an explicit High Command
+		# rejection is preserved as an override.
+		if str(decisions.get(seat_key, "Pending")) == "Pending":
+			decisions[seat_key] = "Approved"
+			changed = true
+	if changed:
+		assignments_by_state[state_name] = assignments
+		decisions_by_state[state_name] = decisions
+		command["state_candidate_assignments"] = assignments_by_state
+		command["state_candidate_review"] = decisions_by_state
+		world_state["high_command"] = command
+
+
 func _prepare_player_candidate_slate(election: Dictionary, jurisdiction: String, seat_count: int, state_name: String) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	if player_party_id.is_empty() or not parties.has(player_party_id):
@@ -1569,6 +2311,12 @@ func _prepare_player_candidate_slate(election: Dictionary, jurisdiction: String,
 	if state_name == "Karnataka" and not is_karnataka_contest_enabled():
 		return result
 	var election_key := "%s|%d|%d" % [jurisdiction, int(election.get("next_year", year)), int(election.get("month", month))]
+	var candidate_start := _candidate_pool_index_for_constituency(state_name, 0)
+	var records := _ensure_player_candidate_records(candidate_start + seat_count, state_name)
+	# Outside Karnataka, each state party president automatically assigns and approves
+	# the party's Assembly tickets. High Command can still review or override them.
+	if state_name != "Karnataka" and not state_name.is_empty():
+		_auto_assign_and_approve_state_tickets(state_name, seat_count, records, candidate_start)
 	var saved_variant: Variant = election.get("player_candidate_slate", [])
 	var saved_slate: Array = saved_variant if saved_variant is Array else []
 	if str(election.get("player_candidate_slate_key", "")) == election_key and saved_slate.size() == seat_count:
@@ -1576,22 +2324,46 @@ func _prepare_player_candidate_slate(election: Dictionary, jurisdiction: String,
 			if candidate_variant is Dictionary:
 				result.append(candidate_variant)
 		return result
-	var candidate_start := _candidate_pool_index_for_constituency(state_name, 0)
-	var records := _ensure_player_candidate_records(candidate_start + seat_count, state_name)
 	for seat_index in range(seat_count):
 		var roster_index := candidate_start + seat_index
 		if roster_index < 0 or roster_index >= records.size():
 			break
 		var member: Dictionary = records[roster_index]
 		var constituency := _constituency_name_for_seat(state_name, seat_index + 1)
-		if state_name == "Karnataka":
-			var command: Dictionary = world_state.get("high_command", {})
+		var command: Dictionary = world_state.get("high_command", {})
+		if state_name.is_empty():
+			var national_decisions: Dictionary = command.get("national_candidate_review", {})
+			if str(national_decisions.get(str(seat_index + 1), "Pending")) != "Approved":
+				result.append({})
+				continue
+			var national_assignments: Dictionary = command.get("national_candidate_assignments", {})
+			var national_assigned_id := str(national_assignments.get(str(seat_index + 1), ""))
+			if not national_assigned_id.is_empty():
+				for member_variant in records:
+					if member_variant is Dictionary and str(member_variant.get("id", "")) == national_assigned_id:
+						member = member_variant
+						break
+		elif state_name == "Karnataka":
 			var review: Dictionary = command.get("karnataka_candidate_review", {})
 			if str(review.get(str(seat_index + 1), "Pending")) != "Approved":
 				result.append({})
 				continue
 			var assignments: Dictionary = command.get("karnataka_candidate_assignments", {})
 			var assigned_id := str(assignments.get(str(seat_index + 1), ""))
+			if not assigned_id.is_empty():
+				for member_variant in records:
+					if member_variant is Dictionary and str(member_variant.get("id", "")) == assigned_id:
+						member = member_variant
+						break
+		elif not state_name.is_empty():
+			var decisions_by_state: Dictionary = command.get("state_candidate_review", {})
+			var state_decisions: Dictionary = decisions_by_state.get(state_name, {})
+			if str(state_decisions.get(str(seat_index + 1), "Pending")) == "Rejected":
+				result.append({})
+				continue
+			var assignments_by_state: Dictionary = command.get("state_candidate_assignments", {})
+			var state_assignments: Dictionary = assignments_by_state.get(state_name, {})
+			var assigned_id := str(state_assignments.get(str(seat_index + 1), ""))
 			if not assigned_id.is_empty():
 				for member_variant in records:
 					if member_variant is Dictionary and str(member_variant.get("id", "")) == assigned_id:
@@ -1633,8 +2405,8 @@ func _candidate_name_for_party(party_id: String, jurisdiction: String, seat_numb
 		var rival_member_index := absi((party_id + "|" + jurisdiction + "|" + str(seat_number)).hash()) % members.size()
 		var member: Dictionary = members[rival_member_index]
 		return {"member_id": str(member.get("id", "")), "candidate_name": str(member.get("name", "party candidate"))}
-	var fallback_index := absi((party_id + "|" + jurisdiction + "|" + str(seat_number)).hash()) % FICTIONAL_AI_NAMES.size()
-	return {"member_id": "ai_%s_%d" % [party_id, seat_number], "candidate_name": "%s %d" % [FICTIONAL_AI_NAMES[fallback_index], 100 + seat_number]}
+	var fallback_index := absi((party_id + "|" + jurisdiction + "|" + str(seat_number)).hash()) % _fictional_name_count()
+	return {"member_id": "ai_%s_%d" % [party_id, seat_number], "candidate_name": _fictional_name_at(fallback_index)}
 
 func _get_player_candidate_for_seat(slate: Array[Dictionary], seat_index: int) -> Dictionary:
 	if seat_index >= 0 and seat_index < slate.size():
@@ -1772,8 +2544,8 @@ func _ai_government_leader_name(party_id: String, jurisdiction: String) -> Strin
 	if not eligible_names.is_empty():
 		var index := absi((party_id + "|" + jurisdiction).hash()) % eligible_names.size()
 		return eligible_names[index]
-	var fallback_index := absi((party_id + "|" + jurisdiction).hash()) % FICTIONAL_AI_NAMES.size()
-	return FICTIONAL_AI_NAMES[fallback_index]
+	var fallback_index := absi((party_id + "|" + jurisdiction).hash()) % _fictional_name_count()
+	return _fictional_name_at(fallback_index)
 
 func _government_leader_title(level: String) -> String:
 	match level:
@@ -1809,6 +2581,120 @@ func _make_initial_ai_government(level: String, jurisdiction: String, party_id: 
 		"last_ai_action": "administration is maintaining routine services pending the next modeled election.",
 		"last_ai_review_index": -1
 	}
+
+func karnataka_government_formation_pending() -> bool:
+	var pending: Dictionary = world_state.get("pending_karnataka_government_formation", {})
+	return bool(pending.get("pending", false))
+
+func karnataka_government_formation_summary() -> String:
+	var pending: Dictionary = world_state.get("pending_karnataka_government_formation", {})
+	if not bool(pending.get("pending", false)):
+		var government := get_state_government("Karnataka")
+		return "KARNATAKA GOVERNMENT\nStatus: %s\nChief Minister: %s" % [str(government.get("government_status", "Incumbent administration")), str(government.get("leader_name", "Not recorded"))]
+	var seats: Dictionary = pending.get("seats_by_party", {})
+	var standings: Array[String] = []
+	for party_id_variant in seats.keys():
+		var party_id := str(party_id_variant)
+		standings.append("%s: %d" % [_government_party_name(party_id), int(seats.get(party_id_variant, 0))])
+	standings.sort()
+	var player_seats := int(seats.get(player_party_id, 0))
+	var majority := int(pending.get("majority_required", 113))
+	var status := "Your party has a majority" if player_seats >= majority else "Your party needs coalition partners"
+	return "KARNATAKA ASSEMBLY RESULT — %d/%d seats needed for majority\n%s\n\n%s\nGovernment formation is pending your decision." % [player_seats, majority, status, "\n".join(standings)]
+
+func karnataka_coalition_options() -> Array[Dictionary]:
+	var pending: Dictionary = world_state.get("pending_karnataka_government_formation", {})
+	var seats: Dictionary = pending.get("seats_by_party", {})
+	var options: Array[Dictionary] = []
+	for party_id_variant in seats.keys():
+		var party_id := str(party_id_variant)
+		var count := int(seats.get(party_id_variant, 0))
+		if party_id != player_party_id and count > 0:
+			options.append({"id": party_id, "name": _government_party_name(party_id), "seats": count})
+	options.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.get("seats", 0)) > int(b.get("seats", 0)))
+	return options
+
+func karnataka_cabinet_candidates() -> Array[String]:
+	var names: Array[String] = []
+	if not character_name.strip_edges().is_empty():
+		names.append(character_name)
+	for party_id_variant in parties.keys():
+		var party: Dictionary = parties.get(str(party_id_variant), {})
+		var records: Array = party.get("member_records", [])
+		for member_variant in records:
+			if member_variant is Dictionary:
+				var member_name := str(member_variant.get("name", "")).strip_edges()
+				if not member_name.is_empty() and not names.has(member_name):
+					names.append(member_name)
+	return names
+
+func form_karnataka_government(coalition_party_ids: Array, chief_minister_name: String, cabinet_appointments: Dictionary = {}) -> String:
+	if not karnataka_government_formation_pending():
+		return "There is no pending Karnataka government formation."
+	var pending: Dictionary = world_state.get("pending_karnataka_government_formation", {})
+	var seats: Dictionary = pending.get("seats_by_party", {})
+	if player_party_id.is_empty() or int(seats.get(player_party_id, 0)) <= 0:
+		return "Your party did not win any Karnataka Assembly seats and cannot lead this formation."
+	var selected: Array[String] = []
+	selected.append(player_party_id)
+	for id_variant in coalition_party_ids:
+		var id := str(id_variant)
+		if id != player_party_id and int(seats.get(id, 0)) > 0 and not selected.has(id):
+			selected.append(id)
+	var coalition_seats := 0
+	for id in selected:
+		coalition_seats += int(seats.get(id, 0))
+	var total_seats := int(pending.get("total_seats", 224))
+	var majority := int(pending.get("majority_required", int(floor(float(total_seats) / 2.0)) + 1))
+	if coalition_seats < majority:
+		return "The proposed coalition has %d seats; %d are required. Add partners before confirming." % [coalition_seats, majority]
+	var cm_name := chief_minister_name.strip_edges()
+	if cm_name.is_empty():
+		return "Select a Chief Minister before confirming government formation."
+	var election_year := int(pending.get("next_year", year))
+	var election_month := int(pending.get("next_month", month))
+	var government := _make_initial_ai_government("state", "Karnataka", player_party_id, election_year, election_month)
+	government["coalition_party_ids"] = selected.duplicate()
+	government["coalition_seats"] = coalition_seats
+	government["seat_count"] = total_seats
+	government["majority_required"] = majority
+	government["leader_name"] = cm_name
+	government["leader_title"] = "Chief Minister"
+	government["formation_type"] = "Single-party majority government" if selected.size() == 1 else "Coalition government"
+	government["government_status"] = "Formed by High Command after completed Karnataka Assembly election"
+	government["source"] = "player-confirmed Karnataka government formation"
+	government["cabinet_appointments"] = cabinet_appointments.duplicate(true)
+	government["cabinet_status"] = "Cabinet appointed by High Command" if not cabinet_appointments.is_empty() else "Cabinet formation pending"
+	government["formed_index"] = year * 12 + month
+	var system: Dictionary = world_state.get("governments", {})
+	var states: Dictionary = system.get("states", {})
+	states["Karnataka"] = government
+	system["states"] = states
+	var history: Array = system.get("history", [])
+	history.append({"level": "state", "jurisdiction": "Karnataka", "year": year, "month": month, "ruling_party_id": player_party_id, "coalition_party_ids": selected.duplicate(), "formation_type": str(government["formation_type"]), "summary": "High Command confirmed a Karnataka government with %d of %d seats; CM: %s." % [coalition_seats, total_seats, cm_name]})
+	system["history"] = history
+	world_state["governments"] = system
+	var pending_copy: Dictionary = pending.duplicate(true)
+	pending_copy["pending"] = false
+	pending_copy["formed"] = true
+	pending_copy["coalition_party_ids"] = selected.duplicate()
+	pending_copy["chief_minister_name"] = cm_name
+	world_state["pending_karnataka_government_formation"] = pending_copy
+	var elections: Array = world_state.get("state_elections", [])
+	for i in range(elections.size()):
+		if elections[i] is Dictionary and str(elections[i].get("state", "")) == "Karnataka":
+			elections[i]["government_status"] = str(government["formation_type"])
+			elections[i]["government_party_id"] = player_party_id
+			elections[i]["government_formation_pending"] = false
+			break
+	world_state["state_elections"] = elections
+	if cm_name.to_lower() == character_name.to_lower():
+		has_elected_office = true
+		elected_office_name = "Chief Minister of Karnataka"
+		player_role = elected_office_name
+		career_rank = elected_office_name
+		generate_monthly_office_missions()
+	return "Karnataka government formed. %s is Chief Minister; coalition support is %d/%d seats. Cabinet appointments can now be made." % [cm_name, coalition_seats, total_seats]
 
 func _form_ai_government_from_result(level: String, jurisdiction: String, seats_by_party: Dictionary, total_seats: int, next_year: int, next_month: int) -> Dictionary:
 	var party_order: Array[String] = []
@@ -2637,22 +3523,104 @@ func _ensure_party_roster(party_id: String) -> void:
 		var seed_count := mini(6, maxi(0, int(party.get("members", 1)) - (1 if party_id == player_party_id else 0)))
 		for i in range(seed_count):
 			counter += 1
-			records.append({"id": "member_%d" % counter, "name": FICTIONAL_AI_NAMES[posmod(counter - 1, FICTIONAL_AI_NAMES.size())], "duty": ["Volunteer", "Booth Coordinator", "Ward Organizer", "Media Coordinator", "Treasurer", "District Secretary"][posmod(i, 6)], "region": "Karnataka", "joined_year": year, "joined_month": month, "is_player_added": false})
+			records.append({"id": "member_%d" % counter, "name": _fictional_name_at(counter - 1), "duty": ["Volunteer", "Booth Coordinator", "Ward Organizer", "Media Coordinator", "Treasurer", "District Secretary"][posmod(i, 6)], "region": "Karnataka", "joined_year": year, "joined_month": month, "is_player_added": false})
 	# The headline membership includes the founder. Materialize missing player-party
 	# members so internal elections use the full electorate, not only the small named seed roster.
 	if party_id == player_party_id:
 		var target_records := mini(1000, maxi(records.size(), maxi(0, int(party.get("members", 1)) - 1)))
 		while records.size() < target_records:
 			counter += 1
-			var base_name := FICTIONAL_AI_NAMES[posmod(counter - 1, FICTIONAL_AI_NAMES.size())]
-			records.append({"id": "member_%d" % counter, "name": "%s %d" % [base_name, 100 + counter], "duty": "Volunteer", "region": home_state, "joined_year": year, "joined_month": month, "is_player_added": false})
+			var base_name := _fictional_name_at(counter - 1)
+			records.append({"id": "member_%d" % counter, "name": base_name, "duty": "Volunteer", "region": home_state, "joined_year": year, "joined_month": month, "is_player_added": false})
 	party["member_records"] = records
 	party["member_counter"] = counter
+	parties[party_id] = party
+	_ensure_state_active_membership(party_id)
+
+func _ensure_state_active_membership(party_id: String) -> void:
+	if party_id.is_empty() or not parties.has(party_id):
+		return
+	var party: Dictionary = parties[party_id]
+	var total_members := maxi(0, int(party.get("members", 0)))
+	var saved_variant: Variant = party.get("state_active_members", {})
+	var counts: Dictionary = saved_variant if saved_variant is Dictionary else {}
+	var states: Array = STATE_ASSEMBLY_SEATS.keys()
+	states.sort()
+	if states.is_empty():
+		return
+	if counts.is_empty():
+		# Existing careers only stored a national membership total. Initialize a
+		# persistent state distribution weighted by each state's modeled support.
+		# Every state gets a baseline weight so the roster is nationwide, not
+		# concentrated in Karnataka merely because the old named roster was local.
+		var regional_support_all: Dictionary = world_state.get("regional_support", {})
+		var regional_support: Dictionary = regional_support_all.get(party_id, {})
+		var weights: Dictionary = {}
+		var total_weight := 0.0
+		for state_variant in states:
+			var state_name := str(state_variant)
+			var weight := maxf(1.0, float(regional_support.get(state_name, 0.0)) + 1.0)
+			weights[state_name] = weight
+			total_weight += weight
+		var assigned := 0
+		for state_variant in states:
+			var state_name := str(state_variant)
+			var amount := int(floor(float(total_members) * float(weights[state_name]) / maxf(1.0, total_weight)))
+			counts[state_name] = amount
+			assigned += amount
+		var remainder := total_members - assigned
+		for index in range(remainder):
+			var state_name := str(states[index % states.size()])
+			counts[state_name] = int(counts.get(state_name, 0)) + 1
+	else:
+		for state_variant in states:
+			var state_name := str(state_variant)
+			if not counts.has(state_name):
+				counts[state_name] = 0
+		# Keep legacy career totals consistent when monthly recruitment or transfers
+		# changed the national count outside a state-specific roster action.
+		var counted_total := 0
+		for count_variant in counts.values():
+			counted_total += maxi(0, int(count_variant))
+		var difference := total_members - counted_total
+		var home_key := home_state if counts.has(home_state) else str(states[0])
+		if difference > 0:
+			counts[home_key] = int(counts.get(home_key, 0)) + difference
+		elif difference < 0:
+			var to_remove := -difference
+			var reduction_order: Array = [home_key]
+			for state_variant in states:
+				var state_name := str(state_variant)
+				if state_name != home_key:
+					reduction_order.append(state_name)
+			for state_variant in reduction_order:
+				var state_name := str(state_variant)
+				var removed := mini(to_remove, maxi(0, int(counts.get(state_name, 0))))
+				counts[state_name] = int(counts.get(state_name, 0)) - removed
+				to_remove -= removed
+				if to_remove <= 0:
+					break
+	party["state_active_members"] = counts
+	parties[party_id] = party
+
+func _add_active_member_to_state(party_id: String, state_name: String, amount: int = 1) -> void:
+	if amount <= 0 or party_id.is_empty() or not parties.has(party_id):
+		return
+	_ensure_state_active_membership(party_id)
+	var party: Dictionary = parties[party_id]
+	var counts: Dictionary = party.get("state_active_members", {})
+	var resolved_state := state_name if counts.has(state_name) else home_state
+	if not counts.has(resolved_state):
+		var state_names: Array = STATE_ASSEMBLY_SEATS.keys()
+		state_names.sort()
+		resolved_state = str(state_names[0])
+	counts[resolved_state] = int(counts.get(resolved_state, 0)) + amount
+	party["state_active_members"] = counts
 	parties[party_id] = party
 
 func _next_fictional_member_name(party: Dictionary) -> String:
 	var counter := int(party.get("member_counter", 0)) + 1
-	return "%s %d" % [FICTIONAL_AI_NAMES[posmod(counter - 1, FICTIONAL_AI_NAMES.size())], 100 + counter]
+	return _fictional_name_at(counter - 1)
 
 func get_player_party_members() -> Array:
 	if player_party_id == "" or not parties.has(player_party_id):
@@ -2667,6 +3635,7 @@ func add_party_member(member_name: String, region: String = "") -> String:
 	var clean_name := member_name.strip_edges()
 	if clean_name.is_empty():
 		return "Enter a member name."
+	_ensure_state_active_membership(player_party_id)
 	var party: Dictionary = parties[player_party_id]
 	var records: Array = party.get("member_records", [])
 	for member_variant in records:
@@ -2687,6 +3656,7 @@ func add_party_member(member_name: String, region: String = "") -> String:
 	party["member_records"] = records
 	party["members"] = int(party.get("members", 0)) + 1
 	parties[player_party_id] = party
+	_add_active_member_to_state(player_party_id, str(records.back().get("region", home_state)))
 	return "%s added as a party member." % clean_name
 
 func assign_party_duty(member_id: String, duty: String) -> String:
@@ -2727,15 +3697,55 @@ func assign_party_member_organization(member_id: String, region: String, duty: S
 		records[record_index] = member
 		party["member_records"] = records
 		parties[player_party_id] = party
+		_ensure_state_active_membership(player_party_id)
+		if previous_region != region:
+			var refreshed_party: Dictionary = parties[player_party_id]
+			var active_counts: Dictionary = refreshed_party.get("state_active_members", {})
+			if active_counts.has(previous_region) and active_counts.has(region):
+				active_counts[previous_region] = maxi(0, int(active_counts.get(previous_region, 0)) - 1)
+				active_counts[region] = int(active_counts.get(region, 0)) + 1
+				refreshed_party["state_active_members"] = active_counts
+				parties[player_party_id] = refreshed_party
 		return "%s assigned as %s in %s. Previous region: %s. Organization readiness recalculated." % [str(member.get("name", "Member")), duty, region, previous_region]
 	return "Select a valid party member."
+
+func _process_party_state_organization_monthly() -> void:
+	# State presidents and their local teams handle routine organization in every
+	# modeled state. This is background simulation; the player need not assign
+	# individual office-bearers state by state.
+	if player_party_id.is_empty() or not parties.has(player_party_id):
+		return
+	_ensure_state_active_membership(player_party_id)
+	var party: Dictionary = parties[player_party_id]
+	var active_variant: Variant = party.get("state_active_members", {})
+	var active_counts: Dictionary = active_variant if active_variant is Dictionary else {}
+	var progress_variant: Variant = party.get("state_organization_progress", {})
+	var progress: Dictionary = progress_variant if progress_variant is Dictionary else {}
+	var state_names: Array = STATE_ASSEMBLY_SEATS.keys()
+	state_names.sort()
+	for state_variant in state_names:
+		var state_name := str(state_variant)
+		var members_here := maxi(0, int(active_counts.get(state_name, 0)))
+		var current_score := clampf(float(progress.get(state_name, 0.0)), 0.0, 100.0)
+		# Existing membership provides the volunteer base. Larger state teams
+		# establish local units faster, with a small baseline so smaller states
+		# are not permanently left at zero.
+		var monthly_gain := 0.65 + minf(2.1, float(members_here) / 140.0)
+		if members_here <= 0:
+			monthly_gain *= 0.25
+		progress[state_name] = minf(100.0, current_score + monthly_gain)
+	party["state_organization_progress"] = progress
+	parties[player_party_id] = party
+
 
 func party_organization_profile(state_name: String) -> Dictionary:
 	if player_party_id.is_empty() or not parties.has(player_party_id) or not STATE_ASSEMBLY_SEATS.has(state_name):
 		return {}
+	_ensure_state_active_membership(player_party_id)
 	var party: Dictionary = parties[player_party_id]
 	var records_variant: Variant = party.get("member_records", [])
 	var records: Array = records_variant if records_variant is Array else []
+	var named_member_count := 0
 	var duty_counts: Dictionary = {
 		"Volunteer": 0,
 		"Booth Coordinator": 0,
@@ -2745,17 +3755,21 @@ func party_organization_profile(state_name: String) -> Dictionary:
 		"District Secretary": 0,
 		"State Organizer": 0
 	}
-	var member_count := 0
 	for member_variant in records:
 		if not member_variant is Dictionary:
 			continue
 		var member: Dictionary = member_variant
 		if str(member.get("region", home_state)) != state_name:
 			continue
-		member_count += 1
+		named_member_count += 1
 		var duty := str(member.get("duty", "Volunteer"))
 		duty_counts[duty] = int(duty_counts.get(duty, 0)) + 1
-	var readiness_score := 0.0
+	var state_active_members: Dictionary = party.get("state_active_members", {})
+	var member_count := maxi(0, int(state_active_members.get(state_name, 0)))
+	var progress_variant: Variant = party.get("state_organization_progress", {})
+	var progress: Dictionary = progress_variant if progress_variant is Dictionary else {}
+	var automated_score := clampf(float(progress.get(state_name, 0.0)), 0.0, 100.0)
+	var readiness_score := automated_score
 	readiness_score += 20.0 if int(duty_counts.get("State Organizer", 0)) > 0 else 0.0
 	readiness_score += float(mini(4, int(duty_counts.get("District Secretary", 0)))) * 8.0
 	readiness_score += float(mini(15, int(duty_counts.get("Ward Organizer", 0)))) * 2.0
@@ -2787,6 +3801,7 @@ func party_organization_profile(state_name: String) -> Dictionary:
 	return {
 		"state": state_name,
 		"member_count": member_count,
+		"named_member_count": named_member_count,
 		"duty_counts": duty_counts,
 		"readiness_score": roundi(readiness_score),
 		"readiness": readiness,
@@ -2969,6 +3984,9 @@ func hold_party_presidential_election(player_vote_id: String = "") -> String:
 		return "The election could not be completed because no valid candidates remain."
 
 	var previous_president := str(party.get("president_name", "Not assigned"))
+	if not _create_career_recovery_point("party presidential election"):
+		return "Election cancelled because a safe recovery point could not be created."
+
 	party["president_name"] = str(winner.get("candidate_name", ""))
 	party["president_member_id"] = str(winner.get("candidate_id", ""))
 	party["president_elected_year"] = year
@@ -3069,6 +4087,8 @@ func appoint_party_office_bearer(member_id: String, office: String) -> String:
 	for member_variant in records:
 		var member: Dictionary = member_variant
 		if str(member.get("id", "")) == member_id:
+			if not _create_career_recovery_point("party office election: " + office):
+				return "Election cancelled because a safe recovery point could not be created."
 			var bearers: Dictionary = party.get("office_bearers", {})
 			bearers[office] = {"member_id": member_id, "name": str(member.get("name", "Member"))}
 			party["office_bearers"] = bearers
@@ -3312,6 +4332,7 @@ func start_career(name: String, age: int, city: String, path: String, party_name
 	local_election_result = ""
 	last_local_election_year = 0
 	last_local_election_result = ""
+	last_local_election_details = {}
 	last_election_vote_share = 0.0
 	election_vote_share = 0.0
 	election_turnout = 0
@@ -3345,6 +4366,16 @@ func start_career(name: String, age: int, city: String, path: String, party_name
 			"founding_year": year,
 			"founding_month": month,
 			"founder_contribution": contribution,
+			"funding_totals": {
+				"founder_contribution": contribution,
+				"starter_reserve": 25000,
+				"member_dues": 0,
+				"small_donors": 0,
+				"fundraising_events": 0,
+				"one_time_grants": 0
+			},
+			"funding_ledger": [],
+			"last_background_report": {},
 			"members": 5,
 			"funds": 25000 + contribution,
 			"debt": 0,
@@ -3392,9 +4423,10 @@ func perform_activity(activity: String) -> Array[String]:
 			experience += 1
 			reputation += 0.2
 			local_leader_relationship = minf(100.0, local_leader_relationship + 2.0)
-			var organizer_name: String = FICTIONAL_AI_NAMES[posmod(int(experience + local_leader_relationship), FICTIONAL_AI_NAMES.size())]
+			var organizer_name: String = _fictional_name_at(int(experience + local_leader_relationship))
 			notifications.append("You attended a party meeting with local organizer %s. Experience +1; your relationship with local leadership improved." % organizer_name)
 		"recruit":
+			_ensure_state_active_membership(player_party_id)
 			var party: Dictionary = parties[player_party_id]
 			if int(party.get("members", 0)) < 100000:
 				var recruited_name: String = _next_fictional_member_name(party)
@@ -3405,6 +4437,7 @@ func perform_activity(activity: String) -> Array[String]:
 				party["members"] = int(party["members"]) + 1
 				party["funds"] = int(party["funds"]) + 500
 				parties[player_party_id] = party
+				_add_active_member_to_state(player_party_id, home_state)
 				experience += 1
 				_increase_party_popularity(0.05)
 				notifications.append("%s joined your party and was added to the named roster." % recruited_name)
@@ -3718,12 +4751,29 @@ func _process_party_monthly() -> void:
 	var funds := int(party.get("funds", 0))
 	var debt := int(party.get("debt", 0))
 
-	# Illustrative game economy: routine donations and operating costs scale with membership.
-	# This is not a claim about any real party's accounts.
+	# Illustrative in-game funding model. These are fictional simulation values,
+	# not claims about real parties or real-world funding rules.
 	var monthly_recruits := clampi(roundi(popularity / 15.0), 0, 8)
-	var donations := 2000 + members * 15
+	var member_dues := members * 5
+	var small_donor_contributions := 1000 + members * 8
+	var fundraising_events := 1000 + members * 2
+	var donations := member_dues + small_donor_contributions + fundraising_events
 	var operating_cost := 1000 + members * 10
 	members += monthly_recruits
+
+	var funding_totals: Dictionary = party.get("funding_totals", {})
+	funding_totals["founder_contribution"] = int(funding_totals.get("founder_contribution", party.get("founder_contribution", 0)))
+	funding_totals["starter_reserve"] = int(funding_totals.get("starter_reserve", 25000))
+	funding_totals["member_dues"] = int(funding_totals.get("member_dues", 0)) + member_dues
+	funding_totals["small_donors"] = int(funding_totals.get("small_donors", 0)) + small_donor_contributions
+	funding_totals["fundraising_events"] = int(funding_totals.get("fundraising_events", 0)) + fundraising_events
+	var grant_total := 0
+	for grant_value in party.get("grant_history", []):
+		var grant: Dictionary = grant_value
+		grant_total += int(grant.get("amount", 0))
+	funding_totals["one_time_grants"] = grant_total
+	party["funding_totals"] = funding_totals
+
 	var net := donations - operating_cost
 	if net >= 0:
 		var debt_payment := mini(debt, net)
@@ -3734,16 +4784,57 @@ func _process_party_monthly() -> void:
 		var paid_from_cash := mini(funds, shortfall)
 		funds -= paid_from_cash
 		debt += shortfall - paid_from_cash
+
+	# The party organization continues routine work in the background each month.
+	# Its budget is limited to available cash and scales gently with membership.
+	var background_budget := mini(funds, 500 + members * 2)
+	var outreach_spend := int(floor(float(background_budget) * 0.45))
+	var volunteer_coordination_spend := int(floor(float(background_budget) * 0.35))
+	var recruitment_spend := background_budget - outreach_spend - volunteer_coordination_spend
+	funds -= background_budget
+	var background_activity_gain := float(outreach_spend) / 50000.0 + float(volunteer_coordination_spend) / 80000.0
+	if background_budget > 0:
+		popularity = minf(100.0, popularity + minf(0.08, background_activity_gain * 0.01))
 	if monthly_recruits > 0:
 		popularity = minf(100.0, popularity + float(monthly_recruits) * 0.015)
+
+	var monthly_ledger: Array = party.get("funding_ledger", [])
+	monthly_ledger.append({
+		"year": year, "month": month,
+		"member_dues": member_dues,
+		"small_donors": small_donor_contributions,
+		"fundraising_events": fundraising_events,
+		"operating_cost": operating_cost,
+		"outreach_spend": outreach_spend,
+		"volunteer_coordination_spend": volunteer_coordination_spend,
+		"recruitment_spend": recruitment_spend,
+		"recruits": monthly_recruits
+	})
+	while monthly_ledger.size() > 36:
+		monthly_ledger.pop_front()
+
 	party["members"] = members
 	party["funds"] = funds
 	party["debt"] = debt
 	party["popularity"] = popularity
+	party["funding_ledger"] = monthly_ledger
+	party["last_background_report"] = {
+		"recruits": monthly_recruits,
+		"outreach_spend": outreach_spend,
+		"volunteer_coordination_spend": volunteer_coordination_spend,
+		"recruitment_spend": recruitment_spend,
+		"popularity_gain": minf(0.08, background_activity_gain * 0.01) if background_budget > 0 else 0.0
+	}
 	parties[player_party_id] = party
-	notifications.append(str(parties.get(player_party_id, {}).get("name", "Your party")) + " accounts: +%d members; modeled donations ₹%s; operating costs ₹%s; party cash ₹%s; party debt ₹%s." % [
-		monthly_recruits, _format_number(donations), _format_number(operating_cost),
-		_format_number(funds), _format_number(debt)
+	_ensure_state_active_membership(player_party_id)
+	_process_party_state_organization_monthly()
+	notifications.append("%s monthly party report: funds received ₹%s — member dues ₹%s, small-donor contributions ₹%s, fundraising events ₹%s. Costs: operations ₹%s; background outreach ₹%s, volunteer coordination ₹%s, recruitment ₹%s. +%d members; closing party cash ₹%s; debt ₹%s." % [
+		str(party.get("name", "Your party")),
+		_format_number(donations), _format_number(member_dues),
+		_format_number(small_donor_contributions), _format_number(fundraising_events),
+		_format_number(operating_cost), _format_number(outreach_spend),
+		_format_number(volunteer_coordination_spend), _format_number(recruitment_spend),
+		monthly_recruits, _format_number(funds), _format_number(debt)
 	])
 
 func _process_personal_monthly_finances() -> void:
@@ -3769,6 +4860,7 @@ func finance_summary() -> String:
 	var party_donations := 0
 	var party_operating_cost := 0
 	var district_office_monthly_cost := 0
+	var funding_detail := "No party funding account is available."
 	if player_party_id != "" and parties.has(player_party_id):
 		ensure_party_district_offices()
 		var party: Dictionary = parties[player_party_id]
@@ -3783,13 +4875,59 @@ func finance_summary() -> String:
 			var office: Dictionary = offices.get(district_name, {})
 			if bool(office.get("established", false)):
 				district_office_monthly_cost += int(office.get("monthly_cost", DISTRICT_OFFICE_MONTHLY_COST))
+
+		var totals: Dictionary = party.get("funding_totals", {})
+		var founder_amount := int(totals.get("founder_contribution", party.get("founder_contribution", 0)))
+		var starter_reserve := int(totals.get("starter_reserve", 25000))
+		var dues_total := int(totals.get("member_dues", 0))
+		var donors_total := int(totals.get("small_donors", 0))
+		var events_total := int(totals.get("fundraising_events", 0))
+		var grants_total := int(totals.get("one_time_grants", 0))
+		if grants_total == 0:
+			for grant_value in party.get("grant_history", []):
+				var grant: Dictionary = grant_value
+				grants_total += int(grant.get("amount", 0))
+		funding_detail = "FUNDING SOURCES — CUMULATIVE TRACKING\n"
+		funding_detail += "Founder contribution (transferred from personal savings): ₹%s\n" % _format_number(founder_amount)
+		funding_detail += "Starting treasury reserve (game setup allocation): ₹%s\n" % _format_number(starter_reserve)
+		funding_detail += "Member dues / recurring member contributions: ₹%s\n" % _format_number(dues_total)
+		funding_detail += "Small-donor contributions: ₹%s\n" % _format_number(donors_total)
+		funding_detail += "Fundraising events: ₹%s\n" % _format_number(events_total)
+		funding_detail += "Recorded one-time grants: ₹%s\n" % _format_number(grants_total)
+		funding_detail += "Monthly sources are fictional game-economy channels, not claims about real-world party funding. Historical totals begin when this ledger feature is active.\n"
+		var ledger: Array = party.get("funding_ledger", [])
+		funding_detail += "\nLATEST MONTHLY LEDGER\n"
+		if ledger.is_empty():
+			funding_detail += "No monthly ledger entries yet. Advance one month to record the first breakdown.\n"
+		else:
+			for index in range(maxi(0, ledger.size() - 6), ledger.size()):
+				var entry: Dictionary = ledger[index]
+				funding_detail += "%02d/%d — received ₹%s (dues ₹%s, small donors ₹%s, events ₹%s); operating cost ₹%s; background outreach ₹%s; volunteer coordination ₹%s; recruitment ₹%s.\n" % [
+					int(entry.get("month", 1)), int(entry.get("year", year)),
+					_format_number(int(entry.get("member_dues", 0)) + int(entry.get("small_donors", 0)) + int(entry.get("fundraising_events", 0))),
+					_format_number(int(entry.get("member_dues", 0))),
+					_format_number(int(entry.get("small_donors", 0))),
+					_format_number(int(entry.get("fundraising_events", 0))),
+					_format_number(int(entry.get("operating_cost", 0))),
+					_format_number(int(entry.get("outreach_spend", 0))),
+					_format_number(int(entry.get("volunteer_coordination_spend", 0))),
+					_format_number(int(entry.get("recruitment_spend", 0)))
+				]
+		var background: Dictionary = party.get("last_background_report", {})
+		funding_detail += "\nBACKGROUND PARTY ACTIVITY\n"
+		funding_detail += "Last month: +%d members; outreach ₹%s; volunteer coordination ₹%s; recruitment ₹%s. Routine party work runs automatically when you advance the month and is paid from party funds.\n" % [
+			int(background.get("recruits", 0)),
+			_format_number(int(background.get("outreach_spend", 0))),
+			_format_number(int(background.get("volunteer_coordination_spend", 0))),
+			_format_number(int(background.get("recruitment_spend", 0)))
+		]
 	var monthly_net := monthly_income - monthly_living_expenses
-	return "PERSONAL FINANCES\\nCash savings: ₹%s\\nMonthly income: ₹%s\\nLiving costs: ₹%s\\nNet monthly cash flow: ₹%s\\nPersonal debt: ₹%s\\n\\nPARTY FINANCES\\nParty cash: ₹%s\\nParty debt: ₹%s\\nModeled monthly donations: ₹%s\\nModeled operating costs: ₹%s\\nDistrict office network: ₹%s / month\\n\\nCAMPsimulationGN ACCOUNTING\\nCampaign spending this election: ₹%s / ₹%s\\nCampaign actions are paid from party funds; personal and party money stay separate. The campaign budget is a simplified game rule, not a statement of the legal limit for every local election." % [
+	return "PERSONAL FINANCES\nCash savings: ₹%s\nMonthly income: ₹%s\nLiving costs: ₹%s\nNet monthly cash flow: ₹%s\nPersonal debt: ₹%s\n\nPARTY FINANCES\nParty cash: ₹%s\nParty debt: ₹%s\nModeled monthly receipts: ₹%s\nModeled operating costs: ₹%s\nDistrict office network: ₹%s / month\n\n%s\nCAMPAIGN ACCOUNTING\nCampaign spending this election: ₹%s / ₹%s\nCampaign actions are paid from party funds; personal and party money stay separate. All funding channels and costs here are simplified fictional game rules, not audited real-world accounts or legal guidance." % [
 		_format_number(personal_funds), _format_number(monthly_income),
 		_format_number(monthly_living_expenses), _format_number(monthly_net),
 		_format_number(personal_debt), _format_number(party_cash), _format_number(party_debt),
 		_format_number(party_donations), _format_number(party_operating_cost),
-		_format_number(district_office_monthly_cost),
+		_format_number(district_office_monthly_cost), funding_detail,
 		_format_number(campaign_expenditure), _format_number(LOCAL_CAMPAIGN_MODEL_BUDGET)
 	]
 
@@ -4374,7 +5512,9 @@ func _process_karnataka_auto_campaign_monthly() -> void:
 	var phase_name := str(timing.get("phase", "Long-term groundwork"))
 	# Campaigns may run at any time; intensity scales spending as polling approaches.
 	var phase_ceiling := roundi(float(ceiling) * intensity)
-	var spend := mini(phase_ceiling, available)
+	# The High Command ceiling limits total campaign activity. Party funds cover 75%;
+	# the pooled member-contribution ledger covers the remaining 25%.
+	var spend := mini(phase_ceiling, floori(float(available) / 0.75))
 	if spend <= 0:
 		var no_funds_log: Array = campaign.get("log", [])
 		no_funds_log.append("%s: Campaign teams stood down because no monthly campaign budget or party funds were available." % date_label())
@@ -4415,8 +5555,13 @@ func _process_karnataka_auto_campaign_monthly() -> void:
 	for value in spend_by_seat.values():
 		actual_spend += int(value)
 	if actual_spend > 0:
-		party["funds"] = available - actual_spend
+		var party_share := floori(float(actual_spend) * 0.75)
+		var member_share := actual_spend - party_share
+		party["funds"] = maxi(0, available - party_share)
 		parties[player_party_id] = party
+		campaign["party_funding_rupees"] = int(campaign.get("party_funding_rupees", 0)) + party_share
+		campaign["member_contribution_pool_rupees"] = int(campaign.get("member_contribution_pool_rupees", 0)) + member_share
+		campaign["funding_split_note"] = "75% party funds / 25% pooled member contributions"
 		_record_high_command_campaign_spend(actual_spend)
 		var elections: Array = world_state.get("state_elections", [])
 		for i in range(elections.size()):
@@ -4434,7 +5579,7 @@ func _process_karnataka_auto_campaign_monthly() -> void:
 	campaign["spend_crore"] = float(campaign.get("spend_crore", 0.0)) + float(actual_spend) / 10000000.0
 	campaign["covered_seats"] = covered
 	var log: Array = campaign.get("log", [])
-	log.append("%s · %s: Teams completed %d constituency operations and recorded ₹%.2f crore in actual spending (%.0f%% intensity)." % [date_label(), phase_name, spend_by_seat.size(), float(actual_spend) / 10000000.0, intensity * 100.0])
+	log.append("%s · %s: %d constituency operations; ₹%.2f crore spent (party ₹%.2f cr / member pool ₹%.2f cr; 75/25 split; %.0f%% intensity)." % [date_label(), phase_name, spend_by_seat.size(), float(actual_spend) / 10000000.0, float(floori(float(actual_spend) * 0.75)) / 10000000.0, float(actual_spend - floori(float(actual_spend) * 0.75)) / 10000000.0, intensity * 100.0])
 	while log.size() > 30:
 		log.pop_front()
 	campaign["log"] = log
@@ -4444,6 +5589,9 @@ func _process_karnataka_auto_campaign_monthly() -> void:
 
 func advance_month() -> Array[String]:
 	notifications.clear()
+	if career_started and not _create_career_recovery_point("monthly career transition"):
+		notifications.append("Month not advanced: a verified recovery point could not be created. Please save space and try again.")
+		return notifications.duplicate()
 	month += 1
 	if month > 12:
 		month = 1
@@ -4478,7 +5626,14 @@ func _resolve_local_election() -> void:
 		return
 	last_local_election_year = local_election_year
 	election_turnout = randi_range(5500, 7500)
-	rival_candidate_name = FICTIONAL_AI_NAMES[posmod(local_election_year + month, FICTIONAL_AI_NAMES.size())]
+	rival_candidate_name = _fictional_name_at(local_election_year + month)
+	var local_candidate_rows: Array[Dictionary] = []
+	var local_player_stood := local_candidate_selected and ticket_approved
+	var local_player_candidate_name := character_name.strip_edges() if local_player_stood else ""
+	var local_player_votes := 0
+	var local_party_candidate_name := ""
+	var local_party_candidate_votes := 0
+	var local_rival_votes := 0
 
 	if local_candidate_selected and ticket_approved:
 		var party: Dictionary = parties[player_party_id]
@@ -4497,6 +5652,12 @@ func _resolve_local_election() -> void:
 		election_vote_share = clampf(50.0 + (candidate_score - rival_score) * 1.6, 5.0, 95.0)
 		var candidate_votes: int = roundi(float(election_turnout) * election_vote_share / 100.0)
 		var rival_votes: int = election_turnout - candidate_votes
+		local_player_votes = candidate_votes
+		local_rival_votes = rival_votes
+		local_candidate_rows = [
+			{"member_id": "player_character", "candidate_name": character_name.strip_edges(), "party_id": player_party_id, "votes": candidate_votes, "vote_percent": float(candidate_votes) * 100.0 / float(maxi(1, election_turnout))},
+			{"member_id": "", "candidate_name": rival_candidate_name, "party_id": "opposition", "votes": rival_votes, "vote_percent": float(rival_votes) * 100.0 / float(maxi(1, election_turnout))}
+		]
 
 		if candidate_votes > rival_votes:
 			has_elected_office = true
@@ -4545,6 +5706,13 @@ func _resolve_local_election() -> void:
 		election_vote_share = clampf(50.0 + (ai_candidate_score - rival_score) * 1.1, 8.0, 92.0)
 		var party_votes := roundi(float(election_turnout) * election_vote_share / 100.0)
 		var rival_votes := election_turnout - party_votes
+		local_party_candidate_name = _fictional_name_at(local_election_year + month + 2)
+		local_party_candidate_votes = party_votes
+		local_rival_votes = rival_votes
+		local_candidate_rows = [
+			{"member_id": "", "candidate_name": local_party_candidate_name, "party_id": player_party_id, "votes": party_votes, "vote_percent": float(party_votes) * 100.0 / float(maxi(1, election_turnout))},
+			{"member_id": "", "candidate_name": rival_candidate_name, "party_id": "opposition", "votes": rival_votes, "vote_percent": float(rival_votes) * 100.0 / float(maxi(1, election_turnout))}
+		]
 		if party_votes > rival_votes:
 			local_election_result = "modeled PARTY WON"
 			party["popularity"] = minf(100.0, party_popularity + 0.6)
@@ -4557,6 +5725,24 @@ func _resolve_local_election() -> void:
 		parties[player_party_id] = party
 
 	last_local_election_result = local_election_result
+	var local_turnout_percent := float(election_turnout) / 100.0
+	last_local_election_details = {
+		"year": last_local_election_year,
+		"month": month,
+		"jurisdiction": local_election_area(),
+		"player_stood": local_player_stood,
+		"player_candidate_name": local_player_candidate_name,
+		"player_votes": local_player_votes,
+		"player_vote_share": election_vote_share if local_player_stood else 0.0,
+		"party_candidate_name": local_party_candidate_name,
+		"party_candidate_votes": local_party_candidate_votes,
+		"rival_candidate_name": rival_candidate_name,
+		"rival_votes": local_rival_votes,
+		"candidate_rows": local_candidate_rows,
+		"ballots_cast": election_turnout,
+		"turnout_percent": local_turnout_percent,
+		"eligible_voters": roundi(float(election_turnout) * 100.0 / maxf(1.0, local_turnout_percent))
+	}
 	last_election_vote_share = election_vote_share
 	local_election_completed = true
 	local_candidate_selected = false
@@ -4675,6 +5861,9 @@ func apply_player_party_fund_grant_once() -> bool:
 	var history: Array = party["grant_history"]
 	history.append({"type": "founder_support_grant", "amount": 5000000000, "year": year, "month": month})
 	party["grant_history"] = history
+	var funding_totals: Dictionary = party.get("funding_totals", {})
+	funding_totals["one_time_grants"] = int(funding_totals.get("one_time_grants", 0)) + 5000000000
+	party["funding_totals"] = funding_totals
 	parties[player_party_id] = party
 	notifications.append("₹500 crore one-time grant credited to your party treasury.")
 	return true
@@ -4696,6 +5885,61 @@ func _format_number(value: int) -> String:
 
 
 const SAVE_PATH := "user://political_world_save.json"
+const SAVE_BACKUP_PATH := "user://political_world_save.json.bak"
+const SAVE_TEMP_PATH := "user://political_world_save.json.tmp"
+const SAVE_DAMAGED_PATH := "user://political_world_save.json.damaged"
+const SAVE_PREVIOUS_PATH := "user://political_world_save.json.previous"
+const SAVE_CHECKPOINT_PATH := "user://political_world_save.json.checkpoint"
+const SAVE_CHECKPOINT_PREVIOUS_PATH := "user://political_world_save.json.checkpoint.previous"
+
+func _is_valid_save_file(path: String) -> bool:
+	if not FileAccess.file_exists(path):
+		return false
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return false
+	var text := file.get_as_text()
+	file.close()
+	if text.is_empty():
+		return false
+	var parser := JSON.new()
+	if parser.parse(text) != OK:
+		return false
+	var data: Variant = parser.data
+	if typeof(data) != TYPE_DICTIONARY or not bool(data.get("career_started", false)):
+		return false
+	# Reject parseable but structurally broken saves before they can replace a
+	# known-good career. Older saves may omit these fields, so defaults remain
+	# supported; when present, the calendar values must be numeric and sensible.
+	if data.has("year"):
+		var saved_year: Variant = data.get("year")
+		if typeof(saved_year) not in [TYPE_INT, TYPE_FLOAT] or int(saved_year) < 1:
+			return false
+	if data.has("month"):
+		var saved_month: Variant = data.get("month")
+		if typeof(saved_month) not in [TYPE_INT, TYPE_FLOAT] or int(saved_month) < 1 or int(saved_month) > 12:
+			return false
+	if data.has("character_name") and typeof(data.get("character_name")) != TYPE_STRING:
+		return false
+	return true
+
+func _create_career_recovery_point(reason: String) -> bool:
+	# Persist the exact pre-transition state first; only checkpoint a validated save.
+	if not career_started or not save_game():
+		push_warning("Could not create recovery point before: " + reason)
+		return false
+	var source_path := ProjectSettings.globalize_path(SAVE_PATH)
+	var checkpoint_path := ProjectSettings.globalize_path(SAVE_CHECKPOINT_PATH)
+	var previous_path := ProjectSettings.globalize_path(SAVE_CHECKPOINT_PREVIOUS_PATH)
+	if not _is_valid_save_file(SAVE_PATH):
+		return false
+	if FileAccess.file_exists(SAVE_CHECKPOINT_PATH):
+		DirAccess.copy_absolute(checkpoint_path, previous_path)
+	var copy_error := DirAccess.copy_absolute(source_path, checkpoint_path)
+	if copy_error != OK or not _is_valid_save_file(SAVE_CHECKPOINT_PATH):
+		push_warning("Recovery point could not be verified before: " + reason)
+		return false
+	return true
 
 func save_game() -> bool:
 	var save_data: Dictionary = {
@@ -4727,6 +5971,7 @@ func save_game() -> bool:
 		"local_election_result": local_election_result,
 		"last_local_election_year": last_local_election_year,
 		"last_local_election_result": last_local_election_result,
+		"last_local_election_details": last_local_election_details,
 		"last_election_vote_share": last_election_vote_share,
 		"election_vote_share": election_vote_share,
 		"election_turnout": election_turnout,
@@ -4751,33 +5996,114 @@ func save_game() -> bool:
 		"district_service_record": district_service_record,
 		"world_state": world_state
 	}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file == null:
+	var serialized := JSON.stringify(save_data)
+	var temp_file := FileAccess.open(SAVE_TEMP_PATH, FileAccess.WRITE)
+	if temp_file == null:
 		return false
-	file.store_string(JSON.stringify(save_data))
-	file.close()
+	temp_file.store_string(serialized)
+	temp_file.flush()
+	var write_error := temp_file.get_error()
+	temp_file.close()
+	if write_error != OK or not _is_valid_save_file(SAVE_TEMP_PATH):
+		return false
+
+	# Keep the last known-good career as a recovery copy before replacing it.
+	if _is_valid_save_file(SAVE_PATH):
+		if DirAccess.copy_absolute(ProjectSettings.globalize_path(SAVE_PATH), ProjectSettings.globalize_path(SAVE_BACKUP_PATH)) != OK:
+			return false
+	elif FileAccess.file_exists(SAVE_PATH) and not FileAccess.file_exists(SAVE_DAMAGED_PATH):
+		# Preserve an already damaged primary for manual recovery; never call it a good backup.
+		if DirAccess.copy_absolute(ProjectSettings.globalize_path(SAVE_PATH), ProjectSettings.globalize_path(SAVE_DAMAGED_PATH)) != OK:
+			return false
+
+	# Move the current primary aside instead of deleting it. This keeps a
+	# rollback copy if promotion of the verified temporary save fails.
+	var primary_exists := FileAccess.file_exists(SAVE_PATH)
+	if FileAccess.file_exists(SAVE_PREVIOUS_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PREVIOUS_PATH))
+	if primary_exists:
+		var stage_error := DirAccess.rename_absolute(
+			ProjectSettings.globalize_path(SAVE_PATH),
+			ProjectSettings.globalize_path(SAVE_PREVIOUS_PATH)
+		)
+		if stage_error != OK:
+			return false
+
+	var promote_error := DirAccess.rename_absolute(
+		ProjectSettings.globalize_path(SAVE_TEMP_PATH),
+		ProjectSettings.globalize_path(SAVE_PATH)
+	)
+	if promote_error != OK:
+		# Restore the exact prior primary first; use the known-good backup only
+		# when no staged primary is available.
+		if FileAccess.file_exists(SAVE_PREVIOUS_PATH):
+			DirAccess.rename_absolute(
+				ProjectSettings.globalize_path(SAVE_PREVIOUS_PATH),
+				ProjectSettings.globalize_path(SAVE_PATH)
+			)
+		elif FileAccess.file_exists(SAVE_BACKUP_PATH):
+			DirAccess.copy_absolute(
+				ProjectSettings.globalize_path(SAVE_BACKUP_PATH),
+				ProjectSettings.globalize_path(SAVE_PATH)
+			)
+		return false
+
+	if not _is_valid_save_file(SAVE_PATH):
+		# A post-promotion validation failure also rolls back to the prior save.
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+		if FileAccess.file_exists(SAVE_PREVIOUS_PATH):
+			DirAccess.rename_absolute(
+				ProjectSettings.globalize_path(SAVE_PREVIOUS_PATH),
+				ProjectSettings.globalize_path(SAVE_PATH)
+			)
+		return false
+
+	# Keep the previous save as an additional recovery point. The primary and
+	# last-known-good backup are both retained after a successful save.
 	return true
 
+func has_existing_save_data() -> bool:
+	# Used by startup to distinguish a genuinely new game from a career that
+	# exists on disk but could not be loaded. Never overwrite those files silently.
+	for path in [SAVE_PATH, SAVE_BACKUP_PATH, SAVE_TEMP_PATH, SAVE_DAMAGED_PATH, SAVE_PREVIOUS_PATH, SAVE_CHECKPOINT_PATH, SAVE_CHECKPOINT_PREVIOUS_PATH]:
+		if FileAccess.file_exists(path):
+			return true
+	return false
+
 func load_game() -> bool:
-	if not FileAccess.file_exists(SAVE_PATH):
-		return false
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var load_path := SAVE_PATH
+	if not _is_valid_save_file(load_path):
+		if _is_valid_save_file(SAVE_BACKUP_PATH):
+			load_path = SAVE_BACKUP_PATH
+			push_warning("Primary career save is invalid. Loading the last known-good backup.")
+		elif _is_valid_save_file(SAVE_PREVIOUS_PATH):
+			load_path = SAVE_PREVIOUS_PATH
+			push_warning("Primary and backup career saves are invalid. Loading the previous recovery copy.")
+		elif _is_valid_save_file(SAVE_TEMP_PATH):
+			# A crash may occur after the temporary save is fully written but before
+			# it is promoted. It is safe to load only after the same validation used
+			# during saving succeeds.
+			load_path = SAVE_TEMP_PATH
+			push_warning("Primary and backup career saves are invalid. Loading the verified temporary recovery copy.")
+		elif _is_valid_save_file(SAVE_CHECKPOINT_PATH):
+			# Transition checkpoints contain the last verified career state before
+			# a major operation. Use one only after regular save copies fail.
+			load_path = SAVE_CHECKPOINT_PATH
+			push_warning("Primary save copies are invalid. Loading the verified career checkpoint.")
+		elif _is_valid_save_file(SAVE_CHECKPOINT_PREVIOUS_PATH):
+			load_path = SAVE_CHECKPOINT_PREVIOUS_PATH
+			push_warning("Primary save copies and latest checkpoint are invalid. Loading the previous verified checkpoint.")
+		else:
+			return false
+	var file := FileAccess.open(load_path, FileAccess.READ)
 	if file == null:
 		return false
 	var save_text := file.get_as_text()
 	file.close()
-
-	# Parse safely so a damaged or incompatible save does not emit a parser error
-	# or prevent the game from reaching its normal new-game flow.
 	var json := JSON.new()
 	var parse_error := json.parse(save_text)
 	if parse_error != OK:
-		push_warning("Saved game could not be loaded (invalid JSON at line %d): %s" % [
-			json.get_error_line(),
-			json.get_error_message()
-		])
 		return false
-
 	var parsed: Variant = json.data
 	if typeof(parsed) != TYPE_DICTIONARY or not bool(parsed.get("career_started", false)):
 		return false
@@ -4810,6 +6136,8 @@ func load_game() -> bool:
 	local_election_result = str(parsed.get("local_election_result", ""))
 	last_local_election_year = int(parsed.get("last_local_election_year", 0))
 	last_local_election_result = str(parsed.get("last_local_election_result", ""))
+	var saved_local_details: Variant = parsed.get("last_local_election_details", {})
+	last_local_election_details = saved_local_details if saved_local_details is Dictionary else {}
 	last_election_vote_share = float(parsed.get("last_election_vote_share", 0.0))
 	election_vote_share = float(parsed.get("election_vote_share", 0.0))
 	election_turnout = int(parsed.get("election_turnout", 0))
